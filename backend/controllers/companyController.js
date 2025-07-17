@@ -1,0 +1,100 @@
+import Company from "../models/Company.js";
+
+// Get company details
+export const getCompany = async (req, res) => {
+    try {
+        const company = await Company.findOne();
+        if (!company) {
+            return res.status(404).json({ message: "Company not found" });
+        }
+        res.status(200).json(company);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Create company
+export const createCompany = async (req, res) => {
+    try {
+        const { name, city, contactPhone, gstNumber, address } = req.body;
+
+        if (!name || name.trim() === "") {
+            return res.status(400).json({ error: "Company name is required." });
+        }
+
+        // Check for duplicates by name, contactPhone, or gstNumber
+        const existingCompany = await Company.findOne({
+            $or: [
+                { name: name.trim() },
+                { contactPhone: contactPhone?.trim() },
+                { gstNumber: gstNumber?.trim() }
+            ]
+        });
+
+        if (existingCompany) {
+            return res.status(400).json({
+                error: "Company already exists",
+                existingCompany,
+            });
+        }
+
+        const company = new Company({
+            name: name.trim(),
+            city: city?.trim(),
+            contactPhone: contactPhone?.trim(),
+            gstNumber: gstNumber?.trim(),
+            address: address?.trim(),
+        });
+
+        const savedCompany = await company.save();
+        res.status(201).json(savedCompany);
+
+    } catch (err) {
+        console.error("Error creating company:", err);
+        res.status(500).json({ error: "Internal server error." });
+    }
+};
+
+
+
+// Update company
+export const updateCompany = async (req, res) => {
+    try {
+        const company = await Company.findOne();
+        if (!company) {
+            return res.status(404).json({ message: "Company not found" });
+        }
+        Object.assign(company, req.body);
+        await company.save();
+        res.status(200).json(company);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+export const searchCompanyByName = async (req, res) => {
+    try {
+        const { name } = req.query;
+        if (!name) {
+            return res.status(400).json({ message: "Name query is required" });
+        }
+        const companies = await Company.find({
+            name: { $regex: name, $options: "i" }
+        }).limit(10);
+        res.status(200).json(companies);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Fetch all companies
+export const getAllCompanies = async (req, res) => {
+    try {
+        const companies = await Company.find().sort({ createdAt: -1 }); // latest first, optional
+        res.json(companies);
+    } catch (error) {
+        console.error("Error fetching companies:", error);
+        res.status(500).json({ message: "Server error while fetching companies." });
+    }
+};

@@ -1,0 +1,32 @@
+.products{
+    padding: 1rem;
+    background-color: #f8f9fa;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.products .prod-btn{
+    border: none;
+    background-color: transparent;
+}
+
+.prod-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5); /* ensures backdrop */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+.prod-modal-content {
+  background: white;
+  padding: 20px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+}

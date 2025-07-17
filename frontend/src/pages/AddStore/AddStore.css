@@ -1,0 +1,17 @@
+.stores{
+    padding: 1rem;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.stores .head {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.stores form{
+    padding: 0 1rem;
+}
+
+.stores label {
+  font-weight: 700;
+}

@@ -1,0 +1,22 @@
+.orders{
+    padding: 1rem;
+    background-color: #f8f9fa;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.invoice-logo{
+    width: 120px;
+    height: 120px;
+}
+
+.orders button{
+    border: 0;
+    /* background-color: transparent; */
+}
+
+@media (max-width:991px) {
+    .invoice-logo{
+        width: 90px;
+        height: 90px;
+    }
+}

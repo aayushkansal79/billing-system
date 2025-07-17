@@ -1,0 +1,45 @@
+import express from 'express';
+import cors from 'cors';
+import mongoose from 'mongoose';
+import 'dotenv/config';
+import dashboardRoutes from './routes/dashboardRoutes.js';
+import companyRoutes from './routes/companyRoutes.js';
+import purchaseRoutes from "./routes/purchaseRoutes.js";
+import productRoutes from './routes/productRoutes.js';
+import storeRoutes from './routes/storeRoutes.js';
+import storeProductRoutes from './routes/storeProductRoutes.js';
+import billRoutes from './routes/billRoutes.js';
+import masterSearchRoutes from './routes/masterSearchRoutes.js';
+
+// app config
+const app = express();
+const port = process.env.PORT || 4000;
+
+// middleware
+app.use(express.json());
+app.use(cors());
+
+// test route
+app.get("/", (req, res) => {
+    res.send("Ajjawam - API Working");
+});
+
+// routes
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/company", companyRoutes);
+app.use("/api/purchase", purchaseRoutes);
+app.use("/api/product", productRoutes);
+app.use("/api/stores", storeRoutes);
+app.use("/api/store-products", storeProductRoutes);
+app.use("/api/bill", billRoutes);
+app.use("/api/master-search", masterSearchRoutes);
+
+// database connection
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log("DB Connected"))
+    .catch((err) => console.error(err));
+
+// listen
+app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+});

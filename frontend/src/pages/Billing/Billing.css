@@ -1,0 +1,27 @@
+.billing {
+  padding: 1rem;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.billing .head {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.billing form{
+    padding: 0 1rem;
+}
+
+.billing label {
+  font-weight: 700;
+}
+
+.billing input::-webkit-outer-spin-button,
+.billing input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.billing input[type=number] {
+  -moz-appearance: textfield;
+}

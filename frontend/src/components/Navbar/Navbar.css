@@ -1,0 +1,23 @@
+.navbar{
+    border-bottom: 1px solid rgba(0, 0, 0, 0.236);
+    z-index: 1001;
+}
+
+.navbar .ham{
+    cursor: pointer;
+}
+
+/* .navbar .nav-item:hover{
+    border: 1px solid black;
+    color: blue;
+} */
+
+.navbar .nav-item a{
+    font-size: 1.2rem;
+}
+
+.navbar .nav-item ul li:last-child{
+    >a{
+        color: red !important;
+    }
+}

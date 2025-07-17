@@ -1,0 +1,21 @@
+.purchase {
+  padding: 1rem;
+  /* background-color: rgba(230, 227, 227, 0.842); */
+}
+
+.purchase-container{
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.purchase .head {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.purchase form{
+    padding: 0 1rem;
+}
+
+.purchase label {
+  font-weight: 700;
+}
