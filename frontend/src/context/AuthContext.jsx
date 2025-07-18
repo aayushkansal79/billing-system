@@ -8,7 +8,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const url = "http://localhost:4000"; // adjust as needed
+  // const url = "http://localhost:4000";
+  const url = "https://ajjawam-backend.onrender.com";
 
   useEffect(() => {
     const token = localStorage.getItem("token");
