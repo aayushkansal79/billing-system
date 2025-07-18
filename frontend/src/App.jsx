@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import Login from "./pages/Login/login";
+import Login from "./pages/Login/Login";
 import Sidebar from "./components/Sidebar/Sidebar";
 import Navbar from "./components/Navbar/Navbar";
 import Dashboard from "./pages/Dashboard/Dashboard";
@@ -25,7 +25,8 @@ import RequestsRecieved from "./pages/RequestsRecieved/RequestsRecieved";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const url = "http://localhost:4000";
+  // const url = "http://localhost:4000";
+  const url = "https://ajjawam-backend.onrender.com";
 
   const location = useLocation();
   const hideLayout = location.pathname === "/login";
