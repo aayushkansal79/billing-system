@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useReactToPrint } from "react-to-print";
+// import { useReactToPrint } from "react-to-print";
 import "./Orders.css";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -18,6 +18,8 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
       <h2>INVOICE</h2>
       <div className="d-flex justify-content-between">
         <div>
+          <b>Comapny Details:</b>
+          <br />
           <strong>{company?.name}</strong>
           <br />
           {company?.address}
@@ -95,13 +97,45 @@ const Order = ({ url }) => {
     fetchPurchases();
   }, [url]);
 
-  const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
-    documentTitle: "Invoice",
-  });
+  // const handlePrint = useReactToPrint({
+  //   content: () => componentRef.current,
+  //   documentTitle: "Invoice",
+  // });
 
   const openModal = (purchase) => {
     setSelectedPurchase(purchase);
+  };
+
+  const handlePrint = () => {
+    const contents = componentRef.current.innerHTML;
+    const frame1 = document.createElement("iframe");
+    frame1.name = "frame1";
+    frame1.style.position = "absolute";
+    frame1.style.top = "-1000000px";
+    document.body.appendChild(frame1);
+
+    const frameDoc = frame1.contentWindow.document;
+
+    frameDoc.open();
+    frameDoc.write("<html><head><title>Invoice Print</title>");
+
+    // Clone current styles
+    document
+      .querySelectorAll('link[rel="stylesheet"], style')
+      .forEach((style) => {
+        frameDoc.write(style.outerHTML);
+      });
+
+    frameDoc.write("</head><body>");
+    frameDoc.write(contents);
+    frameDoc.write("</body></html>");
+    frameDoc.close();
+
+    setTimeout(() => {
+      frame1.contentWindow.focus();
+      frame1.contentWindow.print();
+      document.body.removeChild(frame1);
+    }, 500);
   };
 
   const closeModal = () => {

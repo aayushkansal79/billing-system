@@ -21,3 +21,13 @@
         color: red !important;
     }
 }
+
+.navbar .img{
+    display: none;
+}
+
+@media (max-width:1000px) {
+    .navbar .img{
+        display: block;
+    }
+}

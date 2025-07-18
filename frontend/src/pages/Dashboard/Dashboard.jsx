@@ -23,8 +23,8 @@ const Dashboard = ({ url }) => {
     const fetchCounts = async () => {
       try {
         const res = await axios.get(`${url}/api/dashboard/counts`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setCounts(res.data);
       } catch (err) {
         console.error(err);
@@ -39,22 +39,7 @@ const Dashboard = ({ url }) => {
       <p className="bread">Dashboard</p>
 
       <div className="dashboard">
-        <div className="card text-bg-light mb-3">
-          <div className="card-header">Companies</div>
-          <div className="card-body">
-            <p className="card-text">{counts.companies}</p>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              height="70px"
-              viewBox="0 -960 960 960"
-              width="50px"
-              fill="#1f1f1f"
-            >
-              <path d="M80-120v-720h400v160h400v560H80Zm80-80h240v-80H160v80Zm0-160h240v-80H160v80Zm0-160h240v-80H160v80Zm0-160h240v-80H160v80Zm320 480h320v-400H480v400Zm80-240v-80h160v80H560Zm0 160v-80h160v80H560Z" />
-            </svg>{" "}
-          </div>
-        </div>
-
+        
         <div className="card text-bg-light mb-3">
           <div className="card-header">Orders</div>
           <div className="card-body">
@@ -67,6 +52,22 @@ const Dashboard = ({ url }) => {
               fill="#1f1f1f"
             >
               <path d="M200-640v440h560v-440H640v320l-160-80-160 80v-320H200Zm0 520q-33 0-56.5-23.5T120-200v-499q0-14 4.5-27t13.5-24l50-61q11-14 27.5-21.5T250-840h460q18 0 34.5 7.5T772-811l50 61q9 11 13.5 24t4.5 27v499q0 33-23.5 56.5T760-120H200Zm16-600h528l-34-40H250l-34 40Zm184 80v190l80-40 80 40v-190H400Zm-200 0h560-560Z" />
+            </svg>{" "}
+          </div>
+        </div>
+
+        <div className="card text-bg-light mb-3">
+          <div className="card-header">Companies</div>
+          <div className="card-body">
+            <p className="card-text">{counts.companies}</p>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              height="70px"
+              viewBox="0 -960 960 960"
+              width="50px"
+              fill="#1f1f1f"
+            >
+              <path d="M80-120v-720h400v160h400v560H80Zm80-80h240v-80H160v80Zm0-160h240v-80H160v80Zm0-160h240v-80H160v80Zm0-160h240v-80H160v80Zm320 480h320v-400H480v400Zm80-240v-80h160v80H560Zm0 160v-80h160v80H560Z" />
             </svg>{" "}
           </div>
         </div>

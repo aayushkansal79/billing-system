@@ -8,8 +8,8 @@
   font-weight: 700;
 }
 
-.billing form{
-    padding: 0 1rem;
+.billing form {
+  padding: 0 1rem;
 }
 
 .billing label {
@@ -22,6 +22,11 @@
   margin: 0;
 }
 
-.billing input[type=number] {
+.billing input[type="number"] {
   -moz-appearance: textfield;
+}
+
+.billing .del-btn {
+  border: none;
+  background-color: transparent;
 }

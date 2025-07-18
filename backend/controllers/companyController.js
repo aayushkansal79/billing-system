@@ -98,3 +98,24 @@ export const getAllCompanies = async (req, res) => {
         res.status(500).json({ message: "Server error while fetching companies." });
     }
 };
+
+export const updateACompany = async (req, res) => {
+    try {
+        const company = await Company.findById(req.params.id);
+        if (!company) {
+            return res.status(404).json({ message: "Company not found" });
+        }
+
+        company.name = req.body.name || company.name;
+        company.address = req.body.address || company.address;
+        company.city = req.body.city || company.city;
+        company.contactPhone = req.body.contactPhone || company.contactPhone;
+        company.gstNumber = req.body.gstNumber || company.gstNumber;
+
+        await company.save();
+        res.json({ message: "Company updated successfully", company });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Server Error" });
+    }
+};

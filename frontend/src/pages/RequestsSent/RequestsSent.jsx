@@ -1,22 +1,19 @@
-import React, { useContext, useEffect, useState } from "react";
-import "./Requests.css";
+import React, { useEffect, useState } from "react";
+import "./RequestsSent.css";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { AuthContext } from "../../context/AuthContext";
 
-const Requests = ({ url }) => {
+const RequestsSent = ({ url }) => {
   useEffect(() => {
-    document.title = "Requests | Ajjawam";
+    document.title = "Requests Sent | Ajjawam";
   }, []);
 
   const [requests, setRequests] = useState([]);
-  const [acceptedQty, setAcceptedQty] = useState({});
   const token = localStorage.getItem("token");
-  const {user} = useContext(AuthContext)
 
   const fetchRequests = async () => {
     try {
-      const res = await axios.get(`${url}/api/product-requests/all`, {
+      const res = await axios.get(`${url}/api/product-requests/sent`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRequests(res.data);
@@ -32,12 +29,11 @@ const Requests = ({ url }) => {
 
   return (
     <>
-      <p className="bread">Requests</p>
-      <div className="requests">
+      <p className="bread">Requests Sent</p>
+      <div className="requestsSent">
         <table className="table align-middle table-striped table-bordered">
           <thead className="table-dark">
             <tr>
-              <th scope="col">Requested By</th>
               <th scope="col">Requested To</th>
               <th scope="col">Product Name</th>
               <th scope="col">Requested Quantity</th>
@@ -48,20 +44,6 @@ const Requests = ({ url }) => {
           <tbody className="table-group-divider">
             {requests.map((req) => (
               <tr key={req._id}>
-                <td scope="row">
-                  <h5>
-                    <span className="badge rounded-pill text-bg-secondary">
-                      {req.requestingStore?.username}
-                    </span>
-                  </h5>
-                  {req.requestingStore?.address}
-                  <br />
-                  <b>City -</b> {req.requestingStore?.city}
-                  <br />
-                  <b>State -</b> {req.requestingStore?.state}
-                  <br />
-                  <b>Zip -</b> {req.requestingStore?.zipCode}
-                </td>
                 <td scope="row">
                   <h5>
                     <span className="badge rounded-pill text-bg-primary">
@@ -105,4 +87,4 @@ const Requests = ({ url }) => {
   );
 };
 
-export default Requests;
+export default RequestsSent;

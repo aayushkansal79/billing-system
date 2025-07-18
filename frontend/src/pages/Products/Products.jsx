@@ -410,9 +410,9 @@ const Products = ({ url }) => {
                   <tr key={sp._id}>
                     <th>{sp.product.name}</th>
                     <td>{sp.quantity}</td>
-                    <td>₹{sp.product.priceBeforeGst}</td>
+                    <td>₹{sp.product.priceBeforeGst.toFixed(2)}</td>
                     <td>{sp.product.gstPercentage}%</td>
-                    <td>₹{sp.product.price}</td>
+                    <td>₹{sp.product.price.toFixed(2)}</td>
                   </tr>
                 ))}
           </tbody>

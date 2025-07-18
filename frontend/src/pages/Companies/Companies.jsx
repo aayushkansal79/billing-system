@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./Companies.css";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const Companies = ({ url }) => {
   useEffect(() => {
@@ -8,6 +9,8 @@ const Companies = ({ url }) => {
   }, []);
 
   const [allCompanies, setAllCompanies] = useState([]);
+  const [editIndex, setEditIndex] = useState(null);
+  const [editData, setEditData] = useState({});
   const token = localStorage.getItem("token");
 
   const fetchAllCompanies = async () => {
@@ -26,6 +29,31 @@ const Companies = ({ url }) => {
     fetchAllCompanies();
   }, [url]);
 
+  const handleEditClick = (index) => {
+    setEditIndex(index);
+    setEditData(allCompanies[index]);
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async (id) => {
+    try {
+      await axios.patch(
+        `${url}/api/company/${id}`,
+        { ...editData },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Company updated successfully.");
+      setEditIndex(null);
+      fetchAllCompanies();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update company.");
+    }
+  };
+
   return (
     <>
       <p className="bread">Companies</p>
@@ -41,57 +69,135 @@ const Companies = ({ url }) => {
             </tr>
           </thead>
           <tbody className="table-group-divider">
-            {allCompanies.map((company) => (
+            {allCompanies.map((company, index) => (
               <tr key={company._id}>
-                <th>{company.name}</th>
-                <td scope="row">
-                  {company.address}
-                  <br />
-                  <b>City -</b> {company.city}
-                </td>
-                <td>{company.contactPhone}</td>
-                <td>{company.gstNumber}</td>
+                <th>
+                  {editIndex === index ? (
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editData.name}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
+                    />
+                  ) : (
+                    company.name
+                  )}
+                </th>
                 <td>
-                  {new Date(company.createdAt).toLocaleString()}
+                  {editIndex === index ? (
+                    <>
+                      <input
+                        type="text"
+                        className="form-control mb-1"
+                        placeholder="Address"
+                        value={editData.address}
+                        onChange={(e) =>
+                          handleInputChange("address", e.target.value)
+                        }
+                      />
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="City"
+                        value={editData.city}
+                        onChange={(e) =>
+                          handleInputChange("city", e.target.value)
+                        }
+                      />
+                    </>
+                  ) : (
+                    <>
+                      {company.address}
+                      <br />
+                      <b>City -</b> {company.city}
+                    </>
+                  )}
+                </td>
+                <td>
+                  {editIndex === index ? (
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editData.contactPhone}
+                      onChange={(e) =>
+                        handleInputChange("contactPhone", e.target.value)
+                      }
+                    />
+                  ) : (
+                    company.contactPhone
+                  )}
+                </td>
+                <td>
+                  {editIndex === index ? (
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editData.gstNumber}
+                      onChange={(e) =>
+                        handleInputChange("gstNumber", e.target.value)
+                      }
+                    />
+                  ) : (
+                    company.gstNumber
+                  )}
+                </td>
+                <td>
+                  {new Date(company.updatedAt).toLocaleString()}
                   <hr />
+                  {editIndex === index ? (
+                    <>
+                      <button
+                        className="cpy-btn"
+                        onClick={() => handleSave(company._id)}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          height="24px"
+                          viewBox="0 -960 960 960"
+                          width="24px"
+                          fill="green"
+                        >
+                          <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q8 0 15 1.5t14 4.5l-74 74H200v560h560v-266l80-80v346q0 33-23.5 56.5T760-120H200Zm261-160L235-506l56-56 170 170 367-367 57 55-424 424Z" />
+                        </svg>
+                      </button>
+                      <button
+                        className="cpy-btn mx-2"
+                        onClick={() => setEditIndex(null)}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          height="24px"
+                          viewBox="0 -960 960 960"
+                          width="24px"
+                          fill="red"
+                        >
+                          <path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
+                        </svg>
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="cpy-btn"
+                      onClick={() => handleEditClick(index)}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        height="24px"
+                        viewBox="0 -960 960 960"
+                        width="24px"
+                        fill="green"
+                      >
+                        <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h357l-80 80H200v560h560v-278l80-80v358q0 33-23.5 56.5T760-120H200Zm280-360ZM360-360v-170l367-367q12-12 27-18t30-6q16 0 30.5 6t26.5 18l56 57q11 12 17 26.5t6 29.5q0 15-5.5 29.5T897-728L530-360H360Zm481-424-56-56 56 56ZM440-440h56l232-232-28-28-29-28-231 231v57Zm260-260-29-28 29 28 28 28-28-28Z" />
+                      </svg>
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-
-        {/* <div
-          className="master-store"
-          style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}
-        >
-          {store.map((item, index) => (
-            <div className="card text-bg-light mb-3">
-              <div className="card-header">
-                <div className="d-flex justify-content-between align-items-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    height="30px"
-                    viewBox="0 -960 960 960"
-                    width="30px"
-                    fill="#1f1f1f"
-                  >
-                    <path d="M160-720v-80h640v80H160Zm0 560v-240h-40v-80l40-200h640l40 200v80h-40v240h-80v-240H560v240H160Zm80-80h240v-160H240v160Zm-38-240h556-556Zm0 0h556l-24-120H226l-24 120Z" />
-                  </svg>
-                  <p className="card-text">Avail Qty. - 10</p>
-                </div>
-                <hr />
-                D-242 Sector-62 <br />
-                City - New Delhi <br />
-                State - Delhi <br />
-                Zip - 110001 <hr />
-                Contact - 9876543210
-              </div>
-              <div className="card-body">
-                <button className="btn btn-primary">Request</button>
-              </div>
-            </div>
-          ))}
-        </div> */}
       </div>
     </>
   );

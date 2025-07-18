@@ -12,6 +12,7 @@ import Products from "./pages/Products/Products";
 import AddStore from "./pages/AddStore/AddStore";
 import AllStores from "./pages/AllStores/AllStores";
 import Billing from "./pages/Billing/Billing";
+import AllBill from "./pages/AllBill/AllBill";
 import MasterSearch from "./pages/MasterSearch/MasterSearch";
 import Requests from "./pages/Requests/Requests";
 import Profile from "./pages/Profile/Profile";
@@ -19,6 +20,8 @@ import ChangePass from "./pages/ChangePass/ChangePass";
 import Invoice from "./pages/Invoice/Invoice";
 import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./context/PrivateRoute";
+import RequestsSent from "./pages/RequestsSent/RequestsSent";
+import RequestsRecieved from "./pages/RequestsRecieved/RequestsRecieved";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -55,8 +58,11 @@ function App() {
               <Route path="/add-store" element={<PrivateRoute roles={["admin"]}> <AddStore url={url} /> </PrivateRoute>} />
               <Route path="/all-stores" element={<PrivateRoute roles={["admin"]}> <AllStores url={url} /> </PrivateRoute>} />
               <Route path="/billing" element={<PrivateRoute roles={["admin", "store"]}> <Billing url={url} /> </PrivateRoute>} />
+              <Route path="/all-bill" element={<PrivateRoute roles={["admin", "store"]}> <AllBill url={url} /> </PrivateRoute>} />
               <Route path="/mastersearch" element={<PrivateRoute roles={["admin", "store"]}> <MasterSearch url={url} /> </PrivateRoute>} />
-              <Route path="/requests" element={<PrivateRoute roles={["admin", "store"]}> <Requests url={url} /> </PrivateRoute>} />
+              <Route path="/requests" element={<PrivateRoute roles={["admin"]}> <Requests url={url} /> </PrivateRoute>} />
+              <Route path="/requests-sent" element={<PrivateRoute roles={["store"]}> <RequestsSent url={url} /> </PrivateRoute>} />
+              <Route path="/requests-recieved" element={<PrivateRoute roles={["store"]}> <RequestsRecieved url={url} /> </PrivateRoute>} />
               <Route path="/profile" element={<PrivateRoute roles={["admin", "store"]}> <Profile url={url} /> </PrivateRoute>} />
               <Route path="/change-password" element={<PrivateRoute roles={["admin", "store"]}> <ChangePass url={url} /> </PrivateRoute>} />
               <Route path="/invoice" element={<Invoice url={url} />} />

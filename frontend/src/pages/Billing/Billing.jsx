@@ -53,7 +53,6 @@ const Billing = ({ url }) => {
 
   const handleProductSelect = (index, sp) => {
     const product = sp.product;
-    console.log(product);
     const newProducts = [...products];
     newProducts[index] = {
       ...newProducts[index],
@@ -317,7 +316,7 @@ const Billing = ({ url }) => {
             <label className="form-label">Total*</label>
           </div>
           {products.map((p, index) => (
-            <div key={index} className="row g-2 border-bottom mt-0 pb-2">
+            <div key={index} className="row g-1 border-bottom mt-0 pb-2">
               <div className="col-md-2 mt-1 position-relative">
                 <input
                   type="text"
@@ -422,11 +421,11 @@ const Billing = ({ url }) => {
                   disabled
                 />
               </div>
-              <div className="col-md-1 mt-1 d-flex align-items-end">
+              <div className="col-md-1 d-flex justify-content-center">
                 {products.length > 1 && (
                   <button
                     type="button"
-                    className="btn btn-danger"
+                    className="del-btn"
                     onClick={() => removeProduct(index)}
                   >
                     <svg
@@ -434,7 +433,7 @@ const Billing = ({ url }) => {
                       height="24px"
                       viewBox="0 -960 960 960"
                       width="24px"
-                      fill="white"
+                      fill="red"
                     >
                       <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />
                     </svg>
