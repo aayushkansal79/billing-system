@@ -47,7 +47,7 @@ function App() {
               scrollbarWidth: "none",
             }}
           >
-            <ToastContainer />
+            <ToastContainer position="top-right" autoClose={2000} hideProgressBar={false} newestOnTop={true} closeOnClick pauseOnFocusLoss draggable pauseOnHover />
             <Routes>
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/login" element={<Login url={url} />} />

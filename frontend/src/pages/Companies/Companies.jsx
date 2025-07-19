@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./Companies.css";
 import axios from "axios";
 import { toast } from "react-toastify";
+import Loader from "../../components/Loader/Loader";
 
 const Companies = ({ url }) => {
   useEffect(() => {
@@ -12,6 +13,7 @@ const Companies = ({ url }) => {
   const [editIndex, setEditIndex] = useState(null);
   const [editData, setEditData] = useState({});
   const token = localStorage.getItem("token");
+  const [loading, setLoading] = useState(false);
 
   const fetchAllCompanies = async () => {
     try {
@@ -39,6 +41,7 @@ const Companies = ({ url }) => {
   };
 
   const handleSave = async (id) => {
+    setLoading(true);
     try {
       await axios.patch(
         `${url}/api/company/${id}`,
@@ -51,6 +54,8 @@ const Companies = ({ url }) => {
     } catch (err) {
       console.error(err);
       toast.error("Failed to update company.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -199,6 +204,7 @@ const Companies = ({ url }) => {
           </tbody>
         </table>
       </div>
+      {loading && <Loader />}
     </>
   );
 };

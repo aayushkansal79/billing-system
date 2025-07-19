@@ -189,7 +189,7 @@ const Sidebar = ({ sidebarOpen }) => {
           ""
         )}
 
-        {user?.type == "store" || "admin" ? (
+        {user?.type == "store" ? (
           <NavLink
             to="/billing"
             className={sidebarOpen ? "side-item" : "side-item side-item-active"}

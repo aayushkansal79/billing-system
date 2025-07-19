@@ -4,6 +4,7 @@ import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../context/AuthContext";
+import Loader from "../../components/Loader/Loader";
 
 const AssignProductModal = ({ url, product, onClose }) => {
   const [stores, setStores] = useState([]);
@@ -11,6 +12,7 @@ const AssignProductModal = ({ url, product, onClose }) => {
   const [quantities, setQuantities] = useState({});
 
   const token = localStorage.getItem("token");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,26 +46,30 @@ const AssignProductModal = ({ url, product, onClose }) => {
   };
 
   const handleAssign = async () => {
-    try {
-      const payload = {
-        productId: product._id,
-        assignments: stores
-          .map((store) => ({
-            storeId: store._id,
-            quantity: quantities[store._id] || 0,
-          }))
-          .filter((item) => item.quantity > 0),
-      };
+    // setLoading(true);
+    if (product.unit)
+      try {
+        const payload = {
+          productId: product._id,
+          assignments: stores
+            .map((store) => ({
+              storeId: store._id,
+              quantity: quantities[store._id] || 0,
+            }))
+            .filter((item) => item.quantity > 0),
+        };
 
-      await axios.post(`${url}/api/store-products/assign-multiple`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.success("Product assigned successfully!");
-      onClose();
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to assign product");
-    }
+        await axios.post(`${url}/api/store-products/assign-multiple`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success("Product assigned successfully!");
+        onClose();
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to assign product");
+      } finally {
+        // setLoading(false);
+      }
   };
 
   return (
@@ -114,6 +120,7 @@ const AssignProductModal = ({ url, product, onClose }) => {
           </button>
         </div>
       </div>
+      {loading && <Loader />}
     </div>
   );
 };
@@ -131,6 +138,7 @@ const Products = ({ url }) => {
 
   const token = localStorage.getItem("token");
   const { user } = useContext(AuthContext);
+  const [loading, setLoading] = useState(false);
 
   const fetchAllProducts = async () => {
     try {
@@ -162,6 +170,7 @@ const Products = ({ url }) => {
   };
 
   const handleSave = async (id) => {
+    setLoading(true);
     try {
       await axios.put(`${url}/api/product/${id}`, editData, {
         headers: { Authorization: `Bearer ${token}` },
@@ -172,6 +181,8 @@ const Products = ({ url }) => {
     } catch (err) {
       console.error(err);
       toast.error("Failed to update product.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -181,6 +192,7 @@ const Products = ({ url }) => {
   };
 
   const handleToggleStatus = async (product) => {
+    setLoading(true);
     try {
       await axios.put(
         `${url}/api/product/${product._id}`,
@@ -194,6 +206,8 @@ const Products = ({ url }) => {
     } catch (err) {
       console.error(err);
       toast.error("Failed to update status.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -292,7 +306,7 @@ const Products = ({ url }) => {
                           }
                         />
                       ) : (
-                        `₹${product.priceBeforeGst}`
+                        `₹${product.priceBeforeGst.toFixed(2)}`
                       )}
                     </td>
                     <td>
@@ -323,7 +337,7 @@ const Products = ({ url }) => {
                           }
                         />
                       ) : (
-                        `₹${product.price}`
+                        `₹${product.price.toFixed(2)}`
                       )}
                     </td>
                     <td>
@@ -426,6 +440,8 @@ const Products = ({ url }) => {
           onClose={handleCloseAssign}
         />
       )}
+
+      {loading && <Loader />}
     </>
   );
 };

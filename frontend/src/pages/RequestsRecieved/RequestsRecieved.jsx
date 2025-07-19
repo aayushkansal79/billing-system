@@ -3,6 +3,7 @@ import "./RequestsRecieved.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../context/AuthContext";
+import Loader from "../../components/Loader/Loader";
 
 const RequestsRecieved = ({ url }) => {
   useEffect(() => {
@@ -13,6 +14,7 @@ const RequestsRecieved = ({ url }) => {
   const [acceptedQty, setAcceptedQty] = useState({});
   const token = localStorage.getItem("token");
   const { user } = useContext(AuthContext);
+  const [loading, setLoading] = useState(false);
 
   const fetchRequests = async () => {
     try {
@@ -27,6 +29,7 @@ const RequestsRecieved = ({ url }) => {
   };
 
   const handleAccept = async (requestId) => {
+    setLoading(ture);
     try {
       const qty = acceptedQty[requestId];
       if (!qty || qty <= 0) {
@@ -43,7 +46,7 @@ const RequestsRecieved = ({ url }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
+      setLoading(false);
       toast.success("Request accepted.");
       fetchRequests();
     } catch (err) {
@@ -53,6 +56,7 @@ const RequestsRecieved = ({ url }) => {
   };
 
   const handleReject = async (requestId) => {
+    setLoading(true);
     try {
       await axios.post(
         `${url}/api/product-requests/reject`,
@@ -64,6 +68,8 @@ const RequestsRecieved = ({ url }) => {
     } catch (err) {
       console.error(err);
       toast.error("Failed to reject request.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -105,8 +111,7 @@ const RequestsRecieved = ({ url }) => {
                 <td>{req.product?.name}</td>
                 <td>{req.requestedQuantity}</td>
                 <td>
-                  {req.status === 0 &&
-                  req.supplyingStore._id === user._id ? (
+                  {req.status === 0 && req.supplyingStore._id === user._id ? (
                     <input
                       type="number"
                       className="form-control mb-2"
@@ -136,8 +141,7 @@ const RequestsRecieved = ({ url }) => {
                       : "-"}
                   </small>
                   <hr />
-                  {req.status === 0 &&
-                  req.supplyingStore._id === user._id ? (
+                  {req.status === 0 && req.supplyingStore._id === user._id ? (
                     <>
                       <button
                         className="btn btn-success btn-sm me-1"
@@ -165,6 +169,8 @@ const RequestsRecieved = ({ url }) => {
           </tbody>
         </table>
       </div>
+
+      {loading && <Loader />}
     </>
   );
 };

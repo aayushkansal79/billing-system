@@ -1,14 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./Purchase.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
+import Loader from "../../components/Loader/Loader";
 
 const Purchase = ({ url }) => {
   useEffect(() => {
     document.title = "Purchases | Ajjawam";
   }, []);
+
+  const [loading, setLoading] = useState(false);
 
   const [companyData, setCompanyData] = useState({
     name: "",
@@ -131,6 +135,42 @@ const Purchase = ({ url }) => {
     setProducts(updatedProducts);
   }, [discount, products.length]);
 
+  const companyRef = useRef();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (companyRef.current && !companyRef.current.contains(event.target)) {
+        setShowCompanyDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const productRefs = useRef([]);
+
+  useEffect(() => {
+    productRefs.current = productRefs.current.slice(0, products.length);
+  }, [products.length]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      productRefs.current.forEach((ref, index) => {
+        if (ref && !ref.contains(event.target)) {
+          setProductDropdowns((prev) => ({ ...prev, [index]: [] }));
+        }
+      });
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const handleChangeProd = (index, field, value) => {
     const newProducts = [...products];
     newProducts[index][field] = value;
@@ -223,12 +263,27 @@ const Purchase = ({ url }) => {
     .toFixed(2);
 
   const removeProduct = (index) => {
-    setProducts(products.filter((_, i) => i !== index));
-    setSelectedProducts(selectedProducts.filter((_, i) => i !== index));
+    Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to remove this product?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, remove it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setProducts(products.filter((_, i) => i !== index));
+        setSelectedProducts(selectedProducts.filter((_, i) => i !== index));
+
+        // Swal.fire("Removed!", "The product has been removed.", "success");
+      }
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       let company = selectedCompany;
 
@@ -255,6 +310,7 @@ const Purchase = ({ url }) => {
       for (let i = 0; i < products.length; i++) {
         const p = products[i];
         if (!p.name.trim()) continue;
+        if (p.quantity == 0) continue;
 
         let productInDB = selectedProducts[i];
 
@@ -336,6 +392,8 @@ const Purchase = ({ url }) => {
     } catch (err) {
       console.error(err);
       toast.error("Error saving purchase.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -347,7 +405,7 @@ const Purchase = ({ url }) => {
         <div className="purchase text-bg-light col-md-6 rounded">
           <div className="head text-bg-dark p-2 mb-3">Company Details</div>
           <form className="row g-3">
-            <div className="col-md-4 position-relative">
+            <div className="col-md-4 position-relative" ref={companyRef}>
               <label className="form-label">Company Name*</label>
               <input
                 type="text"
@@ -518,7 +576,10 @@ const Purchase = ({ url }) => {
               className="row gy-1 gx-2 border-bottom align-items-end pb-2"
               key={index}
             >
-              <div className="col-md-2 position-relative">
+              <div
+                className="col-md-2 position-relative"
+                ref={(el) => (productRefs.current[index] = el)}
+              >
                 <input
                   type="text"
                   className="form-control"
@@ -552,7 +613,8 @@ const Purchase = ({ url }) => {
                   type="number"
                   className="form-control"
                   placeholder="Quantity"
-                  min="0"
+                  min="1"
+                  pattern="^[1-9][0-9]*$"
                   value={product.quantity}
                   onChange={(e) =>
                     handleChangeProd(index, "quantity", e.target.value)
@@ -691,6 +753,7 @@ const Purchase = ({ url }) => {
           </div>
         </form>
       </div>
+      {loading && <Loader />}
     </>
   );
 };

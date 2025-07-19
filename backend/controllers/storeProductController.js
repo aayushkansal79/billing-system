@@ -16,7 +16,7 @@ export const assignProductToMultipleStores = async (req, res) => {
 
         const totalQuantityRequested = assignments.reduce((sum, a) => sum + a.quantity, 0);
 
-        if (totalQuantityRequested > product.quantity) {
+        if (totalQuantityRequested > product.unit) {
             return res.status(400).json({
                 message: "Insufficient stock in main inventory for the requested quantities.",
             });

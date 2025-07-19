@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./AddStore.css";
 import axios from "axios";
 import { toast } from "react-toastify";
+import Loader from "../../components/Loader/Loader";
 
 const AddStore = ({ url }) => {
   useEffect(() => {
@@ -9,6 +10,7 @@ const AddStore = ({ url }) => {
   }, []);
 
   const token = localStorage.getItem("token");
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -25,36 +27,37 @@ const AddStore = ({ url }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    await axios.post(
-      `${url}/api/stores/register`,
-      {
-        ...formData,
-        type: "store", // ensuring role assignment
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-    toast.success("Store created successfully!");
-    setFormData({
-      username: "",
-      password: "",
-      address: "",
-      city: "",
-      state: "",
-      zipCode: "",
-      contactNumber: "",
-    });
-  } catch (error) {
-    console.error(error);
-    toast.error(
-      error.response?.data?.message || "Failed to create store."
-    );
-  }
-};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post(
+        `${url}/api/stores/register`,
+        {
+          ...formData,
+          type: "store", // ensuring role assignment
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Store created successfully!");
+      setFormData({
+        username: "",
+        password: "",
+        address: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        contactNumber: "",
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to create store.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -170,8 +173,9 @@ const AddStore = ({ url }) => {
           </div>
         </form>
       </div>
+      {loading && <Loader />}
     </>
-  );  
+  );
 };
 
 export default AddStore;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./Billing.css";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -75,6 +75,27 @@ const Billing = ({ url }) => {
     setProductDropdowns((prev) => ({ ...prev, [index]: [] }));
   };
 
+  const productRefs = useRef([]);
+
+  useEffect(() => {
+    productRefs.current = productRefs.current.slice(0, products.length);
+  }, [products.length]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      productRefs.current.forEach((ref, index) => {
+        if (ref && !ref.contains(event.target)) {
+          setProductDropdowns((prev) => ({ ...prev, [index]: [] }));
+        }
+      });
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const handleChangeProd = (index, field, value) => {
     const newProducts = [...products];
     newProducts[index][field] = value;
@@ -146,7 +167,7 @@ const Billing = ({ url }) => {
     setSelectedProducts(selectedProducts.filter((_, i) => i !== index));
   };
 
-    const grandTotal = products
+  const grandTotal = products
     .reduce((acc, p) => {
       const qty = parseFloat(p.quantity) || 0;
       const finalPrice = parseFloat(p.finalPrice) || 0;
@@ -317,7 +338,7 @@ const Billing = ({ url }) => {
           </div>
           {products.map((p, index) => (
             <div key={index} className="row g-1 border-bottom mt-0 pb-2">
-              <div className="col-md-2 mt-1 position-relative">
+              <div className="col-md-2 mt-1 position-relative" ref={(el) => (productRefs.current[index] = el)}>
                 <input
                   type="text"
                   className="form-control"

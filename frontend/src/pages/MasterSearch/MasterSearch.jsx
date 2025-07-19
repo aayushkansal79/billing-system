@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./MasterSearch.css";
 import axios from "axios";
 import { toast } from "react-toastify";
+import Loader from "../../components/Loader/Loader";
 
 const MasterSearch = ({ url }) => {
   useEffect(() => {
@@ -11,6 +12,7 @@ const MasterSearch = ({ url }) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingm, setLoadingm] = useState(false);
 
   const [showRequest, setShowRequest] = useState(false);
   const [requestQty, setRequestQty] = useState(1);
@@ -54,11 +56,12 @@ const MasterSearch = ({ url }) => {
 
   const handleRequest = async () => {
     if (!selectedProduct) return;
-    if(requestQty > selectedProduct.product.quantity){
+    if (requestQty > selectedProduct.product.quantity) {
       toast.error("Quantity Not Available");
       return;
     }
     try {
+      setLoadingm(true);
       const res = await axios.post(
         `${url}/api/product-requests/create`,
         {
@@ -79,6 +82,8 @@ const MasterSearch = ({ url }) => {
     } catch (err) {
       console.error(err);
       toast.error("Failed to send request.");
+    } finally {
+      setLoadingm(false);
     }
   };
 
@@ -213,6 +218,8 @@ const MasterSearch = ({ url }) => {
           </div>
         </div>
       )}
+
+      {loadingm && <Loader />}
     </>
   );
 };
