@@ -290,7 +290,7 @@ const Products = ({ url }) => {
                           }
                         />
                       ) : ( */}
-                        {product.unit}
+                      {product.unit}
                       {/* )} */}
                     </th>
                     <td>
@@ -312,9 +312,9 @@ const Products = ({ url }) => {
                     </td>
                     <td>
                       {editingProductId === product._id ? (
-                        <input
-                          type="number"
-                          className="form-control w-100"
+                        <select
+                          className="form-select"
+                          name="gst"
                           value={editData.gstPercentage}
                           onChange={(e) =>
                             setEditData({
@@ -322,7 +322,13 @@ const Products = ({ url }) => {
                               gstPercentage: e.target.value,
                             })
                           }
-                        />
+                        >
+                          {[0, 5, 12, 18, 28].map((gst) => (
+                            <option key={gst} value={gst}>
+                              {gst}
+                            </option>
+                          ))}
+                        </select>
                       ) : (
                         `${product.gstPercentage}%`
                       )}
@@ -428,7 +434,9 @@ const Products = ({ url }) => {
                     <th className="text-primary">{sp.quantity}</th>
                     <td>₹{sp.product.priceBeforeGst.toFixed(2)}</td>
                     <td>{sp.product.gstPercentage}%</td>
-                    <th className="text-danger">₹{sp.product.price.toFixed(2)}</th>
+                    <th className="text-danger">
+                      ₹{sp.product.price.toFixed(2)}
+                    </th>
                   </tr>
                 ))}
           </tbody>

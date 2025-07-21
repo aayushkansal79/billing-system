@@ -29,7 +29,7 @@ const RequestsRecieved = ({ url }) => {
   };
 
   const handleAccept = async (requestId) => {
-    setLoading(ture);
+    setLoading(true);
     try {
       const qty = acceptedQty[requestId];
       if (!qty || qty <= 0) {
@@ -46,12 +46,13 @@ const RequestsRecieved = ({ url }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setLoading(false);
       toast.success("Request accepted.");
       fetchRequests();
     } catch (err) {
       console.error(err);
       toast.error("Failed to accept request.");
+    } finally{
+      setLoading(false);
     }
   };
 

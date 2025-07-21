@@ -12,7 +12,7 @@ const Requests = ({ url }) => {
   const [requests, setRequests] = useState([]);
   const [acceptedQty, setAcceptedQty] = useState({});
   const token = localStorage.getItem("token");
-  const {user} = useContext(AuthContext)
+  const { user } = useContext(AuthContext);
 
   const fetchRequests = async () => {
     try {
@@ -83,22 +83,24 @@ const Requests = ({ url }) => {
                   <small>
                     Req At: {new Date(req.requestedAt).toLocaleString()}
                     <br />
-                    {req.acceptedAt
-                      && `Acc At: ${new Date(req.acceptedAt).toLocaleString()}`}
-                    {req.rejectedAt
-                      && `Rej At: ${new Date(req.rejectedAt).toLocaleString()}`}
+                    {req.acceptedAt &&
+                      `Acc At: ${new Date(req.acceptedAt).toLocaleString()}`}
+                    {req.rejectedAt &&
+                      `Rej At: ${new Date(req.rejectedAt).toLocaleString()}`}
+                    {/* <hr /> */}
+                    <br />
+                    {req.status === 0 && (
+                      <span className="badge bg-warning text-dark">
+                        Pending
+                      </span>
+                    )}
+                    {req.status === 1 && (
+                      <span className="badge bg-success">Accepted</span>
+                    )}
+                    {req.status === 2 && (
+                      <span className="badge bg-danger">Rejected</span>
+                    )}
                   </small>
-                  {/* <hr /> */}
-                  <br />
-                  {req.status === 0 && (
-                    <span className="badge bg-warning text-dark">Pending</span>
-                  )}
-                  {req.status === 1 && (
-                    <span className="badge bg-success">Accepted</span>
-                  )}
-                  {req.status === 2 && (
-                    <span className="badge bg-danger">Rejected</span>
-                  )}
                 </td>
               </tr>
             ))}
