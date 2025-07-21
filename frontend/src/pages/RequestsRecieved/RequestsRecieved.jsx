@@ -152,45 +152,24 @@ const RequestsRecieved = ({ url }) => {
                   <small>
                     Req At: {new Date(req.requestedAt).toLocaleString()}
                     <br />
-                    {req.acceptedAt
-                      && `Acc At: ${new Date(req.acceptedAt).toLocaleString()}`}
-                    {req.rejectedAt
-                      && `Rej At: ${new Date(req.rejectedAt).toLocaleString()}`}
+                    {req.acceptedAt &&
+                      `Acc At: ${new Date(req.acceptedAt).toLocaleString()}`}
+                    {req.rejectedAt &&
+                      `Rej At: ${new Date(req.rejectedAt).toLocaleString()}`}
+                    {/* <hr /> */}
+                    <br />
+                    {req.status === 0 && (
+                      <span className="badge bg-warning text-dark">
+                        Pending
+                      </span>
+                    )}
+                    {req.status === 1 && (
+                      <span className="badge bg-success">Accepted</span>
+                    )}
+                    {req.status === 2 && (
+                      <span className="badge bg-danger">Rejected</span>
+                    )}
                   </small>
-
-                  {/* <hr /> */}
-                  <br />
-                  {/* {req.status === 0 && req.supplyingStore._id === user._id ? (
-                    <>
-                      <button
-                        className="btn btn-success btn-sm me-1"
-                        onClick={() => handleAccept(req._id)}
-                      >
-                        Accept
-                      </button>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        onClick={() => handleReject(req._id)}
-                      >
-                        Reject
-                      </button>
-                    </>
-                  ) : req.status === 0 ? (
-                    <span className="badge bg-warning text-dark">Pending</span>
-                  ) : req.status === 1 ? (
-                    <span className="badge bg-success">Accepted</span>
-                  ) : req.status === 2 ? (
-                    <span className="badge bg-danger">Rejected</span>
-                  ) : null} */}
-                  {req.status === 0 && (
-                    <span className="badge bg-warning text-dark">Pending</span>
-                  )}
-                  {req.status === 1 && (
-                    <span className="badge bg-success">Accepted</span>
-                  )}
-                  {req.status === 2 && (
-                    <span className="badge bg-danger">Rejected</span>
-                  )}
                 </td>
               </tr>
             ))}
