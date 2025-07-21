@@ -19,3 +19,13 @@
 .purchase label {
   font-weight: 700;
 }
+
+.purchase input::-webkit-outer-spin-button,
+.purchase input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.purchase input[type="number"] {
+  -moz-appearance: textfield;
+}

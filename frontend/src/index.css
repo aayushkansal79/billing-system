@@ -1,11 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Intel+One+Mono:ital,wght@0,300..700;1,300..700&family=Raleway:ital,wght@0,100..900;1,100..900&family=TikTok+Sans:opsz,wght@12..36,300..900&display=swap');
 
 *{
   padding: 0;
   margin: 0;
   box-sizing: border-box;
   font-family: "Nunito Sans", sans-serif;
+  /* font-family: "Railway", monospace; */
+  /* font-family: "TikTok Sans", sans-serif; */
   scrollbar-width: none;
+  animation: fadein 0.3s;
+  font-size: 14px !important;
 }
 
 body{
@@ -14,4 +19,13 @@ body{
 
 a{
   text-decoration: none;
+}
+
+@keyframes fadein {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }

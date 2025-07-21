@@ -247,15 +247,16 @@ const Products = ({ url }) => {
   return (
     <>
       <p className="bread">Products</p>
-      <div className="products">
-        <table className="table align-middle table-striped table-bordered">
-          <thead className="table-dark">
+      <div className="products rounded">
+        <table className="table align-middle table-striped my-0">
+          <thead className="table-info">
             <tr>
               <th scope="col">Product Name</th>
               <th scope="col">Quantity</th>
               <th scope="col">Price Before GST</th>
               <th scope="col">GST %</th>
               <th scope="col">Selling Price</th>
+              {user?.type === "admin" ? <th scope="col">Date & Time</th> : ""}
               {user?.type === "admin" ? <th scope="col">Actions</th> : ""}
             </tr>
           </thead>
@@ -278,8 +279,8 @@ const Products = ({ url }) => {
                         product.name
                       )}
                     </th>
-                    <td>
-                      {editingProductId === product._id ? (
+                    <th className="text-primary">
+                      {/* {editingProductId === product._id ? (
                         <input
                           type="text"
                           className="form-control w-100"
@@ -288,10 +289,10 @@ const Products = ({ url }) => {
                             setEditData({ ...editData, unit: e.target.value })
                           }
                         />
-                      ) : (
-                        product.unit
-                      )}
-                    </td>
+                      ) : ( */}
+                        {product.unit}
+                      {/* )} */}
+                    </th>
                     <td>
                       {editingProductId === product._id ? (
                         <input
@@ -326,7 +327,7 @@ const Products = ({ url }) => {
                         `${product.gstPercentage}%`
                       )}
                     </td>
-                    <td>
+                    <th className="text-danger">
                       {editingProductId === product._id ? (
                         <input
                           type="number"
@@ -339,10 +340,11 @@ const Products = ({ url }) => {
                       ) : (
                         `₹${product.price.toFixed(2)}`
                       )}
-                    </td>
+                    </th>
+                    <td>{new Date(product.updatedAt).toLocaleString()}</td>
                     <td>
-                      {new Date(product.updatedAt).toLocaleString()}
-                      <hr />
+                      {/* {new Date(product.updatedAt).toLocaleString()}
+                      <hr /> */}
                       <div
                         style={{
                           display: "flex",
@@ -423,10 +425,10 @@ const Products = ({ url }) => {
               : storeProducts.map((sp) => (
                   <tr key={sp._id}>
                     <th>{sp.product.name}</th>
-                    <td>{sp.quantity}</td>
+                    <th className="text-primary">{sp.quantity}</th>
                     <td>₹{sp.product.priceBeforeGst.toFixed(2)}</td>
                     <td>{sp.product.gstPercentage}%</td>
-                    <td>₹{sp.product.price.toFixed(2)}</td>
+                    <th className="text-danger">₹{sp.product.price.toFixed(2)}</th>
                   </tr>
                 ))}
           </tbody>

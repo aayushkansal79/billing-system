@@ -15,3 +15,7 @@
 .stores label {
   font-weight: 700;
 }
+
+.form-label{
+  font-size: 14px !important;
+}

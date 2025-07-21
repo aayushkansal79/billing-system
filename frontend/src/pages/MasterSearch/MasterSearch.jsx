@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "./MasterSearch.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Loader from "../../components/Loader/Loader";
+import { AuthContext } from "../../context/AuthContext";
 
 const MasterSearch = ({ url }) => {
   useEffect(() => {
@@ -19,6 +20,9 @@ const MasterSearch = ({ url }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const token = localStorage.getItem("token");
+  const { user } = useContext(AuthContext);
+
+  const [resultLoad, setResultLoad] = useState(false);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -26,7 +30,7 @@ const MasterSearch = ({ url }) => {
       toast.error("Please enter a product name.");
       return;
     }
-
+    setResultLoad(true);
     setLoading(true);
     try {
       const res = await axios.get(`${url}/api/master-search/products`, {
@@ -34,6 +38,9 @@ const MasterSearch = ({ url }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setResults(res.data);
+      if(res.data.length !== 0){
+        setResultLoad(false);
+      }
     } catch (err) {
       console.error(err);
       toast.error("Error fetching search results.");
@@ -90,7 +97,7 @@ const MasterSearch = ({ url }) => {
   return (
     <>
       <p className="bread">Master Search</p>
-      <div className="master row">
+      <div className="master row rounded">
         <div className="col-md-6 mt-1 mb-3">
           <div className="input-group mb-3">
             <span className="input-group-text">Product Name</span>
@@ -125,7 +132,14 @@ const MasterSearch = ({ url }) => {
         <div
           className="master-store"
           style={{ display: "flex", flexWrap: "wrap", gap: "2rem" }}
-        >
+          >
+            
+          {resultLoad && 
+            <>
+              <p>No results found!</p>
+            </>
+          }
+
           {results.map((item) => (
             <div
               className="card text-bg-light mb-2"
@@ -158,14 +172,16 @@ const MasterSearch = ({ url }) => {
                 <hr />
                 <b>Contact -</b> {item.contact}
               </div>
-              <div className="card-body">
-                <button
-                  className="btn btn-primary"
-                  onClick={() => openRequestModal(item)}
-                >
-                  Request
-                </button>
-              </div>
+              {user?.type === "store" && (
+                <div className="card-body">
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => openRequestModal(item)}
+                  >
+                    Request
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

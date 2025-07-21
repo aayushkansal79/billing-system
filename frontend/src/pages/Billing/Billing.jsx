@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import "./Billing.css";
 import axios from "axios";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
 const Billing = ({ url }) => {
   useEffect(() => {
@@ -163,8 +164,22 @@ const Billing = ({ url }) => {
   };
 
   const removeProduct = (index) => {
-    setProducts(products.filter((_, i) => i !== index));
-    setSelectedProducts(selectedProducts.filter((_, i) => i !== index));
+    Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to remove this product?",
+      // icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, remove it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setProducts(products.filter((_, i) => i !== index));
+        setSelectedProducts(selectedProducts.filter((_, i) => i !== index));
+
+        // Swal.fire("Removed!", "The product has been removed.", "success");
+      }
+    });
   };
 
   const grandTotal = products
@@ -239,8 +254,8 @@ const Billing = ({ url }) => {
   return (
     <>
       <p className="bread">Billing</p>
-      <div className="billing text-bg-light mt-3">
-        <div className="head text-bg-dark p-2 mb-3">Costumer Details</div>
+      <div className="billing text-bg-light mt-3 rounded">
+        <div className="head p-2 mb-3" style={{background: '#FBEBD3', color: '#6D0616'}}>Costumer Details</div>
         <form className="row gy-3 gx-3" onSubmit={handleSubmit}>
           <div className="col-md-3">
             <label className="form-label">State*</label>
@@ -310,7 +325,7 @@ const Billing = ({ url }) => {
             />
           </div>
 
-          <div className="head text-bg-dark p-2 mb-2">Product Details</div>
+          <div className="head p-2 mb-2" style={{background: '#FBEBD3', color: '#6D0616'}}>Product Details</div>
 
           <div className="col-md-2">
             <label className="form-label">Product Name*</label>
@@ -419,7 +434,7 @@ const Billing = ({ url }) => {
                 <input
                   type="number"
                   className="form-control"
-                  placeholder="Price After Discount"
+                  placeholder="Price"
                   value={p.priceAfterDiscount}
                   disabled
                 />
@@ -465,11 +480,11 @@ const Billing = ({ url }) => {
           ))}
           <div className="row mt-3 gx-2">
             <div className="col-md-2">
-              <h6 className="text-danger">Grand Total</h6>
+              <h6 className="text-danger fw-bold">Grand Total</h6>
             </div>
             <div className="col-md-7"></div>
             <div className="col-md-2">
-              <h6 className="text-danger">₹ {grandTotal}</h6>
+              <h6 className="text-danger fw-bold">₹ {grandTotal}</h6>
             </div>
           </div>
           <div className="col-12">

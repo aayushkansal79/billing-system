@@ -1,4 +1,18 @@
-.master .cpy-btn{
+.company{
+    padding: 1rem;
+    margin: 1rem 0.1rem;
+    background-color: #f8f9fa;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.company .cpy-btn{
     border: none;
     background-color: transparent;
+}
+
+@media (max-width: 680px) {
+  .company{
+    width: calc(100vw - 2rem);
+    overflow-x: auto;
+  }
 }

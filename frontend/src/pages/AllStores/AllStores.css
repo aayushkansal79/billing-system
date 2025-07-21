@@ -8,3 +8,10 @@
     border: none;
     background-color: transparent;
 }
+
+@media (max-width: 680px) {
+  .all-stores{
+    width: calc(100vw - 2rem);
+    overflow-x: auto;
+  }
+}

@@ -15,6 +15,7 @@ const BillProductSchema = new mongoose.Schema({
 
 const BillSchema = new mongoose.Schema({
     store: { type: mongoose.Schema.Types.ObjectId, ref: "Store", required: true },
+    invoiceNumber: { type: String, unique: true, required: true },
 
     state: { type: String, required: true },
     customerName: { type: String },

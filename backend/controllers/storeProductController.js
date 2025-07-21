@@ -125,6 +125,7 @@ export const getStoreProducts = async (req, res) => {
                 path: "product",
                 match: { status: true }, // only products with status true
             })
+            .sort({createdAt : -1})
             .exec();
 
         // Remove storeProducts where product is null (because of match filter)

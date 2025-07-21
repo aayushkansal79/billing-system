@@ -49,12 +49,12 @@ function App() {
           >
             <ToastContainer position="top-right" autoClose={2000} hideProgressBar={false} newestOnTop={true} closeOnClick pauseOnFocusLoss draggable pauseOnHover />
             <Routes>
-              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
               <Route path="/login" element={<Login url={url} />} />
               <Route path="/dashboard" element={<PrivateRoute roles={["admin"]}> <Dashboard url={url} /> </PrivateRoute>} />
               <Route path="/purchase" element={<PrivateRoute roles={["admin"]}> <Purchase url={url} /> </PrivateRoute>} />
-              <Route path="/orders" element={<PrivateRoute roles={["admin"]}> <Orders url={url} /> </PrivateRoute>} />
-              <Route path="/companies" element={<PrivateRoute roles={["admin"]}> <Companies url={url} /> </PrivateRoute>} />
+              <Route path="/purchase-list" element={<PrivateRoute roles={["admin"]}> <Orders url={url} /> </PrivateRoute>} />
+              <Route path="/vendors" element={<PrivateRoute roles={["admin"]}> <Companies url={url} /> </PrivateRoute>} />
               <Route path="/products" element={<PrivateRoute roles={["admin", "store"]}> <Products url={url} /> </PrivateRoute>} />
               <Route path="/add-store" element={<PrivateRoute roles={["admin"]}> <AddStore url={url} /> </PrivateRoute>} />
               <Route path="/all-stores" element={<PrivateRoute roles={["admin"]}> <AllStores url={url} /> </PrivateRoute>} />

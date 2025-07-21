@@ -1,5 +1,5 @@
 .sidebar {
-  width: 270px;
+  width: 250px;
   text-align: center;
   background: #f8f9fa;
   padding: 5px 1rem;
@@ -38,9 +38,9 @@
     }
     >p{
         margin: 0;
-        font-size: 1.2rem;
+        font-size: 14px;
         font-weight: 800;
-        color: #6d0016;
+        color: #6D0616;
     }
 }
 
@@ -50,10 +50,10 @@
 }
 
 .sidebar .side-item{
-    width: 230px;
+    width: 200px;
     display: inline-flex;
     align-items: center;
-    font-size: 1rem;
+    font-size: 14px;
     gap: 20px;
     padding: 10px;
     margin-bottom: 5px;
@@ -61,31 +61,37 @@
     border-radius: 10px;
     cursor: pointer;
     /* transition: width 0.1s; */
+    animation: fadein 0.2s;
     >p{
-        font-size: 1rem;
+        font-size: 14px;
         font-weight: 700;
         margin: 0;
-        color: black;
+        color: #6D0616;
     }
     >li{
         color: black;
     }
     >li span{
-        font-size: 1rem;
+        font-size: 14px;
         font-weight: 700;
         margin: 0;
-        color: black;
+        color: #6D0616;
+    }
+    >span{
+        color: #6D0616;
+
     }
     >svg{
-        fill: black;
+        fill: #6D0616;
     }
     >.vr{
-        color: black;
+        color: #6D0616;
     }
 }
 
 .sidebar a.active{
-    background-color: rgba(72, 128, 255, 1);
+    /* background-color: rgba(72, 128, 255, 1); */
+    background-color: #6D0616;
     >p{
         color: white;
     }
@@ -109,6 +115,9 @@
     >p{
         display: none;
     }
+    >.vr{
+        display: none;
+    }
 }
 
 /* .menu-item{
@@ -117,7 +126,8 @@
 } */
 
 .sidebar .side-item:hover{
-    border: 2px solid rgba(72, 128, 255, 1);
+    /* border: 2px solid rgba(72, 128, 255, 1); */
+    border: 2px solid #6D0616;
 }
 
 .arrow{
@@ -126,6 +136,11 @@
 
 .arrow-active{
     display: none;
+}
+
+.menu-item {
+  display: block;
+  visibility: visible;
 }
 
 @media (max-width: 1000px) {

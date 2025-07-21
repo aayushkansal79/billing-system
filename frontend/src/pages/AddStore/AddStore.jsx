@@ -63,7 +63,7 @@ const AddStore = ({ url }) => {
     <>
       <p className="bread">Add Store</p>
       <div className="stores text-bg-light mt-4 p-3 rounded">
-        <div className="head text-bg-dark p-2 mb-4">Add New Store</div>
+        <div className="head p-2 mb-4" style={{background: '#FBEBD3'}}>Add New Store</div>
         <form className="row g-3" onSubmit={handleSubmit}>
           <div className="col-md-3">
             <label className="form-label">Username*</label>

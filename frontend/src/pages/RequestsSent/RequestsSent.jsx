@@ -30,9 +30,9 @@ const RequestsSent = ({ url }) => {
   return (
     <>
       <p className="bread">Requests Sent</p>
-      <div className="requestsSent">
-        <table className="table align-middle table-striped table-bordered">
-          <thead className="table-dark">
+      <div className="requestsSent rounded">
+        <table className="table align-middle table-striped">
+          <thead className="table-warning">
             <tr>
               <th scope="col">Requested To</th>
               <th scope="col">Product Name</th>
@@ -50,24 +50,43 @@ const RequestsSent = ({ url }) => {
                       {req.supplyingStore?.username}
                     </span>
                   </h5>
-                  {req.supplyingStore?.address}
+                  {/* {req.supplyingStore?.address}
                   <br />
                   <b>City -</b> {req.supplyingStore?.city}
                   <br />
                   <b>State -</b> {req.supplyingStore?.state}
                   <br />
-                  <b>Zip -</b> {req.supplyingStore?.zipCode}
+                  <b>Zip -</b> {req.supplyingStore?.zipCode} */}
                 </td>
-                <td>{req.product?.name}</td>
+                <th>{req.product?.name}</th>
                 <td>{req.requestedQuantity}</td>
-                <td>{req.acceptedQuantity || "-"}</td>
+                <td>
+                  <span className="mx-4">{req.acceptedQuantity || "-"}</span>
+                  {/* <span>
+                    {req.status === 0 && (
+                      <span className="badge bg-warning text-dark">
+                        Pending
+                      </span>
+                    )}
+                    {req.status === 1 && (
+                      <span className="badge bg-success">Accepted</span>
+                    )}
+                    {req.status === 2 && (
+                      <span className="badge bg-danger">Rejected</span>
+                    )}
+                  </span> */}
+                </td>
                 <td>
                   <small>
                     Req At: {new Date(req.requestedAt).toLocaleString()}
                     <br />
-                    Acc At: {req.acceptedAt ? new Date(req.acceptedAt).toLocaleString() : "-"}
+                    {req.acceptedAt
+                      && `Acc At: ${new Date(req.acceptedAt).toLocaleString()}`}
+                    {req.rejectedAt
+                      && `Rej At: ${new Date(req.rejectedAt).toLocaleString()}`}
                   </small>
-                  <hr />
+                  {/* <hr /> */}
+                  <br />
                   {req.status === 0 && (
                     <span className="badge bg-warning text-dark">Pending</span>
                   )}

@@ -14,6 +14,11 @@ const Sidebar = ({ sidebarOpen }) => {
     setOpenMenu(openMenu === menu ? null : menu);
   };
 
+  if (!user) {
+    return;
+  }
+
+
   return (
     <aside className={sidebarOpen ? "sidebar" : "sidebar sidebar-active"}>
       <Link
@@ -42,7 +47,7 @@ const Sidebar = ({ sidebarOpen }) => {
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                height="24px"
+                height="20px"
                 viewBox="0 -960 960 960"
                 width="24px"
                 fill="#1f1f1f"
@@ -54,15 +59,16 @@ const Sidebar = ({ sidebarOpen }) => {
               <p>Dashboard</p>
             </NavLink>
 
-            <NavLink
-              to="/purchase"
+            <div
+              // to="/purchase"
+              onClick={() => toggleMenu("purchase")}
               className={
                 sidebarOpen ? "side-item" : "side-item side-item-active"
               }
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                height="24px"
+                height="20px"
                 viewBox="0 -960 960 960"
                 width="24px"
                 fill="#1f1f1f"
@@ -70,46 +76,74 @@ const Sidebar = ({ sidebarOpen }) => {
                 <path d="M440-600v-120H320v-80h120v-120h80v120h120v80H520v120h-80ZM280-80q-33 0-56.5-23.5T200-160q0-33 23.5-56.5T280-240q33 0 56.5 23.5T360-160q0 33-23.5 56.5T280-80Zm400 0q-33 0-56.5-23.5T600-160q0-33 23.5-56.5T680-240q33 0 56.5 23.5T760-160q0 33-23.5 56.5T680-80ZM40-800v-80h131l170 360h280l156-280h91L692-482q-11 20-29.5 31T622-440H324l-44 80h480v80H280q-45 0-68.5-39t-1.5-79l54-98-144-304H40Z" />
               </svg>
               {/* <div class="vr"></div> */}
-              <p>Add Purchase</p>
-            </NavLink>
+              <p>Purchase</p>
+              <span className={sidebarOpen ? "arrow" : "arrow arrow-active"}>
+                {openMenu === "purchase" ? "▾" : "▸"}
+              </span>
+            </div>
 
-            <NavLink
-              to="/orders"
-              className={
-                sidebarOpen ? "side-item" : "side-item side-item-active"
-              }
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                height="24px"
-                viewBox="0 -960 960 960"
-                width="24px"
-                fill="#1f1f1f"
-              >
-                <path d="M240-80q-50 0-85-35t-35-85v-120h120v-560l60 60 60-60 60 60 60-60 60 60 60-60 60 60 60-60 60 60 60-60v680q0 50-35 85t-85 35H240Zm480-80q17 0 28.5-11.5T760-200v-560H320v440h360v120q0 17 11.5 28.5T720-160ZM360-600v-80h240v80H360Zm0 120v-80h240v80H360Zm320-120q-17 0-28.5-11.5T640-640q0-17 11.5-28.5T680-680q17 0 28.5 11.5T720-640q0 17-11.5 28.5T680-600Zm0 120q-17 0-28.5-11.5T640-520q0-17 11.5-28.5T680-560q17 0 28.5 11.5T720-520q0 17-11.5 28.5T680-480ZM240-160h360v-80H200v40q0 17 11.5 28.5T240-160Zm-40 0v-80 80Z" />
-              </svg>
-              {/* <div class="vr"></div> */}
-              <p>Orders List</p>
-            </NavLink>
+            {openMenu === "purchase" && sidebarOpen && (
+              <>
+                <NavLink
+                  to="/purchase"
+                  className={`side-item menu-item ${sidebarOpen ? "" : "side-item-active"}`}
+                  style={{paddingLeft: "55px"}}
+                >
+                  {/* <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="20px"
+                    viewBox="0 -960 960 960"
+                    width="24px"
+                    fill="#1f1f1f"
+                  >
+                    <path d="M440-600v-120H320v-80h120v-120h80v120h120v80H520v120h-80ZM280-80q-33 0-56.5-23.5T200-160q0-33 23.5-56.5T280-240q33 0 56.5 23.5T360-160q0 33-23.5 56.5T280-80Zm400 0q-33 0-56.5-23.5T600-160q0-33 23.5-56.5T680-240q33 0 56.5 23.5T760-160q0 33-23.5 56.5T680-80ZM40-800v-80h131l170 360h280l156-280h91L692-482q-11 20-29.5 31T622-440H324l-44 80h480v80H280q-45 0-68.5-39t-1.5-79l54-98-144-304H40Z" />
+                  </svg> */}
+                  {/* <div class="vr"></div> */}
+                  <p>Add Purchase</p>
+                </NavLink>
 
-            <NavLink
-              to="/companies"
-              className={
-                sidebarOpen ? "side-item" : "side-item side-item-active"
-              }
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                height="24px"
-                viewBox="0 -960 960 960"
-                width="24px"
-                fill="#000000"
-              >
-                <path d="M80-120v-650l200-150 200 150v90h400v560H80Zm80-80h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 0h80v-80h-80v80Zm0 480h480v-400H320v400Zm240-240v-80h160v80H560Zm0 160v-80h160v80H560ZM400-440v-80h80v80h-80Zm0 160v-80h80v80h-80Z" />
-              </svg>
-              {/* <div class="vr"></div> */}
-              <p>Companies List</p>
-            </NavLink>
+                <NavLink
+                  to="/purchase-list"
+                  className={
+                    sidebarOpen ? "side-item" : "side-item side-item-active"
+                  }
+                  style={{paddingLeft: "55px"}}
+                >
+                  {/* <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="20px"
+                    viewBox="0 -960 960 960"
+                    width="24px"
+                    fill="#1f1f1f"
+                  >
+                    <path d="M240-80q-50 0-85-35t-35-85v-120h120v-560l60 60 60-60 60 60 60-60 60 60 60-60 60 60 60-60 60 60 60-60v680q0 50-35 85t-85 35H240Zm480-80q17 0 28.5-11.5T760-200v-560H320v440h360v120q0 17 11.5 28.5T720-160ZM360-600v-80h240v80H360Zm0 120v-80h240v80H360Zm320-120q-17 0-28.5-11.5T640-640q0-17 11.5-28.5T680-680q17 0 28.5 11.5T720-640q0 17-11.5 28.5T680-600Zm0 120q-17 0-28.5-11.5T640-520q0-17 11.5-28.5T680-560q17 0 28.5 11.5T720-520q0 17-11.5 28.5T680-480ZM240-160h360v-80H200v40q0 17 11.5 28.5T240-160Zm-40 0v-80 80Z" />
+                  </svg> */}
+                  {/* <div class="vr"></div> */}
+                  <p>Purchase List</p>
+                </NavLink>
+            
+                <NavLink
+                  to="/vendors"
+                  className={
+                    sidebarOpen ? "side-item" : "side-item side-item-active"
+                  }
+                  style={{paddingLeft: "55px"}}
+                >
+                  {/* <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="20px"
+                    viewBox="0 -960 960 960"
+                    width="24px"
+                    fill="#000000"
+                  >
+                    <path d="M80-120v-650l200-150 200 150v90h400v560H80Zm80-80h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 0h80v-80h-80v80Zm0 480h480v-400H320v400Zm240-240v-80h160v80H560Zm0 160v-80h160v80H560ZM400-440v-80h80v80h-80Zm0 160v-80h80v80h-80Z" />
+                  </svg> */}
+                  {/* <div class="vr"></div> */}
+                  <p>Vendors List</p>
+                </NavLink>
+              </>
+            )}
+
           </>
         ) : (
           ""
@@ -120,7 +154,7 @@ const Sidebar = ({ sidebarOpen }) => {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            height="24px"
+            height="20px"
             viewBox="0 -960 960 960"
             width="24px"
             fill="#1f1f1f"
@@ -133,7 +167,7 @@ const Sidebar = ({ sidebarOpen }) => {
         </NavLink>
 
         {user?.type === "admin" ? (
-          <span>
+          <>
             <div
               onClick={() => toggleMenu("stores")}
               className={
@@ -142,7 +176,7 @@ const Sidebar = ({ sidebarOpen }) => {
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                height="24px"
+                height="20px"
                 viewBox="0 -960 960 960"
                 width="24px"
                 fill="#1f1f1f"
@@ -157,34 +191,49 @@ const Sidebar = ({ sidebarOpen }) => {
             </div>
 
             {openMenu === "stores" && sidebarOpen && (
-              <div className=" sub-menu">
+              <>
                 <NavLink
                   to="/add-store"
                   className={
-                    sidebarOpen
-                      ? "side-item list-unstyled"
-                      : "side-item side-item-active menu-item"
+                    sidebarOpen ? "side-item" : "side-item side-item-active"
                   }
+                  style={{paddingLeft: "55px"}}
                 >
-                  <li className="mx-5">
-                    <span>• Add Store</span>
-                  </li>
+                  {/* <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="20px"
+                    viewBox="0 -960 960 960"
+                    width="24px"
+                    fill="#000000"
+                  >
+                    <path d="M80-120v-650l200-150 200 150v90h400v560H80Zm80-80h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 0h80v-80h-80v80Zm0 480h480v-400H320v400Zm240-240v-80h160v80H560Zm0 160v-80h160v80H560ZM400-440v-80h80v80h-80Zm0 160v-80h80v80h-80Z" />
+                  </svg> */}
+                  {/* <div class="vr"></div> */}
+                  <p>Add Stores</p>
                 </NavLink>
+                
                 <NavLink
                   to="/all-stores"
                   className={
-                    sidebarOpen
-                      ? "side-item list-unstyled"
-                      : "side-item side-item-active menu-item"
+                    sidebarOpen ? "side-item" : "side-item side-item-active"
                   }
+                  style={{paddingLeft: "55px"}}
                 >
-                  <li className="mx-5">
-                    <span>• All Stores</span>
-                  </li>
+                  {/* <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="20px"
+                    viewBox="0 -960 960 960"
+                    width="24px"
+                    fill="#1f1f1f"
+                  >
+                    <path d="M240-80q-50 0-85-35t-35-85v-120h120v-560l60 60 60-60 60 60 60-60 60 60 60-60 60 60 60-60 60 60 60-60v680q0 50-35 85t-85 35H240Zm480-80q17 0 28.5-11.5T760-200v-560H320v440h360v120q0 17 11.5 28.5T720-160ZM360-600v-80h240v80H360Zm0 120v-80h240v80H360Zm320-120q-17 0-28.5-11.5T640-640q0-17 11.5-28.5T680-680q17 0 28.5 11.5T720-640q0 17-11.5 28.5T680-600Zm0 120q-17 0-28.5-11.5T640-520q0-17 11.5-28.5T680-560q17 0 28.5 11.5T720-520q0 17-11.5 28.5T680-480ZM240-160h360v-80H200v40q0 17 11.5 28.5T240-160Zm-40 0v-80 80Z" />
+                  </svg> */}
+                  {/* <div class="vr"></div> */}
+                  <p>All Stores</p>
                 </NavLink>
-              </div>
+              </>
             )}
-          </span>
+          </>
         ) : (
           ""
         )}
@@ -196,7 +245,7 @@ const Sidebar = ({ sidebarOpen }) => {
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              height="24px"
+              height="20px"
               viewBox="0 -960 960 960"
               width="24px"
               fill="#1f1f1f"
@@ -216,7 +265,7 @@ const Sidebar = ({ sidebarOpen }) => {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            height="24px"
+            height="20px"
             viewBox="0 -960 960 960"
             width="24px"
             fill="#1f1f1f"
@@ -233,7 +282,7 @@ const Sidebar = ({ sidebarOpen }) => {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            height="24px"
+            height="20px"
             viewBox="0 -960 960 960"
             width="24px"
             fill="#1f1f1f"
@@ -251,7 +300,7 @@ const Sidebar = ({ sidebarOpen }) => {
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              height="24px"
+              height="20px"
               viewBox="0 -960 960 960"
               width="24px"
               fill="#1f1f1f"
@@ -273,7 +322,7 @@ const Sidebar = ({ sidebarOpen }) => {
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                height="24px"
+                height="20px"
                 viewBox="0 -960 960 960"
                 width="24px"
                 fill="#000000"
@@ -292,7 +341,7 @@ const Sidebar = ({ sidebarOpen }) => {
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                height="24px"
+                height="20px"
                 viewBox="0 -960 960 960"
                 width="24px"
                 fill="#1f1f1f"

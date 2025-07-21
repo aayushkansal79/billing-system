@@ -9,7 +9,7 @@ import Loader from "../../components/Loader/Loader";
 
 const Purchase = ({ url }) => {
   useEffect(() => {
-    document.title = "Purchases | Ajjawam";
+    document.title = "Purchase | Ajjawam";
   }, []);
 
   const [loading, setLoading] = useState(false);
@@ -266,7 +266,7 @@ const Purchase = ({ url }) => {
     Swal.fire({
       title: "Are you sure?",
       text: "Do you want to remove this product?",
-      icon: "warning",
+      // icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
@@ -403,14 +403,14 @@ const Purchase = ({ url }) => {
 
       <div className="purchase-container d-flex flex-wrap rounded">
         <div className="purchase text-bg-light col-md-6 rounded">
-          <div className="head text-bg-dark p-2 mb-3">Company Details</div>
+          <div className="head p-2 mb-3" style={{background: '#FBEBD3', color: '#6D0616'}}>Company Details</div>
           <form className="row g-3">
             <div className="col-md-4 position-relative" ref={companyRef}>
               <label className="form-label">Company Name*</label>
               <input
                 type="text"
                 className="form-control"
-                placeholder="Enter Company Name"
+                placeholder="Enter Name"
                 value={companyData.name}
                 onChange={handleCompanyChange}
                 onFocus={() => companyData.name && setShowCompanyDropdown(true)}
@@ -496,7 +496,7 @@ const Purchase = ({ url }) => {
         </div>
 
         <div className="purchase text-bg-light col-md-6 rounded">
-          <div className="head text-bg-dark p-2 mb-3">Purchase Details</div>
+          <div className="head p-2 mb-3" style={{background: '#FBEBD3', color: '#6D0616'}}>Purchase Details</div>
           <form className="row g-3">
             <div className="col-md-4">
               <label className="form-label">Date*</label>
@@ -542,8 +542,8 @@ const Purchase = ({ url }) => {
         </div>
       </div>
 
-      <div className="purchase purchase-container text-bg-light mt-4">
-        <div className="head text-bg-dark p-2 mb-3">Product Details</div>
+      <div className="purchase purchase-container text-bg-light mt-4 rounded">
+        <div className="head p-2 mb-3" style={{background: '#FBEBD3', color: '#6D0616'}}>Product Details</div>
         <form className="row g-3" onSubmit={handleSubmit}>
           <div className="col-md-2">
             <label className="form-label">Product Name*</label>
@@ -735,15 +735,15 @@ const Purchase = ({ url }) => {
           ))}
           <div className="row mt-3 gx-2">
             <div className="col-md-2">
-              <h6 className="text-danger">Grand Total</h6>
+              <h6 className="text-danger fw-bold">Grand Total</h6>
             </div>
             <div className="col-md-3"></div>
             <div className="col-md-2">
-              <h6 className="text-danger">₹ {totalPriceAfterDiscount}</h6>
+              <h6 className="text-danger fw-bold">₹ {totalPriceAfterDiscount}</h6>
             </div>
             <div className="col-md-2"></div>
             <div className="col-md-2">
-              <h6 className="text-danger">₹ {totalSellingPrice}</h6>
+              <h6 className="text-danger fw-bold">₹ {totalSellingPrice}</h6>
             </div>
           </div>
           <div className="col-md-2">

@@ -3,15 +3,17 @@ import Product from "../models/Product.js";
 import Purchase from "../models/Purchase.js";
 import Store from "../models/Store.js";
 import Bill from "../models/Bill.js";
+import ProductRequest from "../models/ProductRequest.js";
 
 export const getDashboardCounts = async (req, res) => {
     try {
-        const [companyCount, productCount, purchaseCount, storeCount, billCount] = await Promise.all([
+        const [companyCount, productCount, purchaseCount, storeCount, billCount, reqCount] = await Promise.all([
             Company.countDocuments(),
             Product.countDocuments(),
             Purchase.countDocuments(),
             Store.countDocuments({type:"store"}),
             Bill.countDocuments(),
+            ProductRequest.countDocuments(),
         ]);
 
         res.status(200).json({
@@ -20,6 +22,7 @@ export const getDashboardCounts = async (req, res) => {
             purchases: purchaseCount,
             stores: storeCount,
             bills: billCount,
+            req: reqCount,
         });
     } catch (err) {
         console.error(err);

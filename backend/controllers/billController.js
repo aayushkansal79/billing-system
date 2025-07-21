@@ -1,12 +1,13 @@
 import Bill from "../models/Bill.js";
 import StoreProduct from "../models/StoreProduct.js";
+import { getNextInvoiceNumber } from "../controllers/counterController.js";
 
 // Create a new bill
 export const createBill = async (req, res) => {
     try {
         const { state, customerName, mobileNo, gstNumber, products, totalAmount } = req.body;
         const store = req.store._id;
-
+        
         // First check if all product quantities are available
         for (const p of products) {
             const storeProduct = await StoreProduct.findOne({ store: store, product: p.product });
@@ -17,9 +18,12 @@ export const createBill = async (req, res) => {
             }
         }
 
+        const invoiceNumber = await getNextInvoiceNumber();
+
         // Create the bill only after stock check passes
         const newBill = new Bill({
             store,
+            invoiceNumber,
             state,
             customerName,
             mobileNo,
@@ -65,5 +69,117 @@ export const getAllBills = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Server Error" });
+    }
+};
+
+// export const getDailyBillCounts = async (req, res) => {
+//     try {
+//         const today = new Date();
+//         const sevenDaysAgo = new Date();
+//         sevenDaysAgo.setDate(today.getDate() - 6); // 6 to include today as day 7
+
+//         const pipeline = [
+//             {
+//                 $match: {
+//                     createdAt: { $gte: new Date(sevenDaysAgo.setHours(0,0,0,0)) }
+//                 }
+//             },
+//             {
+//                 $group: {
+//                     _id: {
+//                         year: { $year: "$createdAt" },
+//                         month: { $month: "$createdAt" },
+//                         day: { $dayOfMonth: "$createdAt" },
+//                     },
+//                     count: { $sum: 1 },
+//                 },
+//             },
+//             {
+//                 $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 }
+//             }
+//         ];
+
+//         const data = await Bill.aggregate(pipeline);
+
+//         const formatted = data.map(item => {
+//             const dateObj = new Date(item._id.year, item._id.month - 1, item._id.day);
+//             const options = { day: '2-digit', month: 'long', year: 'numeric' };
+//             const formattedDate = dateObj.toLocaleDateString('en-US', options);
+//             return {
+//                 date: formattedDate, // "14 July 2025"
+//                 count: item.count
+//             };
+//         });
+
+//         res.json(formatted);
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ message: "Error fetching daily bill counts." });
+//     }
+// };
+
+export const getDailyBillCounts = async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(today.getDate() - 6); // 7 days including today
+        sevenDaysAgo.setHours(0, 0, 0, 0);
+
+        // Fetch bills for last 7 days
+        const bills = await Bill.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: sevenDaysAgo, $lte: today }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$createdAt" },
+                        month: { $month: "$createdAt" },
+                        day: { $dayOfMonth: "$createdAt" },
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: {
+                    "_id.year": 1,
+                    "_id.month": 1,
+                    "_id.day": 1
+                }
+            }
+        ]);
+
+        // Build a map from the aggregation results
+        const billMap = {};
+        bills.forEach(item => {
+            const dateObj = new Date(item._id.year, item._id.month - 1, item._id.day);
+            const key = dateObj.toDateString(); // unique key for each date
+            billMap[key] = item.count;
+        });
+
+        // Build final data for last 7 days with 0 where no bills
+        const result = [];
+        for (let i = 0; i < 7; i++) {
+            const dateObj = new Date(sevenDaysAgo);
+            dateObj.setDate(sevenDaysAgo.getDate() + i);
+
+            const options = { day: "2-digit", month: "long", year: "numeric" };
+            const formattedDate = dateObj.toLocaleDateString("en-US", options); // "14 July 2025"
+
+            const key = dateObj.toDateString();
+            result.push({
+                date: formattedDate,
+                count: billMap[key] || 0
+            });
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error while fetching bill graph data." });
     }
 };

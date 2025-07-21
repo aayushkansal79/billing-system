@@ -73,7 +73,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
 
 const Order = ({ url }) => {
   useEffect(() => {
-    document.title = "Orders | Ajjawam";
+    document.title = "Purchases | Ajjawam";
   }, []);
 
   const [purchases, setPurchases] = useState([]);
@@ -86,7 +86,7 @@ const Order = ({ url }) => {
     const fetchPurchases = async () => {
       try {
         const res = await axios.get(`${url}/api/purchase`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         setPurchases(res.data);
       } catch (err) {
@@ -152,15 +152,19 @@ const Order = ({ url }) => {
 
   return (
     <>
-      <p className="bread">Orders</p>
-      <div className="orders">
-        <table className="table align-middle table-striped table-bordered">
-          <thead className="table-dark">
+      <p className="bread">Purchases</p>
+      <div className="orders rounded">
+        <table className="table align-middle table-striped my-0">
+          <thead className="table-danger">
             <tr>
-              <th>Order ID</th>
+              <th>Purchase ID</th>
               <th>Amount</th>
-              <th>Company Details</th>
-              <th>Actions</th>
+              <th>Company Name</th>
+              <th>City</th>
+              <th>Contact</th>
+              <th>GST No.</th>
+              <th>Invoice</th>
+              <th>Date & Time</th>
             </tr>
           </thead>
           <tbody className="table-group-divider">
@@ -170,9 +174,14 @@ const Order = ({ url }) => {
                   <b>Invoice No. -</b> {purchase.invoiceNumber} <br />
                   <b>Order No. -</b> {purchase.orderNumber}
                 </td>
+                <th className="text-danger">₹ {purchase.totalPriceAfterDiscount || 0}</th>
                 <td>
-                  {purchase.totalPriceAfterDiscount || 0} Rs.
-                  <hr />
+                  {purchase.company?.name}
+                </td>
+                <td>{purchase.company?.city}</td>
+                <td>{purchase.company?.contactPhone}</td>
+                <td>{purchase.company?.gstNumber}</td>
+                <td>
                   <button
                     type="button"
                     onClick={() => openModal(purchase)}
@@ -183,14 +192,7 @@ const Order = ({ url }) => {
                   </button>
                 </td>
                 <td>
-                  <b>Name -</b> {purchase.company?.name} <br />
-                  <b>City -</b> {purchase.company?.city} <br />
-                  <b>Contact -</b> {purchase.company?.contactPhone} <br />
-                  <b>GSTIN -</b> {purchase.company?.gstNumber}
-                </td>
-                <td>
-                  <b>Date:</b> {new Date(purchase.date).toLocaleDateString()} <br />
-                  <b>Time:</b> {new Date(purchase.date).toLocaleTimeString()}
+                  {new Date(purchase.date).toLocaleString()}
                 </td>
               </tr>
             ))}

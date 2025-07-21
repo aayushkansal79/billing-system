@@ -20,3 +20,10 @@
         height: 90px;
     }
 }
+
+@media (max-width: 680px) {
+  .orders{
+    width: calc(100vw - 2rem);
+    overflow-x: auto;
+  }
+}

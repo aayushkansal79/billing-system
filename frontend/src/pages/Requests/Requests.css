@@ -3,3 +3,10 @@
     background-color: #f8f9fa;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
+
+@media (max-width: 680px) {
+  .requests{
+    width: calc(100vw - 2rem);
+    overflow-x: auto;
+  }
+}

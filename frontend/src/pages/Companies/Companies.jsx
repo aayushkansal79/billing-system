@@ -6,7 +6,7 @@ import Loader from "../../components/Loader/Loader";
 
 const Companies = ({ url }) => {
   useEffect(() => {
-    document.title = "Companies | Ajjawam";
+    document.title = "Vendors | Ajjawam";
   }, []);
 
   const [allCompanies, setAllCompanies] = useState([]);
@@ -61,15 +61,16 @@ const Companies = ({ url }) => {
 
   return (
     <>
-      <p className="bread">Companies</p>
-      <div className="master row">
-        <table className="table align-middle table-striped table-bordered">
-          <thead className="table-dark">
+      <p className="bread">Vendors</p>
+      <div className="company row rounded">
+        <table className="table align-middle table-striped  my-0">
+          <thead className="table-danger">
             <tr>
-              <th scope="col">Company Name</th>
+              <th scope="col">Vendor Name</th>
               <th scope="col">Address</th>
               <th scope="col">Contact No.</th>
               <th scope="col">GST Number</th>
+              <th scope="col">Date & Time</th>
               <th scope="col">Actions</th>
             </tr>
           </thead>
@@ -148,9 +149,10 @@ const Companies = ({ url }) => {
                     company.gstNumber
                   )}
                 </td>
+                <td>{new Date(company.updatedAt).toLocaleString()}</td>
                 <td>
-                  {new Date(company.updatedAt).toLocaleString()}
-                  <hr />
+                  {/* {new Date(company.updatedAt).toLocaleString()}
+                  <hr /> */}
                   {editIndex === index ? (
                     <>
                       <button

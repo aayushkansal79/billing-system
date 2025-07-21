@@ -164,6 +164,7 @@ export const rejectProductRequest = async (req, res) => {
       return res.status(403).json({ message: "You are not authorized to reject this request." });
     }
 
+    request.rejectedAt = new Date();
     request.status = 2;
     await request.save();
 

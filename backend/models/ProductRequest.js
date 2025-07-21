@@ -9,6 +9,7 @@ const productRequestSchema = new mongoose.Schema(
     acceptedQuantity: { type: Number, default: 0 },
     requestedAt : {type: Date, required: true, default: Date.now},
     acceptedAt : {type: Date},
+    rejectedAt : {type: Date},
     status : {type: Number, default: 0}
   },
   { timestamps: true }

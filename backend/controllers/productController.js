@@ -23,7 +23,7 @@ export const createProduct = async (req, res) => {
 
 export const getAllProducts = async (req, res) => {
     try {
-        const products = await Product.find().sort({ name: 1 }); // optional alphabetical sort
+        const products = await Product.find().sort({ createdAt: -1 }); // optional alphabetical sort
         res.status(200).json(products);
     } catch (err) {
         console.error(err);

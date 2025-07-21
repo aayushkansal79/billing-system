@@ -79,10 +79,14 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               </td>
               <td>₹{p.priceAfterDiscount.toFixed(2)}</td>
               <td>
-                {user.state === state
-                  ? `CGST ${p.gstPercentage / 2}% SGST ${p.gstPercentage / 2}%`
-                  : `IGST ${p.gstPercentage}%`}
-                {/* {p.gstPercentage}% */}
+                {user.state === state ? (
+                  <>
+                    CGST: {p.gstPercentage / 2}% <br />
+                    SGST: {p.gstPercentage / 2}%
+                  </>
+                ) : (
+                  <>IGST: {p.gstPercentage}%</>
+                )}
               </td>
               <td>₹{p.finalPrice.toFixed(2)}</td>
               <td>₹{(p.quantity * p.finalPrice).toFixed(2)}</td>
@@ -174,29 +178,31 @@ const AllBill = ({ url }) => {
     <>
       <p className="bread">All Bills</p>
       {/* <div className="container mt-4"> */}
-      <div className="allbill">
+      <div className="allbill rounded">
         {bills.length === 0 ? (
           <p>No bills found.</p>
         ) : (
-          <div className="">
-            <table className="table align-middle table-striped table-bordered">
-              <thead className="table-dark">
+          <div className="">         
+            <table className="table align-middle table-striped  my-0">
+              <thead className="table-info">
                 <tr>
-                  <th>#</th>
-                  <th>Customer Details</th>
+                  <th>Invoice No.</th>
+                  <th>Name</th>
+                  <th>Mobile No.</th>
                   {bills[0]?.store && <th>Store</th>}
                   <th>Total Amount (₹)</th>
-                  <th>Date</th>
+                  <th>Invoice</th>
+                  <th>Date & Time</th>
                 </tr>
               </thead>
               <tbody>
                 {bills.map((bill, idx) => (
                   <tr key={bill._id}>
-                    <td>{idx + 1}</td>
+                    <td>{bill.invoiceNumber}</td>
                     <td>
-                      <b>Name - </b>
+                      {/* <b>Name - </b> */}
                       {bill.customerName || "N/A"}
-                      <br />
+                      {/* <br />
                       <b>Mobile No. - </b>
                       {bill.mobileNo || "N/A"}
                       <br />
@@ -204,12 +210,21 @@ const AllBill = ({ url }) => {
                       {bill.gstNumber || "N/A"}
                       <br />
                       <b>State - </b>
-                      {bill.state}
+                      {bill.state} */}
                     </td>
-                    <td>{bill.store.username}</td>
+                    <td>{bill.mobileNo || "N/A"}</td>
                     <td>
+                      <h5>
+                        <span className="badge rounded-pill text-bg-secondary">
+                          {bill.store.username}
+                        </span>
+                      </h5>
+                    </td>
+                    <th className="text-danger">
                       {bill.totalAmount.toFixed(2)}
-                      <hr />
+                      {/* <hr /> */}
+                    </th>
+                    <td>
                       <button
                         type="button"
                         onClick={() => openModal(bill)}
@@ -222,13 +237,7 @@ const AllBill = ({ url }) => {
                         👁️
                       </button>
                     </td>
-                    <td>
-                      <b>Date - </b>
-                      {new Date(bill.createdAt).toLocaleDateString()}
-                      <br />
-                      <b>Time - </b>
-                      {new Date(bill.createdAt).toLocaleTimeString()}
-                    </td>
+                    <td>{new Date(bill.createdAt).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>

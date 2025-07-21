@@ -92,13 +92,17 @@ const AllStores = ({ url }) => {
   return (
     <>
       <p className="bread">All Stores</p>
-      <div className="all-stores">
-        <table className="table align-middle table-striped table-bordered">
-          <thead className="table-dark">
+      <div className="all-stores rounded">
+        <table className="table align-middle table-striped my-0">
+          <thead className="table-danger">
             <tr>
               <th scope="col">Username</th>
               <th scope="col">Address</th>
+              <th scope="col">City</th>
+              <th scope="col">State</th>
+              <th scope="col">Zip Code</th>
               <th scope="col">Contact No.</th>
+              <th scope="col">Date & Time</th>
               <th scope="col">Actions</th>
             </tr>
           </thead>
@@ -117,15 +121,19 @@ const AllStores = ({ url }) => {
                       autoFocus
                     />
                   ) : (
-                    store.username
+                    <h5>
+                      <span className="badge rounded-pill text-bg-secondary">
+                        {store.username}
+                      </span>
+                    </h5>
                   )}
                 </th>
-                <td>
+                {/* <td>
                   {editingStoreId === store._id ? (
                     <>
-                      {/* <label className="form-label mb-1">
+                      <label className="form-label mb-1">
                           <b>Address:</b>
-                        </label> */}
+                        </label>
                       <input
                         type="text"
                         className="form-control mb-2"
@@ -176,8 +184,70 @@ const AllStores = ({ url }) => {
                       <b>Zip -</b> {store.zipCode}
                     </>
                   )}
-                </td>
+                </td> */}
 
+                <td>
+                  {editingStoreId === store._id ? (
+                    <input
+                      type="text"
+                      className="form-control mb-2"
+                      value={editData.address}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          address: e.target.value,
+                        })
+                      }
+                    />
+                  ) : (
+                    store.address
+                  )}
+                </td>
+                <td>
+                  {editingStoreId === store._id ? (
+                    <input
+                      type="text"
+                      className="form-control mb-2"
+                      value={editData.city}
+                      onChange={(e) =>
+                        setEditData({ ...editData, city: e.target.value })
+                      }
+                    />
+                  ) : (
+                    store.city
+                  )}
+                </td>
+                <td>
+                  {editingStoreId === store._id ? (
+                    <input
+                      type="text"
+                      className="form-control mb-2"
+                      value={editData.state}
+                      onChange={(e) =>
+                        setEditData({ ...editData, state: e.target.value })
+                      }
+                    />
+                  ) : (
+                    store.state
+                  )}
+                </td>
+                <td>
+                  {editingStoreId === store._id ? (
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editData.zipCode}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          zipCode: e.target.value,
+                        })
+                      }
+                    />
+                  ) : (
+                    store.zipCode
+                  )}
+                </td>
                 <td>
                   {editingStoreId === store._id ? (
                     <input
@@ -195,9 +265,10 @@ const AllStores = ({ url }) => {
                     store.contactNumber
                   )}
                 </td>
+                <td>{new Date(store.createdAt).toLocaleString()}</td>
                 <td>
-                  {new Date(store.createdAt).toLocaleString()}
-                  <hr />
+                  {/* {new Date(store.createdAt).toLocaleString()}
+                  <hr /> */}
                   <div
                     style={{
                       display: "flex",
