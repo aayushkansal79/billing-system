@@ -122,18 +122,22 @@ export const getAllBills = async (req, res) => {
 
 export const getDailyBillCounts = async (req, res) => {
     try {
+        const days = parseInt(req.query.days) || 7; // dynamic filter
+        if (days <= 0 || days > 365) {
+            return res.status(400).json({ message: "Invalid days parameter." });
+        }
+
         const today = new Date();
-        today.setHours(23, 59, 59, 999);
+        today.setHours(23, 59, 59, 999); // include entire current day
 
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(today.getDate() - 6); // 7 days including today
-        sevenDaysAgo.setHours(0, 0, 0, 0);
+        const startDate = new Date();
+        startDate.setDate(today.getDate() - (days - 1));
+        startDate.setHours(0, 0, 0, 0);
 
-        // Fetch bills for last 7 days
         const bills = await Bill.aggregate([
             {
                 $match: {
-                    createdAt: { $gte: sevenDaysAgo, $lte: today }
+                    createdAt: { $gte: startDate, $lte: today },
                 }
             },
             {
@@ -141,7 +145,7 @@ export const getDailyBillCounts = async (req, res) => {
                     _id: {
                         year: { $year: "$createdAt" },
                         month: { $month: "$createdAt" },
-                        day: { $dayOfMonth: "$createdAt" },
+                        day: { $dayOfMonth: "$createdAt" }
                     },
                     count: { $sum: 1 }
                 }
@@ -155,19 +159,17 @@ export const getDailyBillCounts = async (req, res) => {
             }
         ]);
 
-        // Build a map from the aggregation results
         const billMap = {};
         bills.forEach(item => {
             const dateObj = new Date(item._id.year, item._id.month - 1, item._id.day);
-            const key = dateObj.toDateString(); // unique key for each date
+            const key = dateObj.toDateString();
             billMap[key] = item.count;
         });
 
-        // Build final data for last 7 days with 0 where no bills
         const result = [];
-        for (let i = 0; i < 7; i++) {
-            const dateObj = new Date(sevenDaysAgo);
-            dateObj.setDate(sevenDaysAgo.getDate() + i);
+        for (let i = 0; i < days; i++) {
+            const dateObj = new Date(startDate);
+            dateObj.setDate(startDate.getDate() + i);
 
             const options = { day: "2-digit", month: "long", year: "numeric" };
             const formattedDate = dateObj.toLocaleDateString("en-US", options); // "14 July 2025"

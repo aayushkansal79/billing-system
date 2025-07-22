@@ -3,11 +3,14 @@ import "./Billing.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
+import Loader from "../../components/Loader/Loader";
 
 const Billing = ({ url }) => {
   useEffect(() => {
     document.title = "Billing | Ajjawam";
   }, []);
+
+  const [loading, setLoading] = useState(false);
 
   const [products, setProducts] = useState([
     {
@@ -235,7 +238,7 @@ const Billing = ({ url }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
     try {
       const filteredProducts = products.filter(
         (p) => p.productName.trim() && p.quantity
@@ -294,6 +297,8 @@ const Billing = ({ url }) => {
     } catch (err) {
       console.error(err);
       toast.error("Error generating bill.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -593,6 +598,8 @@ const Billing = ({ url }) => {
           </div>
         </form>
       </div>
+
+      {loading && <Loader />}
     </>
   );
 };

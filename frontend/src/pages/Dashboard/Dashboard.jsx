@@ -46,30 +46,35 @@ const Dashboard = ({ url }) => {
   }, []);
 
   const [data, setData] = useState([]);
+  const [days, setDays] = useState(7);
+  const [loading, setLoading] = useState(false);
 
-  const fetchData = async () => {
+  const fetchGraphData = async () => {
+    setLoading(true);
     try {
       const res = await axios.get(`${url}/api/bill/daily-count`, {
+        params: { days },
         headers: { Authorization: `Bearer ${token}` },
       });
       setData(res.data);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch bill graph data.");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
-  }, [url]);
+    fetchGraphData();
+  }, [days, url]);
 
   return (
     <>
       <p className="bread">Dashboard</p>
 
       <div className="dashboard">
-
-        <Link to='/purchase-list' className="card text-bg-light mb-3">
+        <Link to="/purchase-list" className="card text-bg-light mb-3">
           <div className="card-header">Purchases</div>
           <div className="card-body">
             <p className="card-text blue">{counts.purchases}</p>
@@ -86,7 +91,7 @@ const Dashboard = ({ url }) => {
           </div>
         </Link>
 
-        <Link to='/vendors' className="card text-bg-light mb-3">
+        <Link to="/vendors" className="card text-bg-light mb-3">
           <div className="card-header">Vendors</div>
           <div className="card-body">
             <p className="card-text purple">{counts.companies}</p>
@@ -103,7 +108,7 @@ const Dashboard = ({ url }) => {
           </div>
         </Link>
 
-        <Link to='/products' className="card text-bg-light mb-3">
+        <Link to="/products" className="card text-bg-light mb-3">
           <div className="card-header">Products</div>
           <div className="card-body">
             <p className="card-text orange">{counts.products}</p>
@@ -120,7 +125,7 @@ const Dashboard = ({ url }) => {
           </div>
         </Link>
 
-        <Link to='/all-stores' className="card text-bg-light mb-3">
+        <Link to="/all-stores" className="card text-bg-light mb-3">
           <div className="card-header">Stores</div>
           <div className="card-body">
             <p className="card-text green">{counts.stores}</p>
@@ -137,7 +142,7 @@ const Dashboard = ({ url }) => {
           </div>
         </Link>
 
-        <Link to='/all-bill' className="card text-bg-light mb-3">
+        <Link to="/all-bill" className="card text-bg-light mb-3">
           <div className="card-header">Bills</div>
           <div className="card-body">
             <p className="card-text red">{counts.bills}</p>
@@ -154,7 +159,7 @@ const Dashboard = ({ url }) => {
           </div>
         </Link>
 
-        <Link to='/requests' className="card text-bg-light mb-3">
+        <Link to="/requests" className="card text-bg-light mb-3">
           <div className="card-header">Requests</div>
           <div className="card-body">
             <p className="card-text yellow">{counts.req}</p>
@@ -172,22 +177,52 @@ const Dashboard = ({ url }) => {
         </Link>
       </div>
 
-      <div className="card p-3 mt-3">
-        <h5 className="text-center">Bills Generated Per Day</h5>
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={data}>
-            <CartesianGrid stroke="#ccc" strokeDasharray="10 10" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Line
-              type="monotone"
-              dataKey="count"
-              stroke="red"
-              strokeWidth={2}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+      <div className="card p-4 mt-4">
+        <h4 className="mb-3">Bill Generation Trend (Last {days} Days)</h4>
+
+        <div className="mb-3">
+          <label className="form-label">Select Duration:</label>
+          <select
+            className="form-select w-auto"
+            value={days}
+            onChange={(e) => setDays(Number(e.target.value))}
+          >
+            <option value={7}>Last 7 Days</option>
+            <option value={15}>Last 15 Days</option>
+            <option value={30}>Last 30 Days</option>
+            {/* <option value={90}>Last 90 Days</option> */}
+          </select>
+        </div>
+
+        {loading ? (
+          <div className="text-center">
+            <div className="spinner-border" role="status"></div>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart
+              data={data}
+              margin={{ top: 20, right: 20, bottom: 50, left: 0 }}
+            >
+              <CartesianGrid stroke="#ccc" strokeDasharray="10 10" />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 12 }}
+                angle={-45}
+                textAnchor="end"
+                interval={0}
+              />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="count"
+                stroke="red"
+                strokeWidth={2}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </>
   );
