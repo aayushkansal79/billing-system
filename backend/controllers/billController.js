@@ -1,16 +1,51 @@
 import Bill from "../models/Bill.js";
+import Customer from "../models/Customer.js";
+import Transaction from "../models/Transaction.js";
 import StoreProduct from "../models/StoreProduct.js";
 import { getNextInvoiceNumber } from "../controllers/counterController.js";
 
 // Create a new bill
+// Create a new bill
 export const createBill = async (req, res) => {
     try {
-        const { state, customerName, mobileNo, gstNumber, discount, discountMethod, products, totalAmount } = req.body;
+        const {
+            customer = {},
+            products = [],
+            discount = 0,
+            discountMethod = "percentage",
+            totalAmount = 0,
+            paymentMethod = "",
+            paymentStatus = "",
+            usedCoins = 0
+        } = req.body;
+
+        const {
+            name: customerName = "N/A",
+            mobile: mobileNo = "",
+            gst: gstNumber = "",
+            state = ""
+        } = customer;
+
+        if (!req.store || !req.store._id) {
+            return res.status(400).json({ error: "Store information is missing." });
+        }
         const store = req.store._id;
+
+        if (!state) {
+            return res.status(400).json({ error: "State is required for billing." });
+        }
         
-        // First check if all product quantities are available
+        if (!paymentStatus) {
+            return res.status(400).json({ error: "Payment Status is required for billing." });
+        }
+
+        if (mobileNo && mobileNo.length !== 10) {
+            return res.status(400).json({ error: "Enter Correct Mobile No." });
+        }
+
+        // Check product stock
         for (const p of products) {
-            const storeProduct = await StoreProduct.findOne({ store: store, product: p.product });
+            const storeProduct = await StoreProduct.findOne({ store, product: p.product });
             if (!storeProduct || p.quantity > storeProduct.quantity) {
                 return res.status(400).json({
                     error: `Insufficient stock for product ${p.productName || p.product}`,
@@ -18,9 +53,35 @@ export const createBill = async (req, res) => {
             }
         }
 
-        const invoiceNumber = await getNextInvoiceNumber();
+        // Create or update customer
+        let customerDoc = null;
+        if (mobileNo) {
+            customerDoc = await Customer.findOne({ mobile: mobileNo });
+            if (!customerDoc) {
+                customerDoc = new Customer({
+                    mobile: mobileNo,
+                    name: customerName,
+                    gst: gstNumber,
+                    state
+                });
+            } else {
+                customerDoc.name = customerName || customerDoc.name;
+                customerDoc.gst = gstNumber || customerDoc.gst;
+                customerDoc.state = state || customerDoc.state;
+                customerDoc.updatedAt = new Date();
+            }
+        }
 
-        // Create the bill only after stock check passes
+        if (usedCoins > (customerDoc?.coins || 0)) {
+            return res.status(400).json({
+                error: `Used coins (${usedCoins}) cannot exceed customer's available coins (${customerDoc?.coins || 0}).`
+            });
+        }
+
+        const invoiceNumber = await getNextInvoiceNumber();
+        const roundedTotalAmount = Math.round(totalAmount);
+
+        // Create bill
         const newBill = new Bill({
             store,
             invoiceNumber,
@@ -31,24 +92,60 @@ export const createBill = async (req, res) => {
             discount,
             discountMethod,
             products,
-            totalAmount,
+            totalAmount: roundedTotalAmount,
+            paymentMethod,
+            paymentStatus
         });
-
         await newBill.save();
 
-        // Deduct quantities now
+        // Deduct stock quantities
         for (const p of products) {
-            const storeProduct = await StoreProduct.findOne({ store: store, product: p.product });
+            const storeProduct = await StoreProduct.findOne({ store, product: p.product });
             storeProduct.quantity = Math.max(0, storeProduct.quantity - p.quantity);
             await storeProduct.save();
         }
 
-        res.json(newBill);
+        // Calculate coins and payment
+        const generatedCoins = Math.floor(roundedTotalAmount / 100);
+        const paidAmount = paymentStatus === "paid" ? roundedTotalAmount : 0;
+
+        // Create transaction & update customer aggregates
+        if (customerDoc) {
+            const newTransaction = new Transaction({
+                customerId: customerDoc._id,
+                storeId: store,
+                invoiceNo: invoiceNumber,
+                billAmount: roundedTotalAmount,
+                paymentType: paymentMethod,
+                paidAmount,
+                generatedCoins,
+                usedCoins,
+            });
+            await newTransaction.save();
+
+            customerDoc.totalAmount += roundedTotalAmount;
+            customerDoc.paidAmount += paidAmount;
+            customerDoc.pendingAmount = customerDoc.totalAmount - customerDoc.paidAmount;
+            customerDoc.coins += generatedCoins;
+            customerDoc.coins -= usedCoins;
+            customerDoc.usedCoins += usedCoins;
+            customerDoc.updatedAt = new Date();
+            await customerDoc.save();
+        }
+
+        res.status(201).json({
+            message: "Bill created successfully with transaction and customer update.",
+            bill: newBill,
+            customer: customerDoc || null
+        });
+
     } catch (err) {
-        console.error("Error creating bill:", err);
-        res.status(500).json({ error: "Server Error" });
+        console.error("Error in createBill:", err);
+        res.status(500).json({ error: "Server error while creating bill." });
     }
 };
+
+
 
 
 //All bills

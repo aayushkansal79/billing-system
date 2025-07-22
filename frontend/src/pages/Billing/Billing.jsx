@@ -35,12 +35,52 @@ const Billing = ({ url }) => {
     customerName: "",
     mobileNo: "",
     gstNumber: "",
+    coins: 0,
+    pendingAmount: 0,
   });
 
   const [discountMethod, setDiscountMethod] = useState("percentage");
   const [discountValue, setDiscountValue] = useState("");
 
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("");
+  const [usedCoins, setUsedCoins] = useState(0);
+
   const token = localStorage.getItem("token");
+
+  const handleMobileChange = async (e) => {
+    const mobile = e.target.value.replace(/\D/g, "").slice(0, 10);
+    setCustomer((prev) => ({ ...prev, mobileNo: mobile }));
+
+    if (mobile.length === 10) {
+      try {
+        const { data } = await axios.get(
+          `${url}/api/customer/by-mobile/${mobile}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        setCustomer((prev) => ({
+          ...prev,
+          customerName: data.name || "",
+          gstNumber: data.gst || "",
+          state: data.state || prev.state || "",
+          coins: data.coins || 0,
+          pendingAmount: data.pendingAmount || 0,
+        }));
+
+        toast.success("Existing customer data loaded.");
+      } catch (err) {
+        if (err.response && err.response.status === 404) {
+          toast.info("Customer not found. Enter details manually.");
+        } else {
+          console.error(err);
+          toast.error("Error fetching customer data.");
+        }
+      }
+    }
+  };
 
   const fetchProductSuggestions = async (index, value) => {
     if (!value.trim()) {
@@ -248,10 +288,29 @@ const Billing = ({ url }) => {
         0
       );
 
+      if (usedCoins > (customer.coins || 0)) {
+        toast.error(
+          `Used coins (${usedCoins}) exceed available coins (${
+            customer.coins || 0
+          }).`
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Calculate paidAmount
+      const paidAmount = paymentStatus === "paid" ? totalAmount : 0;
+
+      // Calculate generated coins
+      const generatedCoins = Math.floor(totalAmount / 100);
+
       const billPayload = {
-        ...customer,
-        discount: parseFloat(discountValue),
-        discountMethod,
+        customer: {
+          name: customer.customerName,
+          mobile: customer.mobileNo,
+          gst: customer.gstNumber,
+          state: customer.state,
+        },
         products: filteredProducts.map((p) => ({
           product: p.product,
           productName: p.productName.trim(),
@@ -265,13 +324,20 @@ const Billing = ({ url }) => {
           finalPrice: parseFloat(p.finalPrice),
           total: parseFloat(p.total),
         })),
+        discount: parseFloat(discountValue),
+        discountMethod,
         totalAmount,
+        paymentMethod,
+        paymentStatus,
+        paidAmount,
+        usedCoins,
+        generatedCoins,
       };
 
       await axios.post(`${url}/api/bill`, billPayload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Bill generated successfully!");
+      toast.success("Bill and transaction logged successfully!");
 
       setProducts([
         {
@@ -294,6 +360,11 @@ const Billing = ({ url }) => {
         mobileNo: "",
         gstNumber: "",
       });
+      setDiscountMethod("percentage");
+      setDiscountValue("");
+      setPaymentMethod("");
+      setPaymentStatus("");
+      setUsedCoins(0);
     } catch (err) {
       console.error(err);
       toast.error("Error generating bill.");
@@ -313,7 +384,7 @@ const Billing = ({ url }) => {
           Costumer Details
         </div>
         <form className="row gy-3 gx-3" onSubmit={handleSubmit}>
-          <div className="col-md-3">
+          <div className="col-md-2">
             <label className="form-label">State*</label>
             <select
               className="form-select"
@@ -344,7 +415,7 @@ const Billing = ({ url }) => {
               ))}
             </select>
           </div>
-          <div className="col-md-3">
+          <div className="col-md-2">
             <label className="form-label">Costumer Name</label>
             <input
               type="text"
@@ -356,19 +427,18 @@ const Billing = ({ url }) => {
               }
             />
           </div>
-          <div className="col-md-3">
+          <div className="col-md-2">
             <label className="form-label">Mobile No.</label>
             <input
               type="text"
               className="form-control"
               placeholder="Enter Mobile No."
               value={customer.mobileNo}
-              onChange={(e) =>
-                setCustomer({ ...customer, mobileNo: e.target.value })
-              }
+              onChange={handleMobileChange}
             />
           </div>
-          <div className="col-md-3">
+
+          <div className="col-md-2">
             <label className="form-label">GST Number</label>
             <input
               type="text"
@@ -379,6 +449,55 @@ const Billing = ({ url }) => {
                 setCustomer({ ...customer, gstNumber: e.target.value })
               }
             />
+          </div>
+
+          <div className="col-md-2">
+            <label className="form-label">Payment Method</label>
+            <select
+              className="form-select"
+              name="payMethod"
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            >
+              <option value="">Choose...</option>
+              <option value="Cash">Cash</option>
+              <option value="UPI">UPI</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+          </div>
+
+          <div className="col-md-2">
+            <label className="form-label">Payment Status</label>
+            <div className="d-flex">
+              <div className="form-check mx-3">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="paymentStatus"
+                  id="paidRadio"
+                  value="paid"
+                  checked={paymentStatus === "paid"}
+                  onChange={(e) => setPaymentStatus(e.target.value)}
+                />
+                <label className="form-check-label" htmlFor="paidRadio">
+                  Paid
+                </label>
+              </div>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="paymentStatus"
+                  id="unpaidRadio"
+                  value="unpaid"
+                  checked={paymentStatus === "unpaid"}
+                  onChange={(e) => setPaymentStatus(e.target.value)}
+                />
+                <label className="form-check-label" htmlFor="unpaidRadio">
+                  Unpaid
+                </label>
+              </div>
+            </div>
           </div>
 
           <div
@@ -509,7 +628,7 @@ const Billing = ({ url }) => {
                 <input
                   type="number"
                   className="form-control"
-                  placeholder="Price"
+                  placeholder="GST %"
                   value={p.gstPercentage}
                   disabled
                 />
@@ -563,9 +682,10 @@ const Billing = ({ url }) => {
             </div>
           </div>
 
-          <div className="row align-items-center mt-3 gx-2">
-            <div className="col-md-2">
-              <label className="form-label">Discount Method</label>
+          <div className="row align-items-end mt-3 gx-2">
+            <div className="col-md-10"></div>
+            <div className="col-md-1">
+              <label className="form-label">Disc. In</label>
               <select
                 className="form-select"
                 value={discountMethod}
@@ -576,25 +696,53 @@ const Billing = ({ url }) => {
                 <option value="flat">Flat</option>
               </select>
             </div>
-            <div className="col-md-2">
-              <label className="form-label">Discount Value</label>
+            <div className="col-md-1">
+              <label className="form-label">Disc. Amt.</label>
               <input
                 type="number"
                 className="form-control"
                 value={discountValue}
-                onChange={(e) => setDiscountValue(e.target.value)}
+                onChange={(e) => setDiscountValue(e.target.value) || 0}
                 min={0}
               />
             </div>
-            <div className="col-md-5"></div>
+            {/* <div className="col-md-1">
+              <h6 className="text-danger fw-bold">Grand Total</h6>
+              </div> */}
+          </div>
+
+          <div className="row align-items-end mt-3 gx-2">
             <div className="col-md-2">
               <button type="submit" className="btn btn-success">
                 Submit
               </button>
             </div>
-            {/* <div className="col-md-1">
-              <h6 className="text-danger fw-bold">Grand Total</h6>
-            </div> */}
+            <div className="col-md-8"></div>
+            <div className="col-md-1">
+              <div className="d-flex bg-dark align-items-center p-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height="24px"
+                  viewBox="0 -960 960 960"
+                  width="24px"
+                  fill="gold"
+                  className="mx-2"
+                >
+                  <path d="M531-260h96v-3L462-438l1-3h10q54 0 89.5-33t43.5-77h40v-47h-41q-3-15-10.5-28.5T576-653h70v-47H314v57h156q26 0 42.5 13t22.5 32H314v47h222q-6 20-23 34.5T467-502H367v64l164 178ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
+                </svg>
+                <b className="m-0 text-white">{customer.coins}</b>
+              </div>
+            </div>
+            <div className="col-md-1">
+              <label className="form-label">Use Coins</label>
+              <input
+                type="number"
+                className="form-control"
+                value={usedCoins}
+                onChange={(e) => setUsedCoins(parseInt(e.target.value) || 0)}
+                min={0}
+              />
+            </div>
           </div>
         </form>
       </div>

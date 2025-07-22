@@ -6,11 +6,35 @@ import { AuthContext } from "../../context/AuthContext";
 import { assets } from "../../assets/assets";
 
 const InvoiceContent = React.forwardRef(function InvoiceContent(
-  { invoiceNumber, customerName, mobileNo, gstNumber, state, discount, discountMethod, products, date, user },
+  {
+    invoiceNumber,
+    customerName,
+    mobileNo,
+    gstNumber,
+    state,
+    discount,
+    discountMethod,
+    products,
+    paymentMethod,
+    date,
+    user,
+  },
   ref
 ) {
   const total = products.reduce(
     (sum, item) => sum + item.quantity * item.finalPrice,
+    0
+  );
+
+  const totalGST = products.reduce(
+    (sum, item) =>
+      sum +
+      item.quantity * ((item.priceAfterDiscount * item.gstPercentage) / 100),
+    0
+  );
+
+  const totalPriceAfterDiscount = products.reduce(
+    (sum, item) => sum + item.quantity * item.priceAfterDiscount,
     0
   );
 
@@ -19,9 +43,13 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
       <div className="d-flex justify-content-between align-items-center">
         {/* <h2>INVOICE</h2> */}
         <img src={assets.main_logo} width={85} alt="" />
-        <b>Invoice No.: {invoiceNumber}</b>
-        <p className="m-0">Date: {new Date(date).toLocaleDateString()}</p>
+        <div className="text-end">
+          <p className="m-0"><b>Invoice No.:</b> {invoiceNumber}</p>
+          <p className="m-0"><b>Date:</b> {new Date(date).toLocaleDateString()}</p>
+          <p><b>Payment Method:</b> {paymentMethod? paymentMethod : "Unpaid"}</p>
+        </div>
       </div>
+
       <br />
       <div className="d-flex justify-content-between">
         <div>
@@ -64,8 +92,10 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <th>Price</th>
             <th>Discount</th>
             <th>Price After Discount</th>
-            <th>GST</th>
-            <th>Final Price</th>
+            <th>GST %</th>
+            <th>GST Type</th>
+            <th>GST Amount</th>
+            <th>Per Item Price</th>
             <th>Total</th>
           </tr>
         </thead>
@@ -91,11 +121,47 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               <td>
                 {user.state === state ? (
                   <>
-                    CGST: {p.gstPercentage / 2}% <br />
-                    SGST: {p.gstPercentage / 2}%
+                    {p.gstPercentage / 2}% <br />
+                    {p.gstPercentage / 2}%
                   </>
                 ) : (
-                  <>IGST: {p.gstPercentage}%</>
+                  <>{p.gstPercentage}%</>
+                )}
+              </td>
+              <td>
+                {user.state === state ? (
+                  <>
+                    CGST
+                    <br />
+                    SGST
+                  </>
+                ) : (
+                  <>IGST</>
+                )}
+              </td>
+              <td>
+                {user.state === state ? (
+                  <>
+                    ₹
+                    {(
+                      (p.priceAfterDiscount * p.gstPercentage) /
+                      100 /
+                      2
+                    ).toFixed(2)}{" "}
+                    <br />₹
+                    {(
+                      (p.priceAfterDiscount * p.gstPercentage) /
+                      100 /
+                      2
+                    ).toFixed(2)}
+                  </>
+                ) : (
+                  <>
+                    ₹
+                    {((p.priceAfterDiscount * p.gstPercentage) / 100).toFixed(
+                      2
+                    )}
+                  </>
                 )}
               </td>
               <td>₹{p.finalPrice?.toFixed(2)}</td>
@@ -105,11 +171,20 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
         </tbody>
         <tfoot>
           <tr>
-            <td colSpan="8" className="text-end">
+            <td colSpan="5">
               <strong>Grand Total</strong>
             </td>
             <td>
-              <strong>₹{total.toFixed(2)}</strong>
+              <strong>₹{totalPriceAfterDiscount.toFixed(2)}</strong>
+            </td>
+            <td></td>
+            <td></td>
+            <td>
+              <strong>₹{totalGST.toFixed(2)}</strong>
+            </td>
+            <td></td>
+            <td>
+              <strong>₹{Math.round(total)}</strong>
             </td>
           </tr>
         </tfoot>
@@ -192,7 +267,7 @@ const AllBill = ({ url }) => {
         {bills.length === 0 ? (
           <p>No bills found.</p>
         ) : (
-          <div className="">         
+          <div className="">
             <table className="table align-middle table-striped  my-0">
               <thead className="table-info">
                 <tr>
@@ -201,6 +276,7 @@ const AllBill = ({ url }) => {
                   <th>Mobile No.</th>
                   {bills[0]?.store && <th>Store</th>}
                   <th>Total Amount (₹)</th>
+                  <th>Payment Status</th>
                   <th>Invoice</th>
                   <th>Date & Time</th>
                 </tr>
@@ -233,6 +309,18 @@ const AllBill = ({ url }) => {
                     <th className="text-danger">
                       {bill.totalAmount.toFixed(2)}
                       {/* <hr /> */}
+                    </th>
+                    <th className="text-danger">
+                      {bill.paymentStatus === "paid" && (
+                        <span className="badge bg-success">
+                          {bill.paymentStatus}
+                        </span>
+                      )}
+                      {bill.paymentStatus === "unpaid" && (
+                        <span className="badge bg-danger">
+                          {bill.paymentStatus}
+                        </span>
+                      )}
                     </th>
                     <td>
                       <button
@@ -283,6 +371,7 @@ const AllBill = ({ url }) => {
                     discount={selectedBill.discount}
                     discountMethod={selectedBill.discountMethod}
                     products={selectedBill.products}
+                    paymentMethod={selectedBill.paymentMethod}
                     date={selectedBill.date}
                     user={user}
                   />

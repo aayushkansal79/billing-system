@@ -9,6 +9,7 @@ import productRoutes from './routes/productRoutes.js';
 import storeRoutes from './routes/storeRoutes.js';
 import storeProductRoutes from './routes/storeProductRoutes.js';
 import billRoutes from './routes/billRoutes.js';
+import costomerRoutes from './routes/customerRoutes.js'
 import masterSearchRoutes from './routes/masterSearchRoutes.js';
 import productRequestRoutes from './routes/productRequestRoutes.js'
 
@@ -33,6 +34,7 @@ app.use("/api/product", productRoutes);
 app.use("/api/stores", storeRoutes);
 app.use("/api/store-products", storeProductRoutes);
 app.use("/api/bill", billRoutes);
+app.use("/api/customer", costomerRoutes);
 app.use("/api/master-search", masterSearchRoutes);
 app.use("/api/product-requests", productRequestRoutes);
 
