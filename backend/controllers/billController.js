@@ -5,7 +5,7 @@ import { getNextInvoiceNumber } from "../controllers/counterController.js";
 // Create a new bill
 export const createBill = async (req, res) => {
     try {
-        const { state, customerName, mobileNo, gstNumber, products, totalAmount } = req.body;
+        const { state, customerName, mobileNo, gstNumber, discount, discountMethod, products, totalAmount } = req.body;
         const store = req.store._id;
         
         // First check if all product quantities are available
@@ -28,6 +28,8 @@ export const createBill = async (req, res) => {
             customerName,
             mobileNo,
             gstNumber,
+            discount,
+            discountMethod,
             products,
             totalAmount,
         });

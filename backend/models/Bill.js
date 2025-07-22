@@ -7,6 +7,7 @@ const BillProductSchema = new mongoose.Schema({
     priceBeforeGst: { type: Number, required: true },
     discountMethod: { type: String, enum: ["percentage", "flat"] },
     discount: { type: Number },
+    discountAmt: { type: Number },
     priceAfterDiscount: { type: Number, required: true },
     gstPercentage: { type: Number, required: true },
     finalPrice: { type: Number, required: true }, // priceAfterDiscount + gst
@@ -16,7 +17,8 @@ const BillProductSchema = new mongoose.Schema({
 const BillSchema = new mongoose.Schema({
     store: { type: mongoose.Schema.Types.ObjectId, ref: "Store", required: true },
     invoiceNumber: { type: String, unique: true, required: true },
-
+    discount: { type: Number },
+    discountMethod: { type: String, enum: ["percentage", "flat"] },
     state: { type: String, required: true },
     customerName: { type: String },
     mobileNo: { type: String },

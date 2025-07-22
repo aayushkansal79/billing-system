@@ -18,6 +18,7 @@ const Billing = ({ url }) => {
       discountMethod: "percentage",
       discount: "",
       priceAfterDiscount: "",
+      discountAmt: "",
       gstPercentage: "",
       finalPrice: "",
       total: "",
@@ -32,6 +33,9 @@ const Billing = ({ url }) => {
     mobileNo: "",
     gstNumber: "",
   });
+
+  const [discountMethod, setDiscountMethod] = useState("percentage");
+  const [discountValue, setDiscountValue] = useState("");
 
   const token = localStorage.getItem("token");
 
@@ -52,6 +56,40 @@ const Billing = ({ url }) => {
     }
   };
 
+  // Recalculate prices whenever discount changes
+  useEffect(() => {
+    const updated = products.map((p) => calculatePrices(p));
+    setProducts(updated);
+  }, [discountMethod, discountValue]);
+
+  const calculatePrices = (p) => {
+    const priceBeforeGst = parseFloat(p.priceBeforeGst) || 0;
+    const gstPercentage = parseFloat(p.gstPercentage) || 0;
+    const quantity = parseFloat(p.quantity) || 0;
+    const discount = parseFloat(discountValue) || 0;
+    let discountAmt = 0;
+
+    let priceAfterDiscount = priceBeforeGst;
+    if (discountMethod === "percentage") {
+      priceAfterDiscount = priceBeforeGst - (priceBeforeGst * discount) / 100;
+      discountAmt = (priceBeforeGst * discount) / 100;
+    } else if (discountMethod === "flat") {
+      priceAfterDiscount = priceBeforeGst - discount;
+      discountAmt = discount;
+    }
+
+    const finalPrice = priceAfterDiscount * (1 + gstPercentage / 100);
+    const total = finalPrice * quantity;
+
+    return {
+      ...p,
+      discountAmt: discountAmt.toFixed(2),
+      priceAfterDiscount: priceAfterDiscount.toFixed(2),
+      finalPrice: finalPrice.toFixed(2),
+      total: total.toFixed(2),
+    };
+  };
+
   const handleProductSelect = (index, sp) => {
     const product = sp.product;
     const newProducts = [...products];
@@ -61,8 +99,6 @@ const Billing = ({ url }) => {
       productName: product.name,
       priceBeforeGst: product.priceBeforeGst,
       gstPercentage: product.gstPercentage,
-      discountMethod: "percentage",
-      discount: "",
       priceAfterDiscount: "",
       finalPrice: "",
       total: "",
@@ -103,20 +139,27 @@ const Billing = ({ url }) => {
 
     const p = newProducts[index];
     const priceBeforeGst = parseFloat(p.priceBeforeGst) || 0;
-    const discount = parseFloat(p.discount) || 0;
+    // const discount = parseFloat(p.discount) || 0;
+    const discount = parseFloat(discountValue) || 0;
     const gstPercentage = parseFloat(p.gstPercentage) || 0;
     const quantity = parseFloat(p.quantity) || 0;
+    let discountAmt = 0;
 
     let priceAfterDiscount = priceBeforeGst;
-    if (p.discountMethod === "percentage") {
+    // if (p.discountMethod === "percentage") {
+    if (discountMethod === "percentage") {
       priceAfterDiscount = priceBeforeGst - (priceBeforeGst * discount) / 100;
-    } else if (p.discountMethod === "flat") {
+      discountAmt = (priceBeforeGst * discount) / 100;
+      // } else if (p.discountMethod === "flat") {
+    } else if (discountMethod === "flat") {
       priceAfterDiscount = priceBeforeGst - discount;
+      discountAmt = discount;
     }
 
     const finalPrice = priceAfterDiscount * (1 + gstPercentage / 100);
     const total = finalPrice * quantity;
 
+    newProducts[index].discountAmt = discountAmt.toFixed(2);
     newProducts[index].priceAfterDiscount = priceAfterDiscount.toFixed(2);
     newProducts[index].finalPrice = finalPrice.toFixed(2);
     newProducts[index].total = total.toFixed(2);
@@ -151,8 +194,8 @@ const Billing = ({ url }) => {
           productName: "",
           quantity: "",
           priceBeforeGst: "",
-          discountMethod: "percentage",
-          discount: "",
+          discountMethod: p.discountMethod,
+          discount: p.discount,
           priceAfterDiscount: "",
           gstPercentage: "",
           finalPrice: "",
@@ -204,6 +247,8 @@ const Billing = ({ url }) => {
 
       const billPayload = {
         ...customer,
+        discount: parseFloat(discountValue),
+        discountMethod,
         products: filteredProducts.map((p) => ({
           product: p.product,
           productName: p.productName.trim(),
@@ -211,6 +256,7 @@ const Billing = ({ url }) => {
           priceBeforeGst: parseFloat(p.priceBeforeGst),
           discountMethod: p.discountMethod,
           discount: parseFloat(p.discount),
+          discountAmt: parseFloat(p.discountAmt),
           priceAfterDiscount: parseFloat(p.priceAfterDiscount),
           gstPercentage: parseFloat(p.gstPercentage),
           finalPrice: parseFloat(p.finalPrice),
@@ -255,7 +301,12 @@ const Billing = ({ url }) => {
     <>
       <p className="bread">Billing</p>
       <div className="billing text-bg-light mt-3 rounded">
-        <div className="head p-2 mb-3" style={{background: '#FBEBD3', color: '#6D0616'}}>Costumer Details</div>
+        <div
+          className="head p-2 mb-3"
+          style={{ background: "#FBEBD3", color: "#6D0616" }}
+        >
+          Costumer Details
+        </div>
         <form className="row gy-3 gx-3" onSubmit={handleSubmit}>
           <div className="col-md-3">
             <label className="form-label">State*</label>
@@ -325,7 +376,12 @@ const Billing = ({ url }) => {
             />
           </div>
 
-          <div className="head p-2 mb-2" style={{background: '#FBEBD3', color: '#6D0616'}}>Product Details</div>
+          <div
+            className="head p-2 mb-2"
+            style={{ background: "#FBEBD3", color: "#6D0616" }}
+          >
+            Product Details
+          </div>
 
           <div className="col-md-2">
             <label className="form-label">Product Name*</label>
@@ -336,14 +392,17 @@ const Billing = ({ url }) => {
           <div className="col-md-2">
             <label className="form-label">Price (in Rs.)*</label>
           </div>
-          <div className="col-md-1">
+          {/* <div className="col-md-1">
             <label className="form-label">Discount By</label>
           </div>
           <div className="col-md-1">
             <label className="form-label">Discount</label>
+          </div> */}
+          <div className="col-md-2">
+            <label className="form-label">Price After Discount*</label>
           </div>
           <div className="col-md-1">
-            <label className="form-label">Price After Discount*</label>
+            <label className="form-label">GST %</label>
           </div>
           <div className="col-md-1">
             <label className="form-label">Final Price*</label>
@@ -353,7 +412,10 @@ const Billing = ({ url }) => {
           </div>
           {products.map((p, index) => (
             <div key={index} className="row g-1 border-bottom mt-0 pb-2">
-              <div className="col-md-2 mt-1 position-relative" ref={(el) => (productRefs.current[index] = el)}>
+              <div
+                className="col-md-2 mt-1 position-relative"
+                ref={(el) => (productRefs.current[index] = el)}
+              >
                 <input
                   type="text"
                   className="form-control"
@@ -404,8 +466,7 @@ const Billing = ({ url }) => {
                   disabled
                 />
               </div>
-
-              <div className="col-md-1 mt-1">
+              {/* <div className="col-md-1 mt-1">
                 <select
                   className="form-select"
                   name="discOpt"
@@ -429,13 +490,22 @@ const Billing = ({ url }) => {
                   }
                   min={0}
                 />
+              </div> */}
+              <div className="col-md-2 mt-1">
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="Price"
+                  value={p.priceAfterDiscount}
+                  disabled
+                />
               </div>
               <div className="col-md-1 mt-1">
                 <input
                   type="number"
                   className="form-control"
                   placeholder="Price"
-                  value={p.priceAfterDiscount}
+                  value={p.gstPercentage}
                   disabled
                 />
               </div>
@@ -487,10 +557,39 @@ const Billing = ({ url }) => {
               <h6 className="text-danger fw-bold">₹ {grandTotal}</h6>
             </div>
           </div>
-          <div className="col-12">
-            <button type="submit" className="btn btn-success">
-              Submit
-            </button>
+
+          <div className="row align-items-center mt-3 gx-2">
+            <div className="col-md-2">
+              <label className="form-label">Discount Method</label>
+              <select
+                className="form-select"
+                value={discountMethod}
+                onChange={(e) => setDiscountMethod(e.target.value)}
+              >
+                <option value="">--Choose--</option>
+                <option value="percentage">%</option>
+                <option value="flat">Flat</option>
+              </select>
+            </div>
+            <div className="col-md-2">
+              <label className="form-label">Discount Value</label>
+              <input
+                type="number"
+                className="form-control"
+                value={discountValue}
+                onChange={(e) => setDiscountValue(e.target.value)}
+                min={0}
+              />
+            </div>
+            <div className="col-md-5"></div>
+            <div className="col-md-2">
+              <button type="submit" className="btn btn-success">
+                Submit
+              </button>
+            </div>
+            {/* <div className="col-md-1">
+              <h6 className="text-danger fw-bold">Grand Total</h6>
+            </div> */}
           </div>
         </form>
       </div>

@@ -3,9 +3,10 @@ import axios from "axios";
 import "./AllBill.css";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../context/AuthContext";
+import { assets } from "../../assets/assets";
 
 const InvoiceContent = React.forwardRef(function InvoiceContent(
-  { customerName, mobileNo, gstNumber, state, products, date, user },
+  { invoiceNumber, customerName, mobileNo, gstNumber, state, discount, discountMethod, products, date, user },
   ref
 ) {
   const total = products.reduce(
@@ -16,9 +17,12 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
   return (
     <div ref={ref} style={{ padding: "20px" }}>
       <div className="d-flex justify-content-between align-items-center">
-        <h2>INVOICE</h2>
+        {/* <h2>INVOICE</h2> */}
+        <img src={assets.main_logo} width={85} alt="" />
+        <b>Invoice No.: {invoiceNumber}</b>
         <p className="m-0">Date: {new Date(date).toLocaleDateString()}</p>
       </div>
+      <br />
       <div className="d-flex justify-content-between">
         <div>
           <b>Store Details</b>
@@ -72,12 +76,18 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               <td>{p.productName}</td>
               <td>{p.quantity}</td>
               <td>₹{p.priceBeforeGst}</td>
-              <td>
+              {/* <td>
                 {p.discountMethod === "percentage"
                   ? `${p.discount || "0"} %`
                   : `₹ ${p.discount}`}
-              </td>
-              <td>₹{p.priceAfterDiscount.toFixed(2)}</td>
+              </td> */}
+              {/* <td>
+                {discountMethod === "percentage"
+                  ? `${discount || "0"} %`
+                  : `₹ ${discount}`}
+              </td> */}
+              <td>₹{p.discountAmt?.toFixed(2) || 0}</td>
+              <td>₹{p.priceAfterDiscount?.toFixed(2)}</td>
               <td>
                 {user.state === state ? (
                   <>
@@ -88,8 +98,8 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
                   <>IGST: {p.gstPercentage}%</>
                 )}
               </td>
-              <td>₹{p.finalPrice.toFixed(2)}</td>
-              <td>₹{(p.quantity * p.finalPrice).toFixed(2)}</td>
+              <td>₹{p.finalPrice?.toFixed(2)}</td>
+              <td>₹{(p.quantity * p.finalPrice)?.toFixed(2)}</td>
             </tr>
           ))}
         </tbody>
@@ -265,10 +275,13 @@ const AllBill = ({ url }) => {
                 <div className="modal-body">
                   <InvoiceContent
                     ref={componentRef}
+                    invoiceNumber={selectedBill.invoiceNumber}
                     customerName={selectedBill.customerName}
                     mobileNo={selectedBill.mobileNo}
                     gstNumber={selectedBill.gstNumber}
                     state={selectedBill.state}
+                    discount={selectedBill.discount}
+                    discountMethod={selectedBill.discountMethod}
                     products={selectedBill.products}
                     date={selectedBill.date}
                     user={user}
