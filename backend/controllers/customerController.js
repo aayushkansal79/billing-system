@@ -28,3 +28,13 @@ export const getCustomerByMobile = async (req, res) => {
         res.status(500).json({ error: "Server error while fetching customer." });
     }
 };
+
+export const getAllCustomers = async (req, res) => {
+    try {
+        const customers = await Customer.find(); 
+        res.status(200).json(customers);
+    } catch (err) {
+        console.error("Error fetching customers:", err);
+        res.status(500).json({ error: "Server error while fetching customers." });
+    }
+};

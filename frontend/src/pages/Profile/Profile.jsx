@@ -88,7 +88,7 @@ const ImageUploader = () => {
           )}
         </div>
 
-        <div className="col-md-6">
+        <div className="col-md-3">
           <label className="form-label">Website Title*</label>
           <input
             type="text"
@@ -98,12 +98,66 @@ const ImageUploader = () => {
           />
         </div>
 
-        <div className="col-md-6">
+        <div className="col-md-3">
           <label className="form-label">Website Address*</label>
           <input
             type="text"
             className="form-control"
             placeholder="Enter Website Address"
+            required
+          />
+        </div>
+        <div className="col-md-3">
+          <label className="form-label">Company Name*</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter Company Name"
+            required
+          />
+        </div>
+        <div className="col-md-3">
+          <label className="form-label">Company Address*</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter Company Address"
+            required
+          />
+        </div>
+        <div className="col-md-3">
+          <label className="form-label">Company State*</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter Company State"
+            required
+          />
+        </div>
+        <div className="col-md-3">
+          <label className="form-label">Company Contact*</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter Company Contact"
+            required
+          />
+        </div>
+        <div className="col-md-3">
+          <label className="form-label">Company GST*</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter Company GST"
+            required
+          />
+        </div>
+        <div className="col-md-3">
+          <label className="form-label">Extra Field</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter Extra Data"
             required
           />
         </div>

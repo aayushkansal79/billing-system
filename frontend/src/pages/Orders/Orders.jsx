@@ -15,10 +15,15 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
 
   return (
     <div ref={ref} style={{ padding: "20px" }}>
+      <div className="d-flex justify-content-between">
       <h2>INVOICE</h2>
+      <p>
+          <b>Date:</b> {new Date(date).toLocaleDateString()}
+      </p>
+      </div>
       <div className="d-flex justify-content-between">
         <div>
-          <b>Comapny Details:</b>
+          <b>Seller Details:</b>
           <br />
           <strong>{company?.name}</strong>
           <br />
@@ -30,7 +35,19 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
           <br />
           GST: {company?.gstNumber}
         </div>
-        <div>Date: {new Date(date).toLocaleDateString()}</div>
+        <div className="text-end">
+          <b>Purchaser Details:</b>
+          <br />
+          <strong>Ajjawam</strong>
+          <br />
+          G-123
+          <br />
+          Gujarat
+          <br />
+          Contact: 9898989898
+          <br />
+          GST: AJJ123
+        </div>
       </div>
 
       <table className="table table-bordered mt-3">

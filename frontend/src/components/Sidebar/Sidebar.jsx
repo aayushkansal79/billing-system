@@ -18,7 +18,6 @@ const Sidebar = ({ sidebarOpen }) => {
     return;
   }
 
-
   return (
     <aside className={sidebarOpen ? "sidebar" : "sidebar sidebar-active"}>
       <Link
@@ -86,8 +85,10 @@ const Sidebar = ({ sidebarOpen }) => {
               <>
                 <NavLink
                   to="/purchase"
-                  className={`side-item menu-item ${sidebarOpen ? "" : "side-item-active"}`}
-                  style={{paddingLeft: "55px"}}
+                  className={`side-item menu-item ${
+                    sidebarOpen ? "" : "side-item-active"
+                  }`}
+                  style={{ paddingLeft: "55px" }}
                 >
                   {/* <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -107,7 +108,7 @@ const Sidebar = ({ sidebarOpen }) => {
                   className={
                     sidebarOpen ? "side-item" : "side-item side-item-active"
                   }
-                  style={{paddingLeft: "55px"}}
+                  style={{ paddingLeft: "55px" }}
                 >
                   {/* <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -121,13 +122,13 @@ const Sidebar = ({ sidebarOpen }) => {
                   {/* <div class="vr"></div> */}
                   <p>Purchase List</p>
                 </NavLink>
-            
+
                 <NavLink
                   to="/vendors"
                   className={
                     sidebarOpen ? "side-item" : "side-item side-item-active"
                   }
-                  style={{paddingLeft: "55px"}}
+                  style={{ paddingLeft: "55px" }}
                 >
                   {/* <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -143,7 +144,6 @@ const Sidebar = ({ sidebarOpen }) => {
                 </NavLink>
               </>
             )}
-
           </>
         ) : (
           ""
@@ -197,7 +197,7 @@ const Sidebar = ({ sidebarOpen }) => {
                   className={
                     sidebarOpen ? "side-item" : "side-item side-item-active"
                   }
-                  style={{paddingLeft: "55px"}}
+                  style={{ paddingLeft: "55px" }}
                 >
                   {/* <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -211,13 +211,13 @@ const Sidebar = ({ sidebarOpen }) => {
                   {/* <div class="vr"></div> */}
                   <p>Add Stores</p>
                 </NavLink>
-                
+
                 <NavLink
                   to="/all-stores"
                   className={
                     sidebarOpen ? "side-item" : "side-item side-item-active"
                   }
-                  style={{paddingLeft: "55px"}}
+                  style={{ paddingLeft: "55px" }}
                 >
                   {/* <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -274,6 +274,23 @@ const Sidebar = ({ sidebarOpen }) => {
           </svg>
           {/* <div class="vr"></div> */}
           <p>All Bills</p>
+        </NavLink>
+
+        <NavLink
+          to="/all-customer"
+          className={sidebarOpen ? "side-item" : "side-item side-item-active"}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            height="24px"
+            viewBox="0 -960 960 960"
+            width="24px"
+            fill="#000000"
+          >
+            <path d="M640-400q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35ZM400-160v-76q0-21 10-40t28-30q45-27 95.5-40.5T640-360q56 0 106.5 13.5T842-306q18 11 28 30t10 40v76H400Zm86-80h308q-35-20-74-30t-80-10q-41 0-80 10t-74 30Zm154-240q17 0 28.5-11.5T680-520q0-17-11.5-28.5T640-560q-17 0-28.5 11.5T600-520q0 17 11.5 28.5T640-480Zm0-40Zm0 280ZM120-400v-80h320v80H120Zm0-320v-80h480v80H120Zm324 160H120v-80h360q-14 17-22.5 37T444-560Z" />
+          </svg>
+          {/* <div class="vr"></div> */}
+          <p>All Customers</p>
         </NavLink>
 
         <NavLink

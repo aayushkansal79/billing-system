@@ -5,7 +5,6 @@ import StoreProduct from "../models/StoreProduct.js";
 import { getNextInvoiceNumber } from "../controllers/counterController.js";
 
 // Create a new bill
-// Create a new bill
 export const createBill = async (req, res) => {
     try {
         const {

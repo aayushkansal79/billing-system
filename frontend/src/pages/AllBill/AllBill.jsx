@@ -8,6 +8,7 @@ import { assets } from "../../assets/assets";
 const InvoiceContent = React.forwardRef(function InvoiceContent(
   {
     invoiceNumber,
+    store,
     customerName,
     mobileNo,
     gstNumber,
@@ -16,15 +17,16 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
     discountMethod,
     products,
     paymentMethod,
+    totalAmount,
     date,
     user,
   },
   ref
 ) {
-  const total = products.reduce(
-    (sum, item) => sum + item.quantity * item.finalPrice,
-    0
-  );
+  // const total = products.reduce(
+  //   (sum, item) => sum + item.quantity * item.finalPrice,
+  //   0
+  // );
 
   const totalGST = products.reduce(
     (sum, item) =>
@@ -53,19 +55,18 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
       <br />
       <div className="d-flex justify-content-between">
         <div>
-          <b>Store Details</b>
+          <b>Store Details:</b>
           <br />
-          {user.address}
+          {store.address},
           <br />
-          {user.city}
+          {store.city},
           <br />
-          {user.State}
-          {user.zipCode}
+          {store.state} - {store.zipCode}
           <br />
-          {user.contactNumber}
+          {store.contactNumber}
         </div>
-        <div>
-          <b>Customer Details</b>
+        <div className="text-end">
+          <b>Customer Details:</b>
           <br />
           {customerName ? (
             <>
@@ -77,7 +78,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
           )}
           {state}
           <br />
-          Contact: {mobileNo || "N/A"}
+          {mobileNo || "N/A"}
           <br />
           GST: {gstNumber || "N/A"}
         </div>
@@ -119,7 +120,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               <td>₹{p.discountAmt?.toFixed(2) || 0}</td>
               <td>₹{p.priceAfterDiscount?.toFixed(2)}</td>
               <td>
-                {user.state === state ? (
+                {store.state === state ? (
                   <>
                     {p.gstPercentage / 2}% <br />
                     {p.gstPercentage / 2}%
@@ -129,7 +130,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
                 )}
               </td>
               <td>
-                {user.state === state ? (
+                {store.state === state ? (
                   <>
                     CGST
                     <br />
@@ -140,7 +141,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
                 )}
               </td>
               <td>
-                {user.state === state ? (
+                {store.state === state ? (
                   <>
                     ₹
                     {(
@@ -177,14 +178,13 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <td>
               <strong>₹{totalPriceAfterDiscount.toFixed(2)}</strong>
             </td>
-            <td></td>
-            <td></td>
+            <td colSpan="2"></td>
             <td>
               <strong>₹{totalGST.toFixed(2)}</strong>
             </td>
             <td></td>
             <td>
-              <strong>₹{Math.round(total)}</strong>
+              <strong>₹{totalAmount}</strong>
             </td>
           </tr>
         </tfoot>
@@ -363,6 +363,7 @@ const AllBill = ({ url }) => {
                 <div className="modal-body">
                   <InvoiceContent
                     ref={componentRef}
+                    store={selectedBill.store}
                     invoiceNumber={selectedBill.invoiceNumber}
                     customerName={selectedBill.customerName}
                     mobileNo={selectedBill.mobileNo}
@@ -372,6 +373,7 @@ const AllBill = ({ url }) => {
                     discountMethod={selectedBill.discountMethod}
                     products={selectedBill.products}
                     paymentMethod={selectedBill.paymentMethod}
+                    totalAmount={selectedBill.totalAmount}
                     date={selectedBill.date}
                     user={user}
                   />

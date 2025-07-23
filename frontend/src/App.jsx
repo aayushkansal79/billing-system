@@ -13,6 +13,8 @@ import AddStore from "./pages/AddStore/AddStore";
 import AllStores from "./pages/AllStores/AllStores";
 import Billing from "./pages/Billing/Billing";
 import AllBill from "./pages/AllBill/AllBill";
+import Customer from "./pages/Customer/Customer";
+import CustomerTransactions from "./pages/CustomerTransactions/CustomerTransactions";
 import MasterSearch from "./pages/MasterSearch/MasterSearch";
 import Requests from "./pages/Requests/Requests";
 import Profile from "./pages/Profile/Profile";
@@ -60,6 +62,8 @@ function App() {
               <Route path="/all-stores" element={<PrivateRoute roles={["admin"]}> <AllStores url={url} /> </PrivateRoute>} />
               <Route path="/billing" element={<PrivateRoute roles={["admin", "store"]}> <Billing url={url} /> </PrivateRoute>} />
               <Route path="/all-bill" element={<PrivateRoute roles={["admin", "store"]}> <AllBill url={url} /> </PrivateRoute>} />
+              <Route path="/all-customer" element={<PrivateRoute roles={["admin", "store"]}> <Customer url={url} /> </PrivateRoute>} />
+              <Route path="/customer/:customerId/transactions" element={<PrivateRoute roles={["admin", "store"]}> <CustomerTransactions url={url} /> </PrivateRoute>} />
               <Route path="/mastersearch" element={<PrivateRoute roles={["admin", "store"]}> <MasterSearch url={url} /> </PrivateRoute>} />
               <Route path="/requests" element={<PrivateRoute roles={["admin"]}> <Requests url={url} /> </PrivateRoute>} />
               <Route path="/requests-sent" element={<PrivateRoute roles={["store"]}> <RequestsSent url={url} /> </PrivateRoute>} />
