@@ -92,7 +92,7 @@ const AllStores = ({ url }) => {
   return (
     <>
       <p className="bread">All Stores</p>
-      <div className="all-stores rounded">
+      <div className="all-stores rounded mb-3">
         <table className="table align-middle table-striped my-0">
           <thead className="table-danger">
             <tr>

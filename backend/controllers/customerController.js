@@ -15,6 +15,7 @@ export const getCustomerByMobile = async (req, res) => {
         }
 
         res.json({
+            _id: customer._id,
             name: customer.name,
             gst: customer.gst,
             state: customer.state,

@@ -17,7 +17,9 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
     discountMethod,
     products,
     paymentMethod,
+    paymentStatus,
     totalAmount,
+    usedCoins,
     date,
     user,
   },
@@ -48,7 +50,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
         <div className="text-end">
           <p className="m-0"><b>Invoice No.:</b> {invoiceNumber}</p>
           <p className="m-0"><b>Date:</b> {new Date(date).toLocaleDateString()}</p>
-          <p><b>Payment Method:</b> {paymentMethod? paymentMethod : "Unpaid"}</p>
+          <p><b>Payment Method:</b> {paymentStatus === "paid" ? paymentMethod || "--" : "Unpaid"}</p>
         </div>
       </div>
 
@@ -107,16 +109,6 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               <td>{p.productName}</td>
               <td>{p.quantity}</td>
               <td>₹{p.priceBeforeGst}</td>
-              {/* <td>
-                {p.discountMethod === "percentage"
-                  ? `${p.discount || "0"} %`
-                  : `₹ ${p.discount}`}
-              </td> */}
-              {/* <td>
-                {discountMethod === "percentage"
-                  ? `${discount || "0"} %`
-                  : `₹ ${discount}`}
-              </td> */}
               <td>₹{p.discountAmt?.toFixed(2) || 0}</td>
               <td>₹{p.priceAfterDiscount?.toFixed(2)}</td>
               <td>
@@ -173,7 +165,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
         <tfoot>
           <tr>
             <td colSpan="5">
-              <strong>Grand Total</strong>
+              <strong>Total</strong>
             </td>
             <td>
               <strong>₹{totalPriceAfterDiscount.toFixed(2)}</strong>
@@ -185,6 +177,22 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <td></td>
             <td>
               <strong>₹{totalAmount}</strong>
+            </td>
+          </tr>
+          <tr>
+            <td colSpan="10">
+              <strong>Coins Used</strong>
+            </td>
+            <td>
+              <strong>₹ -{usedCoins || 0}</strong>
+            </td>
+          </tr>
+          <tr>
+            <td colSpan="10">
+              <strong>Grand Total</strong>
+            </td>
+            <td>
+              <strong>₹ {totalAmount - (usedCoins || 0)}</strong>
             </td>
           </tr>
         </tfoot>
@@ -263,7 +271,7 @@ const AllBill = ({ url }) => {
     <>
       <p className="bread">All Bills</p>
       {/* <div className="container mt-4"> */}
-      <div className="allbill rounded">
+      <div className="allbill rounded  mb-3">
         {bills.length === 0 ? (
           <p>No bills found.</p>
         ) : (
@@ -307,7 +315,7 @@ const AllBill = ({ url }) => {
                       </h5>
                     </td>
                     <th className="text-danger">
-                      {bill.totalAmount.toFixed(2)}
+                      ₹ {bill.totalAmount.toFixed(2)}
                       {/* <hr /> */}
                     </th>
                     <th className="text-danger">
@@ -373,7 +381,9 @@ const AllBill = ({ url }) => {
                     discountMethod={selectedBill.discountMethod}
                     products={selectedBill.products}
                     paymentMethod={selectedBill.paymentMethod}
+                    paymentStatus={selectedBill.paymentStatus}
                     totalAmount={selectedBill.totalAmount}
+                    usedCoins={selectedBill.usedCoins}
                     date={selectedBill.date}
                     user={user}
                   />

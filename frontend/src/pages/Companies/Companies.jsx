@@ -62,7 +62,7 @@ const Companies = ({ url }) => {
   return (
     <>
       <p className="bread">Vendors</p>
-      <div className="company row rounded">
+      <div className="company row rounded mb-3">
         <table className="table align-middle table-striped  my-0">
           <thead className="table-danger">
             <tr>

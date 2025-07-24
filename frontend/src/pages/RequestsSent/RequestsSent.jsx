@@ -30,7 +30,7 @@ const RequestsSent = ({ url }) => {
   return (
     <>
       <p className="bread">Requests Sent</p>
-      <div className="requestsSent rounded">
+      <div className="requestsSent rounded mb-3">
         <table className="table align-middle table-striped">
           <thead className="table-warning">
             <tr>

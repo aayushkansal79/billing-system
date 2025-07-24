@@ -81,7 +81,7 @@ const RequestsRecieved = ({ url }) => {
   return (
     <>
       <p className="bread">Requests Recieved</p>
-      <div className="requestsRecieved rounded">
+      <div className="requestsRecieved rounded mb-3">
         <table className="table align-middle table-striped">
           <thead className="table-warning">
             <tr>

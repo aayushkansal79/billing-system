@@ -60,7 +60,7 @@ function App() {
               <Route path="/products" element={<PrivateRoute roles={["admin", "store"]}> <Products url={url} /> </PrivateRoute>} />
               <Route path="/add-store" element={<PrivateRoute roles={["admin"]}> <AddStore url={url} /> </PrivateRoute>} />
               <Route path="/all-stores" element={<PrivateRoute roles={["admin"]}> <AllStores url={url} /> </PrivateRoute>} />
-              <Route path="/billing" element={<PrivateRoute roles={["admin", "store"]}> <Billing url={url} /> </PrivateRoute>} />
+              <Route path="/billing" element={<PrivateRoute roles={["admin", "store"]}> <Billing url={url} setSidebarOpen={setSidebarOpen} /> </PrivateRoute>} />
               <Route path="/all-bill" element={<PrivateRoute roles={["admin", "store"]}> <AllBill url={url} /> </PrivateRoute>} />
               <Route path="/all-customer" element={<PrivateRoute roles={["admin", "store"]}> <Customer url={url} /> </PrivateRoute>} />
               <Route path="/customer/:customerId/transactions" element={<PrivateRoute roles={["admin", "store"]}> <CustomerTransactions url={url} /> </PrivateRoute>} />

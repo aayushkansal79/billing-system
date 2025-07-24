@@ -188,7 +188,7 @@ const MasterSearch = ({ url }) => {
       </div>
 
       {showRequest && selectedProduct && (
-        <div className="modal-m modal d-block bg-dark bg-opacity-50">
+        <div className="modal-m modal d-block bg-dark bg-opacity-50 mb-3">
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">

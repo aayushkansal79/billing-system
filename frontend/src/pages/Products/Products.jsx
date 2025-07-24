@@ -247,7 +247,7 @@ const Products = ({ url }) => {
   return (
     <>
       <p className="bread">Products</p>
-      <div className="products rounded">
+      <div className="products rounded mb-3">
         <table className="table align-middle table-striped my-0">
           <thead className="table-info">
             <tr>

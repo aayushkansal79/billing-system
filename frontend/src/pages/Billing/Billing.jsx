@@ -5,10 +5,12 @@ import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import Loader from "../../components/Loader/Loader";
 
-const Billing = ({ url }) => {
+const Billing = ({ url, setSidebarOpen }) => {
   useEffect(() => {
     document.title = "Billing | Ajjawam";
   }, []);
+
+  // setSidebarOpen(false);
 
   const [loading, setLoading] = useState(false);
 
@@ -31,6 +33,7 @@ const Billing = ({ url }) => {
   const [selectedProducts, setSelectedProducts] = useState([null]);
 
   const [customer, setCustomer] = useState({
+    customerId: "",
     state: "",
     customerName: "",
     mobileNo: "",
@@ -39,12 +42,17 @@ const Billing = ({ url }) => {
     pendingAmount: 0,
   });
 
+  const [transactions, setTransactions] = useState([]);
+
   const [discountMethod, setDiscountMethod] = useState("percentage");
   const [discountValue, setDiscountValue] = useState("");
 
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("");
   const [usedCoins, setUsedCoins] = useState(0);
+
+  const [selectedTransactions, setSelectedTransactions] = useState([]);
+  const [selectedTransactionsTotal, setSelectedTransactionsTotal] = useState(0);
 
   const token = localStorage.getItem("token");
 
@@ -56,13 +64,14 @@ const Billing = ({ url }) => {
       try {
         const { data } = await axios.get(
           `${url}/api/customer/by-mobile/${mobile}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
+
+        const customerId = data._id || "";
 
         setCustomer((prev) => ({
           ...prev,
+          customerId,
           customerName: data.name || "",
           gstNumber: data.gst || "",
           state: data.state || prev.state || "",
@@ -70,15 +79,28 @@ const Billing = ({ url }) => {
           pendingAmount: data.pendingAmount || 0,
         }));
 
+        if (customerId) {
+          const res = await axios.get(
+            `${url}/api/transactions/customer/unpaid/${customerId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setTransactions(res.data.transactions || []);
+        } else {
+          setTransactions([]);
+        }
+
         toast.success("Existing customer data loaded.");
       } catch (err) {
-        if (err.response && err.response.status === 404) {
+        if (err.response?.status === 404) {
           toast.info("Customer not found. Enter details manually.");
         } else {
           console.error(err);
           toast.error("Error fetching customer data.");
         }
+        setTransactions([]);
       }
+    } else {
+      setTransactions([]);
     }
   };
 
@@ -268,6 +290,24 @@ const Billing = ({ url }) => {
     });
   };
 
+  const handleTransactionSelection = (
+    transactionId,
+    unpaidAmount,
+    isChecked
+  ) => {
+    setSelectedTransactions((prev) => {
+      const updated = isChecked
+        ? [...prev, transactionId]
+        : prev.filter((id) => id !== transactionId);
+
+      return updated;
+    });
+
+    setSelectedTransactionsTotal((prevTotal) => {
+      return isChecked ? prevTotal + unpaidAmount : prevTotal - unpaidAmount;
+    });
+  };
+
   const grandTotal = products
     .reduce((acc, p) => {
       const qty = parseFloat(p.quantity) || 0;
@@ -283,6 +323,25 @@ const Billing = ({ url }) => {
       const filteredProducts = products.filter(
         (p) => p.productName.trim() && p.quantity
       );
+
+      if (filteredProducts.length === 0) {
+        toast.error("Please add at least one product before billing.");
+        setLoading(false);
+        return;
+      }
+
+      if (paymentStatus === "paid" && !paymentMethod) {
+        toast.error("Enter Payment Method");
+        setLoading(false);
+        return;
+      }
+
+      if (paymentStatus === "unpaid" && selectedTransactions.length > 0) {
+        toast.error("Uncheck Previous Order");
+        setLoading(false);
+        return;
+      }
+
       const totalAmount = filteredProducts.reduce(
         (acc, p) => acc + parseFloat(p.total || 0),
         0
@@ -332,6 +391,7 @@ const Billing = ({ url }) => {
         paidAmount,
         usedCoins,
         generatedCoins,
+        selectedTransactionIds: selectedTransactions,
       };
 
       await axios.post(`${url}/api/bill`, billPayload, {
@@ -355,6 +415,7 @@ const Billing = ({ url }) => {
       ]);
       setSelectedProducts([null]);
       setCustomer({
+        customerId: "",
         state: "",
         customerName: "",
         mobileNo: "",
@@ -367,9 +428,11 @@ const Billing = ({ url }) => {
       setPaymentMethod("");
       setPaymentStatus("");
       setUsedCoins(0);
+      setTransactions([]);
+      setSelectedTransactionsTotal(0);
     } catch (err) {
-      console.error(err);
-      toast.error("Error generating bill.");
+      console.error(err.response?.data || err.message);
+      toast.error(err.response?.data.error);
     } finally {
       setLoading(false);
     }
@@ -378,7 +441,7 @@ const Billing = ({ url }) => {
   return (
     <>
       <p className="bread">Billing</p>
-      <div className="billing text-bg-light mt-3 rounded">
+      <div className="billing text-bg-light mt-3 mb-3 rounded">
         <div
           className="head p-2 mb-3"
           style={{ background: "#FBEBD3", color: "#6D0616" }}
@@ -386,213 +449,291 @@ const Billing = ({ url }) => {
           Customer Details
         </div>
         <form className="row gy-3 gx-3" onSubmit={handleSubmit}>
-          <div className="col-md-2">
-            <label className="form-label">State*</label>
-            <select
-              className="form-select"
-              name="state"
-              value={customer.state}
-              onChange={(e) =>
-                setCustomer({ ...customer, state: e.target.value })
-              }
-              required
-            >
-              <option value="">Choose State...</option>
-              {[
-                "Gujarat",
-                "Delhi",
-                "Maharashtra",
-                "Rajasthan",
-                "Uttar Pradesh",
-                "Bihar",
-                "Punjab",
-                "Haryana",
-                "Madhya Pradesh",
-                "Karnataka",
-                "Tamil Nadu",
-              ].map((state) => (
-                <option key={state} value={state}>
-                  {state}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="col-md-2">
-            <label className="form-label">Customer Name</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Enter Customer Name"
-              value={customer.customerName}
-              onChange={(e) =>
-                setCustomer({ ...customer, customerName: e.target.value })
-              }
-            />
-          </div>
-          <div className="col-md-2">
-            <label className="form-label">Mobile No.</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Enter Mobile No."
-              value={customer.mobileNo}
-              onChange={handleMobileChange}
-            />
-          </div>
-
-          <div className="col-md-2">
-            <label className="form-label">GST Number</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Enter GST Number"
-              value={customer.gstNumber}
-              onChange={(e) =>
-                setCustomer({ ...customer, gstNumber: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="col-md-2">
-            <label className="form-label">Payment Method</label>
-            <select
-              className="form-select"
-              name="payMethod"
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-            >
-              <option value="">Choose...</option>
-              <option value="Cash">Cash</option>
-              <option value="UPI">UPI</option>
-              <option value="Bank Transfer">Bank Transfer</option>
-            </select>
-          </div>
-
-          <div className="col-md-2">
-            <label className="form-label">Payment Status</label>
-            <div className="d-flex">
-              <div className="form-check mx-3">
+          <div className="col-md-12">
+            <div className="row g-3">
+              <div className="col-md-2">
+                <label className="form-label">Mobile No.</label>
                 <input
-                  className="form-check-input"
-                  type="radio"
-                  name="paymentStatus"
-                  id="paidRadio"
-                  value="paid"
-                  checked={paymentStatus === "paid"}
-                  onChange={(e) => setPaymentStatus(e.target.value)}
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter Mobile No."
+                  value={customer.mobileNo}
+                  onChange={handleMobileChange}
                 />
-                <label className="form-check-label" htmlFor="paidRadio">
-                  Paid
-                </label>
               </div>
-              <div className="form-check">
+
+              <div className="col-md-2">
+                <label className="form-label">State*</label>
+                <select
+                  className="form-select"
+                  name="state"
+                  value={customer.state}
+                  onChange={(e) =>
+                    setCustomer({ ...customer, state: e.target.value })
+                  }
+                  required
+                >
+                  <option value="">Choose State...</option>
+                  {[
+                    "Gujarat",
+                    "Delhi",
+                    "Maharashtra",
+                    "Rajasthan",
+                    "Uttar Pradesh",
+                    "Bihar",
+                    "Punjab",
+                    "Haryana",
+                    "Madhya Pradesh",
+                    "Karnataka",
+                    "Tamil Nadu",
+                  ].map((state) => (
+                    <option key={state} value={state}>
+                      {state}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-md-2">
+                <label className="form-label">Customer Name</label>
                 <input
-                  className="form-check-input"
-                  type="radio"
-                  name="paymentStatus"
-                  id="unpaidRadio"
-                  value="unpaid"
-                  checked={paymentStatus === "unpaid"}
-                  onChange={(e) => setPaymentStatus(e.target.value)}
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter Customer Name"
+                  value={customer.customerName}
+                  onChange={(e) =>
+                    setCustomer({ ...customer, customerName: e.target.value })
+                  }
                 />
-                <label className="form-check-label" htmlFor="unpaidRadio">
-                  Unpaid
-                </label>
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label">GST Number</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter GST Number"
+                  value={customer.gstNumber}
+                  onChange={(e) =>
+                    setCustomer({ ...customer, gstNumber: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* <div className="col-md-2">
+                <label className="form-label">Payment Method</label>
+                <select
+                  className="form-select"
+                  name="payMethod"
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                >
+                  <option value="">Choose...</option>
+                  <option value="Cash">Cash</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                </select>
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label">Payment Status</label>
+                <div className="d-flex">
+                  <div className="form-check mx-3">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="paymentStatus"
+                      id="paidRadio"
+                      value="paid"
+                      checked={paymentStatus === "paid"}
+                      onChange={(e) => setPaymentStatus(e.target.value)}
+                    />
+                    <label className="form-check-label" htmlFor="paidRadio">
+                      Paid
+                    </label>
+                  </div>
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="paymentStatus"
+                      id="unpaidRadio"
+                      value="unpaid"
+                      checked={paymentStatus === "unpaid"}
+                      onChange={(e) => setPaymentStatus(e.target.value)}
+                    />
+                    <label className="form-check-label" htmlFor="unpaidRadio">
+                      Unpaid
+                    </label>
+                  </div>
+                </div>
+              </div> */}
+
+              <div className="col-md-1">
+                <label className="form-label">Used Coins</label>
+                <div
+                  className="d-flex bg-dark align-items-center p-2 rounded"
+                  style={{ height: "32px" }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="20px"
+                    viewBox="0 -960 960 960"
+                    width="20px"
+                    fill="#ff9000"
+                    className="mx-2"
+                  >
+                    <path d="M531-260h96v-3L462-438l1-3h10q54 0 89.5-33t43.5-77h40v-47h-41q-3-15-10.5-28.5T576-653h70v-47H314v57h156q26 0 42.5 13t22.5 32H314v47h222q-6 20-23 34.5T467-502H367v64l164 178ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
+                  </svg>
+                  <b className="m-0 text-white">{customer.coins}</b>
+                </div>
+              </div>
+              <div className="col-md-1">
+                <label className="form-label">Use Coins</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={usedCoins}
+                  onChange={(e) => setUsedCoins(parseInt(e.target.value) || 0)}
+                  min={0}
+                />
               </div>
             </div>
           </div>
 
-          <div
-            className="head p-2 mb-2"
-            style={{ background: "#FBEBD3", color: "#6D0616" }}
-          >
-            Product Details
-          </div>
+          {/* {transactions.length > 0 && (
+            <div className="col-md-3">
+              <label className="form-label text-danger">
+                Outstanding Amounts:
+              </label>
+              <table className="table align-middle table-striped my-0">
+                <thead className="table-danger">
+                  <tr>
+                    <th>#</th>
+                    <th>Amt.</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((t, idx) => (
+                    <tr key={idx}>
+                      <td className="d-flex">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={selectedTransactions.includes(t._id)}
+                            onChange={(e) =>
+                              handleTransactionSelection(
+                                t._id,
+                                t.billAmount - t.paidAmount,
+                                e.target.checked
+                              )
+                            }
+                          />
+                        </div>
+                        {t.invoiceNo}
+                      </td>
+                      <th className="text-danger">₹ {t.billAmount}</th>
+                      <td>
+                        <small>
+                          {new Date(t.createdAt).toLocaleDateString()}
+                        </small>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )} */}
 
-          <div className="col-md-2">
-            <label className="form-label">Product Name*</label>
-          </div>
-          <div className="col-md-1">
-            <label className="form-label">Quantity*</label>
-          </div>
-          <div className="col-md-2">
-            <label className="form-label">Price (in Rs.)*</label>
-          </div>
-          {/* <div className="col-md-1">
-            <label className="form-label">Discount By</label>
-          </div>
-          <div className="col-md-1">
-            <label className="form-label">Discount</label>
-          </div> */}
-          <div className="col-md-2">
-            <label className="form-label">Price After Discount*</label>
-          </div>
-          <div className="col-md-1">
-            <label className="form-label">GST %</label>
-          </div>
-          <div className="col-md-1">
-            <label className="form-label">Final Price*</label>
-          </div>
-          <div className="col-md-2">
-            <label className="form-label">Total*</label>
-          </div>
-          {products.map((p, index) => (
-            <div key={index} className="row g-1 border-bottom mt-0 pb-2">
+          <div className="col-md-9">
+            <div className="row">
               <div
-                className="col-md-2 mt-1 position-relative"
-                ref={(el) => (productRefs.current[index] = el)}
+                className="head p-2 mb-2"
+                style={{ background: "#FBEBD3", color: "#6D0616" }}
               >
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Product Name"
-                  value={p.productName}
-                  onChange={(e) =>
-                    handleChangeProd(index, "productName", e.target.value)
-                  }
-                  required
-                />
-                {productDropdowns[index] &&
-                  productDropdowns[index].length > 0 && (
-                    <ul
-                      className="list-group position-absolute w-100"
-                      style={{ zIndex: 1000 }}
-                    >
-                      {productDropdowns[index].map((sp, idx) => (
-                        <li
-                          key={idx}
-                          className="list-group-item list-group-item-action bg-black text-white"
-                          onMouseDown={() => handleProductSelect(index, sp)}
-                        >
-                          {sp.product.name}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                Product Details
               </div>
-              <div className="col-md-1 mt-1">
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="Quantity"
-                  value={p.quantity}
-                  onChange={(e) =>
-                    handleChangeProd(index, "quantity", e.target.value)
-                  }
-                  required
-                  min={1}
-                />
+
+              <div className="col-md-2">
+                <label className="form-label">Product Name*</label>
               </div>
-              <div className="col-md-2 mt-1">
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="Price"
-                  value={p.priceBeforeGst}
-                  disabled
-                />
+              <div className="col-md-1">
+                <label className="form-label">Quantity*</label>
               </div>
-              {/* <div className="col-md-1 mt-1">
+              <div className="col-md-2">
+                <label className="form-label">Price(₹)*</label>
+              </div>
+              <div className="col-md-2">
+                <label className="form-label">Price After Disc (₹)*</label>
+              </div>
+              <div className="col-md-1">
+                <label className="form-label">GST %</label>
+              </div>
+              <div className="col-md-2">
+                <label className="form-label">Final Price(₹)*</label>
+              </div>
+              <div className="col-md-2">
+                <label className="form-label">Total*</label>
+              </div>
+            </div>
+            {products.map((p, index) => (
+              <div key={index} className="row g-1 border-bottom mt-0 pb-2">
+                <div
+                  className="col-md-2 mt-1 position-relative"
+                  ref={(el) => (productRefs.current[index] = el)}
+                >
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Product Name"
+                    value={p.productName}
+                    onChange={(e) =>
+                      handleChangeProd(index, "productName", e.target.value)
+                    }
+                    required
+                  />
+                  {productDropdowns[index] &&
+                    productDropdowns[index].length > 0 && (
+                      <ul
+                        className="list-group position-absolute w-100"
+                        style={{ zIndex: 1000 }}
+                      >
+                        {productDropdowns[index].map((sp, idx) => (
+                          <li
+                            key={idx}
+                            className="list-group-item list-group-item-action bg-black text-white"
+                            onMouseDown={() => handleProductSelect(index, sp)}
+                          >
+                            {sp.product.name}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                </div>
+                <div className="col-md-1 mt-1">
+                  <input
+                    type="number"
+                    className="form-control"
+                    placeholder="Qty"
+                    value={p.quantity}
+                    onChange={(e) =>
+                      handleChangeProd(index, "quantity", e.target.value)
+                    }
+                    required
+                    min={1}
+                  />
+                </div>
+                <div className="col-md-2 mt-1">
+                  <input
+                    type="number"
+                    className="form-control"
+                    placeholder="Price"
+                    value={p.priceBeforeGst}
+                    disabled
+                  />
+                </div>
+                {/* <div className="col-md-1 mt-1">
                 <select
                   className="form-select"
                   name="discOpt"
@@ -617,134 +758,344 @@ const Billing = ({ url }) => {
                   min={0}
                 />
               </div> */}
-              <div className="col-md-2 mt-1">
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="Price"
-                  value={p.priceAfterDiscount}
-                  disabled
-                />
-              </div>
-              <div className="col-md-1 mt-1">
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="GST %"
-                  value={p.gstPercentage}
-                  disabled
-                />
-              </div>
-              <div className="col-md-1 mt-1">
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="Final Price"
-                  value={p.finalPrice}
-                  disabled
-                />
-              </div>
-              <div className="col-md-2 mt-1">
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="Total"
-                  value={p.total}
-                  disabled
-                />
-              </div>
-              <div className="col-md-1 d-flex justify-content-center">
-                {products.length > 1 && (
-                  <button
-                    type="button"
-                    className="del-btn"
-                    onClick={() => removeProduct(index)}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      height="24px"
-                      viewBox="0 -960 960 960"
-                      width="24px"
-                      fill="red"
+                <div className="col-md-2 mt-1">
+                  <input
+                    type="number"
+                    className="form-control"
+                    placeholder="Price"
+                    value={p.priceAfterDiscount}
+                    disabled
+                  />
+                </div>
+                <div className="col-md-1 mt-1">
+                  <input
+                    type="number"
+                    className="form-control"
+                    placeholder="GST %"
+                    value={p.gstPercentage}
+                    disabled
+                  />
+                </div>
+                <div className="col-md-2 mt-1">
+                  <input
+                    type="number"
+                    className="form-control"
+                    placeholder="Final"
+                    value={p.finalPrice}
+                    disabled
+                  />
+                </div>
+                <div className="col-md-2 mt-1 d-flex">
+                  <input
+                    type="number"
+                    className="form-control"
+                    placeholder="Total"
+                    value={p.total}
+                    disabled
+                  />
+
+                  {products.length > 1 && (
+                    <button
+                      type="button"
+                      className="del-btn"
+                      onClick={() => removeProduct(index)}
                     >
-                      <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />
-                    </svg>
-                  </button>
-                )}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        height="18px"
+                        viewBox="0 -960 960 960"
+                        width="18px"
+                        fill="red"
+                      >
+                        <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                {/* <div className="col-md-1 d-flex justify-content-center">
+                </div> */}
+              </div>
+            ))}
+            <div className="row mt-3 gx-2">
+              <div className="col-md-8"></div>
+              <div className="col-md-1">
+                <label className="form-label">Discount</label>
+              </div>
+              <div className="col-md-1">
+                <select
+                  className="form-select"
+                  value={discountMethod}
+                  onChange={(e) => setDiscountMethod(e.target.value)}
+                >
+                  <option value="">--Choose--</option>
+                  <option value="percentage">%</option>
+                  <option value="flat">Flat</option>
+                </select>
+              </div>
+
+              <div className="col-md-2">
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="Amount"
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(e.target.value) || 0}
+                  min={0}
+                />
               </div>
             </div>
-          ))}
-          <div className="row mt-3 gx-2">
-            <div className="col-md-2">
-              <h6 className="text-danger fw-bold">Grand Total</h6>
+            <div className="row mt-3 gx-2">
+              <div className="col-md-3">
+                <h6 className="text-secondary fw-bold">Net Total</h6>
+                <h6 className="text-secondary fw-bold">Outstanding Amounts</h6>
+                {usedCoins > 0 && (
+                  <h6 className="text-secondary fw-bold">Coins Used</h6>
+                )}
+                <h6 className="text-danger fw-bold">Grand Total</h6>
+              </div>
+              <div className="col-md-7"></div>
+              <div className="col-md-2">
+                <h6 className="text-secondary fw-bold">
+                  ₹ {Math.round(grandTotal).toFixed(2)}
+                </h6>
+                <h6 className="text-secondary fw-bold">
+                  ₹ {Math.round(selectedTransactionsTotal).toFixed(2)}
+                </h6>
+                {usedCoins > 0 && (
+                  <h6 className="text-secondary fw-bold">
+                    ₹ -{usedCoins.toFixed(2)}
+                  </h6>
+                )}
+                <h6 className="text-danger fw-bold">
+                  ₹{" "}
+                  {Math.round(
+                    parseFloat(grandTotal) +
+                      parseFloat(selectedTransactionsTotal) -
+                      usedCoins
+                  ).toFixed(2)}
+                </h6>
+              </div>
             </div>
-            <div className="col-md-7"></div>
-            <div className="col-md-2">
-              <h6 className="text-danger fw-bold">₹ {grandTotal}</h6>
-            </div>
+
+            {/* <div className="row align-items-end mt-3 gx-2">
+              <div className="col-md-2">
+                <button type="submit" className="btn btn-success">
+                  Submit
+                </button>
+              </div>
+
+              <div className="col-md-6"></div>
+
+              <div className="col-md-1">
+                <label className="form-label">Disc. In</label>
+                <select
+                  className="form-select"
+                  value={discountMethod}
+                  onChange={(e) => setDiscountMethod(e.target.value)}
+                >
+                  <option value="">--Choose--</option>
+                  <option value="percentage">%</option>
+                  <option value="flat">Flat</option>
+                </select>
+              </div>
+
+              <div className="col-md-1">
+                <label className="form-label">Disc. Amt.</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(e.target.value) || 0}
+                  min={0}
+                />
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label">Payment Method</label>
+                <select
+                  className="form-select"
+                  name="payMethod"
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                >
+                  <option value="">Choose...</option>
+                  <option value="Cash">Cash</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                </select>
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label">Payment Status</label>
+                <div className="d-flex">
+                  <div className="form-check mx-3">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="paymentStatus"
+                      id="paidRadio"
+                      value="paid"
+                      checked={paymentStatus === "paid"}
+                      onChange={(e) => setPaymentStatus(e.target.value)}
+                    />
+                    <label className="form-check-label" htmlFor="paidRadio">
+                      Paid
+                    </label>
+                  </div>
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="paymentStatus"
+                      id="unpaidRadio"
+                      value="unpaid"
+                      checked={paymentStatus === "unpaid"}
+                      onChange={(e) => setPaymentStatus(e.target.value)}
+                    />
+                    <label className="form-check-label" htmlFor="unpaidRadio">
+                      Unpaid
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div> */}
           </div>
 
-          <div className="row align-items-end mt-3 gx-2">
-            <div className="col-md-10"></div>
-            <div className="col-md-1">
-              <label className="form-label">Disc. In</label>
+          <div className="col-md-3">
+            <div
+              className="head p-2 mb-2"
+              style={{ background: "#fbd3d3ff", color: "#6D0616" }}
+            >
+              Outstanding Amounts
+            </div>
+            {transactions.length > 0 ? (
+              <div className="col-md-12">
+                <table className="table align-middle table-striped my-0">
+                  <thead className="table-danger">
+                    <tr>
+                      <th>#</th>
+                      <th>Amt.</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.map((t, idx) => (
+                      <tr key={idx}>
+                        <td className="d-flex">
+                          <div className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              checked={selectedTransactions.includes(t._id)}
+                              onChange={(e) =>
+                                handleTransactionSelection(
+                                  t._id,
+                                  t.billAmount - t.paidAmount,
+                                  e.target.checked
+                                )
+                              }
+                            />
+                          </div>
+                          {t.invoiceNo}
+                        </td>
+                        <th className="text-danger">₹ {t.billAmount}</th>
+                        <td>
+                          <small>
+                            {new Date(t.createdAt).toLocaleDateString()}
+                          </small>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-center text-secondary">
+                No Outstanding Payments found!
+              </p>
+            )}
+          </div>
+
+          <div className="row align-items-end gx-3 border-top py-2">
+            <div className="col-md-2">
+              <label className="form-label">Payment Status</label>
+              <div className="d-flex">
+                <div className="form-check mx-3">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="paymentStatus"
+                    id="paidRadio"
+                    value="paid"
+                    checked={paymentStatus === "paid"}
+                    onChange={(e) => setPaymentStatus(e.target.value)}
+                  />
+                  <label className="form-check-label" htmlFor="paidRadio">
+                    Paid
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="paymentStatus"
+                    id="unpaidRadio"
+                    value="unpaid"
+                    checked={paymentStatus === "unpaid"}
+                    onChange={(e) => setPaymentStatus(e.target.value)}
+                  />
+                  <label className="form-check-label" htmlFor="unpaidRadio">
+                    Unpaid
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-md-2">
+              <label className="form-label">Payment Method</label>
               <select
                 className="form-select"
-                value={discountMethod}
-                onChange={(e) => setDiscountMethod(e.target.value)}
+                name="payMethod"
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
               >
-                <option value="">--Choose--</option>
-                <option value="percentage">%</option>
-                <option value="flat">Flat</option>
+                <option value="">Choose...</option>
+                <option value="Cash">Cash</option>
+                <option value="UPI">UPI</option>
+                <option value="Bank Transfer">Bank Transfer</option>
               </select>
             </div>
-            <div className="col-md-1">
-              <label className="form-label">Disc. Amt.</label>
-              <input
-                type="number"
-                className="form-control"
-                value={discountValue}
-                onChange={(e) => setDiscountValue(e.target.value) || 0}
-                min={0}
-              />
-            </div>
-            {/* <div className="col-md-1">
-              <h6 className="text-danger fw-bold">Grand Total</h6>
-              </div> */}
-          </div>
 
-          <div className="row align-items-end mt-3 gx-2">
-            <div className="col-md-2">
+            <div className="col-md-7"></div>
+
+            <div className="col-md-1">
               <button type="submit" className="btn btn-success">
                 Submit
               </button>
             </div>
-            <div className="col-md-8"></div>
-            <div className="col-md-1">
-              <div className="d-flex bg-dark align-items-center p-2 rounded">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  height="24px"
-                  viewBox="0 -960 960 960"
-                  width="24px"
-                  fill="#ff9000"
-                  className="mx-2"
+            {/* <div className="col-md-1">
+                <label className="form-label">Disc. In</label>
+                <select
+                  className="form-select"
+                  value={discountMethod}
+                  onChange={(e) => setDiscountMethod(e.target.value)}
                 >
-                  <path d="M531-260h96v-3L462-438l1-3h10q54 0 89.5-33t43.5-77h40v-47h-41q-3-15-10.5-28.5T576-653h70v-47H314v57h156q26 0 42.5 13t22.5 32H314v47h222q-6 20-23 34.5T467-502H367v64l164 178ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
-                </svg>
-                <b className="m-0 text-white">{customer.coins}</b>
+                  <option value="">--Choose--</option>
+                  <option value="percentage">%</option>
+                  <option value="flat">Flat</option>
+                </select>
               </div>
-            </div>
-            <div className="col-md-1">
-              <label className="form-label">Use Coins</label>
-              <input
-                type="number"
-                className="form-control"
-                value={usedCoins}
-                onChange={(e) => setUsedCoins(parseInt(e.target.value) || 0)}
-                min={0}
-              />
-            </div>
+
+              <div className="col-md-1">
+                <label className="form-label">Disc. Amt.</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(e.target.value) || 0}
+                  min={0}
+                />
+                </div> */}
           </div>
         </form>
       </div>

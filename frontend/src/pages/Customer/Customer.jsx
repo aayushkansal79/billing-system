@@ -37,7 +37,7 @@ const Customer = ({ url }) => {
   return (
     <>
       <p className="bread">Customers</p>
-      <div className="customer row rounded">
+      <div className="customer row rounded mb-3">
         <table className="table align-middle table-striped my-0">
           <thead className="table-danger">
             <tr>
@@ -66,21 +66,21 @@ const Customer = ({ url }) => {
                 <td>{customer.state}</td>
                 <td>{customer.gst || "N/A"}</td>
                 <th className="text-primary">
-                  {customer.totalAmount.toFixed(2)}
+                  ₹ {customer.totalAmount.toFixed(2)}
                 </th>
                 <th className="text-success">
-                  {customer.paidAmount.toFixed(2)}
+                  ₹ {customer.paidAmount.toFixed(2)}
                 </th>
                 <th className="text-danger">
-                  {customer.pendingAmount.toFixed(2)}
+                  ₹ {customer.pendingAmount.toFixed(2)}
                 </th>
                 <td>
                   <div className="d-flex align-items-center p-2 rounded">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      height="24px"
+                      height="20px"
                       viewBox="0 -960 960 960"
-                      width="24px"
+                      width="20px"
                       fill="#ff9000"
                       className="mx-2"
                     >
@@ -93,9 +93,9 @@ const Customer = ({ url }) => {
                   <div className="d-flex align-items-center p-2 rounded">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      height="24px"
+                      height="20px"
                       viewBox="0 -960 960 960"
-                      width="24px"
+                      width="20px"
                       fill="#ff9000"
                       className="mx-2"
                     >

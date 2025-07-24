@@ -27,6 +27,7 @@ const BillSchema = new mongoose.Schema({
     products: [BillProductSchema],
 
     totalAmount: { type: Number, required: true },
+    usedCoins: { type: Number },
     paymentMethod: { type: String },
     paymentStatus: { type: String, required: true },
     // paymentMethod: { type: String, enum: ["cash", "card", "upi", "credit"], default: "cash" },

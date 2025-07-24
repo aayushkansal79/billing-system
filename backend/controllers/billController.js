@@ -4,7 +4,7 @@ import Transaction from "../models/Transaction.js";
 import StoreProduct from "../models/StoreProduct.js";
 import { getNextInvoiceNumber } from "../controllers/counterController.js";
 
-// Create a new bill
+//create new bill
 export const createBill = async (req, res) => {
     try {
         const {
@@ -15,7 +15,8 @@ export const createBill = async (req, res) => {
             totalAmount = 0,
             paymentMethod = "",
             paymentStatus = "",
-            usedCoins = 0
+            usedCoins = 0,
+            selectedTransactionIds = []
         } = req.body;
 
         const {
@@ -30,19 +31,12 @@ export const createBill = async (req, res) => {
         }
         const store = req.store._id;
 
-        if (!state) {
-            return res.status(400).json({ error: "State is required for billing." });
-        }
-        
-        if (!paymentStatus) {
-            return res.status(400).json({ error: "Payment Status is required for billing." });
-        }
-
+        if (!state) return res.status(400).json({ error: "State is required for billing." });
+        if (!paymentStatus) return res.status(400).json({ error: "Payment Status is required for billing." });
         if (mobileNo && mobileNo.length !== 10) {
             return res.status(400).json({ error: "Enter Correct Mobile No." });
         }
 
-        // Check product stock
         for (const p of products) {
             const storeProduct = await StoreProduct.findOne({ store, product: p.product });
             if (!storeProduct || p.quantity > storeProduct.quantity) {
@@ -52,7 +46,6 @@ export const createBill = async (req, res) => {
             }
         }
 
-        // Create or update customer
         let customerDoc = null;
         if (mobileNo) {
             customerDoc = await Customer.findOne({ mobile: mobileNo });
@@ -80,7 +73,6 @@ export const createBill = async (req, res) => {
         const invoiceNumber = await getNextInvoiceNumber();
         const roundedTotalAmount = Math.round(totalAmount);
 
-        // Create bill
         const newBill = new Bill({
             store,
             invoiceNumber,
@@ -92,48 +84,92 @@ export const createBill = async (req, res) => {
             discountMethod,
             products,
             totalAmount: roundedTotalAmount,
+            usedCoins,
             paymentMethod,
             paymentStatus
         });
         await newBill.save();
 
-        // Deduct stock quantities
         for (const p of products) {
             const storeProduct = await StoreProduct.findOne({ store, product: p.product });
             storeProduct.quantity = Math.max(0, storeProduct.quantity - p.quantity);
             await storeProduct.save();
         }
 
-        // Calculate coins and payment
-        const generatedCoins = Math.floor(roundedTotalAmount / 100);
+        const generatedCoins = paymentStatus === "paid" ? Math.floor(roundedTotalAmount / 100) : 0;
         const paidAmount = paymentStatus === "paid" ? roundedTotalAmount : 0;
 
-        // Create transaction & update customer aggregates
         if (customerDoc) {
+            let settledCoins = 0;
+            let settledAmount = 0;
+
+            for (const transId of selectedTransactionIds) {
+                const trans = await Transaction.findById(transId);
+                if (trans && trans.paymentStatus !== "paid") {
+                    const settleCoins = Math.floor(trans.billAmount / 100);
+
+                    trans.paymentStatus = "paid";
+                    await trans.save();
+
+                    const oldBill = await Bill.findOne({ store: trans.storeId, invoiceNumber: trans.invoiceNo });
+                    if (oldBill) {
+                        oldBill.paymentMethod = paymentMethod;
+                        oldBill.paymentStatus = "paid";
+                        await oldBill.save();
+                    }
+
+                    // Update aggregates before settlement transaction creation
+                    settledCoins += settleCoins;
+                    settledAmount += trans.billAmount;
+
+                    // Update customer aggregates for pendingAmount before saving transaction
+                    customerDoc.paidAmount += trans.billAmount;
+                    customerDoc.pendingAmount = customerDoc.paidAmount - customerDoc.totalAmount ;
+
+                    // const settlementTransaction = new Transaction({
+                    //     customerId: trans.customerId,
+                    //     storeId: trans.storeId,
+                    //     invoiceNo: trans.invoiceNo,
+                    //     billAmount: trans.billAmount,
+                    //     paymentType: paymentMethod,
+                    //     paidAmount: trans.billAmount,
+                    //     paymentStatus: "paid",
+                    //     generatedCoins: settleCoins,
+                    //     usedCoins: 0,
+                    //     wallet: customerDoc.pendingAmount,
+                    //     isSettlement: true,
+                    // });
+                    // await settlementTransaction.save();
+                }
+            }
+
+            // Update customer aggregates for the current bill
+            customerDoc.totalAmount += roundedTotalAmount;
+            customerDoc.paidAmount += paidAmount;
+            customerDoc.pendingAmount = customerDoc.paidAmount - customerDoc.totalAmount;
+            customerDoc.coins += generatedCoins + settledCoins;
+            customerDoc.coins -= usedCoins;
+            customerDoc.usedCoins += usedCoins;
+            customerDoc.updatedAt = new Date();
+            await customerDoc.save();
+
             const newTransaction = new Transaction({
                 customerId: customerDoc._id,
                 storeId: store,
                 invoiceNo: invoiceNumber,
                 billAmount: roundedTotalAmount,
                 paymentType: paymentMethod,
-                paidAmount,
-                generatedCoins,
+                paidAmount : paidAmount + settledAmount,
+                paymentStatus,
+                generatedCoins: generatedCoins + settledCoins,
                 usedCoins,
+                wallet: customerDoc.pendingAmount,
             });
             await newTransaction.save();
-
-            customerDoc.totalAmount += roundedTotalAmount;
-            customerDoc.paidAmount += paidAmount;
-            customerDoc.pendingAmount = customerDoc.totalAmount - customerDoc.paidAmount;
-            customerDoc.coins += generatedCoins;
-            customerDoc.coins -= usedCoins;
-            customerDoc.usedCoins += usedCoins;
-            customerDoc.updatedAt = new Date();
-            await customerDoc.save();
         }
 
         res.status(201).json({
-            message: "Bill created successfully with transaction and customer update.",
+            message: "Bill created successfully, transactions settled, and customer updated.",
             bill: newBill,
             customer: customerDoc || null
         });
@@ -143,7 +179,6 @@ export const createBill = async (req, res) => {
         res.status(500).json({ error: "Server error while creating bill." });
     }
 };
-
 
 
 

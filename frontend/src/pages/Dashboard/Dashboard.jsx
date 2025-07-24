@@ -73,7 +73,7 @@ const Dashboard = ({ url }) => {
     <>
       <p className="bread">Dashboard</p>
 
-      <div className="dashboard">
+      <div className="dashboard ">
         <Link to="/purchase-list" className="card text-bg-light mb-3">
           <div className="card-header">Purchases</div>
           <div className="card-body">
@@ -177,7 +177,7 @@ const Dashboard = ({ url }) => {
         </Link>
       </div>
 
-      <div className="card p-4 mt-4">
+      <div className="card p-4 mt-4 mb-3">
         <h4 className="mb-3">Bill Generation Trend (Last {days} Days)</h4>
 
         <div className="mb-3">

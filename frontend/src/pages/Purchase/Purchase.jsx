@@ -542,7 +542,7 @@ const Purchase = ({ url }) => {
         </div>
       </div>
 
-      <div className="purchase purchase-container text-bg-light mt-4 rounded">
+      <div className="purchase purchase-container text-bg-light mt-4 mb-3 rounded">
         <div className="head p-2 mb-3" style={{background: '#FBEBD3', color: '#6D0616'}}>Product Details</div>
         <form className="row g-3" onSubmit={handleSubmit}>
           <div className="col-md-2">

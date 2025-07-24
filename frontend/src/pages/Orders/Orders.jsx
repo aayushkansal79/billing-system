@@ -170,7 +170,7 @@ const Order = ({ url }) => {
   return (
     <>
       <p className="bread">Purchases</p>
-      <div className="orders rounded">
+      <div className="orders rounded mb-3">
         <table className="table align-middle table-striped my-0">
           <thead className="table-danger">
             <tr>

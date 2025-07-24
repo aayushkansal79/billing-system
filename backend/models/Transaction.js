@@ -6,7 +6,9 @@ const transactionSchema = new mongoose.Schema({
     invoiceNo: { type: String, required: true },
     billAmount: { type: Number, required: true },
     paymentType: { type: String },
+    paymentStatus: { type: String },
     paidAmount: { type: Number },
+    wallet: { type: Number, required: true },
     generatedCoins: { type: Number },
     usedCoins: { type: Number },
     createdAt: { type: Date, default: Date.now }

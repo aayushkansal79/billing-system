@@ -16,6 +16,10 @@
   font-weight: 700;
 }
 
+/* .billing small{
+  font-size: 12px !important;
+} */
+
 .billing input::-webkit-outer-spin-button,
 .billing input::-webkit-inner-spin-button {
   -webkit-appearance: none;
