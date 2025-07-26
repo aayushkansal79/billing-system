@@ -10,8 +10,9 @@ const Customer = ({ url }) => {
   }, []);
 
   const [customerList, setCustomerList] = useState([]);
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
 
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [pendingBills, setPendingBills] = useState([]);
   const [selectedBills, setSelectedBills] = useState([]);
@@ -58,16 +59,23 @@ const Customer = ({ url }) => {
       toast.error("Select at least one bill to pay.");
       return;
     }
+
+    if (selectedBills.length > 0 && !paymentMethod) {
+      toast.error("Select the Payment Method");
+      return;
+    }
+
     try {
       await axios.post(
-        `${url}/api/transaction/pay-multiple`,
-        { transactionIds: selectedBills },
+        `${url}/api/transactions/pay-multiple`,
+        { transactionIds: selectedBills, paymentMethod },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       toast.success("Selected bills marked as paid!");
       setShowPendingModal(false);
+      setPaymentMethod("");
       fetchCustomers();
     } catch (err) {
       console.error(err);
@@ -84,14 +92,14 @@ const Customer = ({ url }) => {
   };
 
   const handleCustomerClick = (customerId) => {
-    navigate(`/customer/${customerId}/transactions`);
+    navigate(`/all-customer/${customerId}/transactions`);
   };
 
   return (
     <>
       <p className="bread">Customers</p>
       <div className="customer row rounded mb-3">
-        <table className="table align-middle table-striped my-0">
+        <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-danger">
             <tr>
               <th scope="col">Customer Name</th>
@@ -119,13 +127,13 @@ const Customer = ({ url }) => {
                 <td>{customer.state}</td>
                 <td>{customer.gst || "N/A"}</td>
                 <th className="text-primary">
-                  ₹ {customer.totalAmount.toFixed(2)}
+                  ₹ {Number(customer.totalAmount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </th>
                 <th className="text-success">
-                  ₹ {customer.paidAmount.toFixed(2)}
+                  ₹ {Number(customer.paidAmount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </th>
                 <th className="text-danger">
-                  ₹ {customer.pendingAmount.toFixed(2)}
+                  ₹ {Number(customer.pendingAmount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </th>
                 <td>
                   <div className="d-flex align-items-center p-2 rounded">
@@ -165,6 +173,7 @@ const Customer = ({ url }) => {
                       e.stopPropagation();
                       handlePayPendingBills(customer);
                     }}
+                    title="Pending Payments"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -173,7 +182,7 @@ const Customer = ({ url }) => {
                       width="24px"
                       fill="#000000"
                     >
-                      <path d="M120-440v-320q0-33 23.5-56.5T200-840h240v400H120Zm240-80Zm160-320h240q33 0 56.5 23.5T840-760v160H520v-240Zm0 720v-400h320v320q0 33-23.5 56.5T760-120H520ZM120-360h320v240H200q-33 0-56.5-23.5T120-200v-160Zm240 80Zm240-400Zm0 240Zm-400-80h160v-240H200v240Zm400-160h160v-80H600v80Zm0 240v240h160v-240H600ZM200-280v80h160v-80H200Z" />
+                      <path d="M200-200v-560 560Zm0 80q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v100h-80v-100H200v560h560v-100h80v100q0 33-23.5 56.5T760-120H200Zm320-160q-33 0-56.5-23.5T440-360v-240q0-33 23.5-56.5T520-680h280q33 0 56.5 23.5T880-600v240q0 33-23.5 56.5T800-280H520Zm280-80v-240H520v240h280Zm-160-60q25 0 42.5-17.5T700-480q0-25-17.5-42.5T640-540q-25 0-42.5 17.5T580-480q0 25 17.5 42.5T640-420Z" />
                     </svg>
                   </button>
                 </td>
@@ -194,11 +203,11 @@ const Customer = ({ url }) => {
               <div className="modal-header bg-danger text-white fw-bold">
                 <h5 className="modal-title mx-3">
                   Pending Bills - {modalCustomer?.name}
-                </h5>|
+                </h5>
+                |<h5 className="modal-title mx-3">{modalCustomer?.mobile}</h5>|
                 <h5 className="modal-title mx-3">
-                  {modalCustomer?.mobile}
-                </h5>|
-                <h5 className="modal-title mx-3">Wallet: ₹ {modalCustomer.pendingAmount}</h5>
+                  Wallet: ₹ {modalCustomer.pendingAmount}
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -213,57 +222,70 @@ const Customer = ({ url }) => {
                 ) : (
                   <ul className="list-group">
                     <table className="table align-middle table-striped my-0">
-                  <thead className="table-danger">
-                    <tr>
-                      <th>#</th>
-                      <th>Amt.</th>
-                      <th>Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pendingBills.map((bill) => (
-                      <tr key={bill._id}>
-                        <td className="d-flex">
-                          <div className="form-check">
-                            <input
-                            type="checkbox"
-                            className="form-check-input me-2"
-                            checked={selectedBills.includes(bill._id)}
-                            onChange={() => handleCheckboxChange(bill._id)}
-                          />
-                          </div>
-                          {bill.invoiceNo}
-                        </td>
-                        <th className="text-danger">₹ {bill.billAmount}</th>
-                        <td>
-                          <small>
-                            {new Date(bill.createdAt).toLocaleDateString()}
-                          </small>
-                        </td>
-                      </tr>
-                    ))}
-                    </tbody>
+                      <thead className="table-danger">
+                        <tr>
+                          <th>#</th>
+                          <th>Amt.</th>
+                          <th>Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pendingBills.map((bill) => (
+                          <tr key={bill._id}>
+                            <td className="d-flex">
+                              <div className="form-check">
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input me-2"
+                                  checked={selectedBills.includes(bill._id)}
+                                  onChange={() =>
+                                    handleCheckboxChange(bill._id)
+                                  }
+                                />
+                              </div>
+                              {bill.invoiceNo}
+                            </td>
+                            <th className="text-danger">₹ {bill.billAmount}</th>
+                            <td>
+                              <small>
+                                {new Date(bill.createdAt).toLocaleDateString()}
+                              </small>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
                     </table>
                   </ul>
                 )}
               </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowPendingModal(false)}
-                >
-                  Close
-                </button>
+              <div className="modal-footer justify-content-between">
                 {pendingBills.length > 0 && (
-                  <button
-                    type="button"
-                    className="btn btn-success"
-                    onClick={handleSubmitPayBills}
-                  >
-                    Pay Selected
-                  </button>
+                  <div className="col-md-5">
+                    {/* <label className="form-label">Payment Method</label> */}
+                    <select
+                      className="form-select"
+                      name="payMethod"
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                    >
+                      <option value="">Payment Method</option>
+                      <option value="Cash">Cash</option>
+                      <option value="UPI">UPI</option>
+                      <option value="Bank Transfer">Bank Transfer</option>
+                    </select>
+                  </div>
                 )}
+                <div>
+                  {pendingBills.length > 0 && (
+                    <button
+                      type="button"
+                      className="btn btn-success"
+                      onClick={handleSubmitPayBills}
+                    >
+                      Pay Pending Amount
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

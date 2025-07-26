@@ -8,6 +8,19 @@
     --bs-modal-width: 660px;
 }
 
+.bill-invoice td{
+  align-content: center;
+}
+
+.bill-invoice th{
+  align-content: center;
+}
+
+.bill-title{
+  font-size: 18px !important;
+  font-weight: 800;
+}
+
 @media (max-width: 680px) {
   .allbill{
     width: calc(100vw - 2rem);

@@ -36,12 +36,20 @@ export const createBill = async (req, res) => {
         if (mobileNo && mobileNo.length !== 10) {
             return res.status(400).json({ error: "Enter Correct Mobile No." });
         }
+        if (totalAmount <=0){
+            return res.status(400).json({ error: "Total Amount must be greater than zero" });
+        }
 
         for (const p of products) {
             const storeProduct = await StoreProduct.findOne({ store, product: p.product });
             if (!storeProduct || p.quantity > storeProduct.quantity) {
                 return res.status(400).json({
                     error: `Insufficient stock for product ${p.productName || p.product}`,
+                });
+            }
+            if( !p.priceAfterDiscount || !p.gstPercentage || !p.finalPrice || !p.total){
+                return res.status(400).json({
+                    error: "Fill all fields",
                 });
             }
         }
@@ -75,6 +83,7 @@ export const createBill = async (req, res) => {
 
         const newBill = new Bill({
             store,
+            customer: customerDoc._id,
             invoiceNumber,
             state,
             customerName,

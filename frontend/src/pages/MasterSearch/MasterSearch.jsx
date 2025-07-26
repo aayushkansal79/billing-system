@@ -19,10 +19,8 @@ const MasterSearch = ({ url }) => {
   const [requestQty, setRequestQty] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
   const { user } = useContext(AuthContext);
-
-  const [resultLoad, setResultLoad] = useState(false);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -30,7 +28,6 @@ const MasterSearch = ({ url }) => {
       toast.error("Please enter a product name.");
       return;
     }
-    setResultLoad(true);
     setLoading(true);
     try {
       const res = await axios.get(`${url}/api/master-search/products`, {
@@ -38,9 +35,6 @@ const MasterSearch = ({ url }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setResults(res.data);
-      if(res.data.length !== 0){
-        setResultLoad(false);
-      }
     } catch (err) {
       console.error(err);
       toast.error("Error fetching search results.");
@@ -133,13 +127,6 @@ const MasterSearch = ({ url }) => {
           className="master-store"
           style={{ display: "flex", flexWrap: "wrap", gap: "2rem" }}
           >
-            
-          {resultLoad && 
-            <>
-              <p>No results found!</p>
-            </>
-          }
-
           {results.map((item) => (
             <div
               className="card text-bg-light mb-2"

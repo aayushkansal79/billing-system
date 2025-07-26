@@ -12,6 +12,7 @@ import Companies from "./pages/Companies/Companies";
 import Products from "./pages/Products/Products";
 import AddStore from "./pages/AddStore/AddStore";
 import AllStores from "./pages/AllStores/AllStores";
+import LoginAsStore from "./pages/LoginAsStore/LoginAsStore";
 import Billing from "./pages/Billing/Billing";
 import AllBill from "./pages/AllBill/AllBill";
 import Customer from "./pages/Customer/Customer";
@@ -62,10 +63,11 @@ function App() {
               <Route path="/products" element={<PrivateRoute roles={["admin", "store"]}> <Products url={url} /> </PrivateRoute>} />
               <Route path="/add-store" element={<PrivateRoute roles={["admin"]}> <AddStore url={url} /> </PrivateRoute>} />
               <Route path="/all-stores" element={<PrivateRoute roles={["admin"]}> <AllStores url={url} /> </PrivateRoute>} />
+              <Route path="/login-as-store" element={<PrivateRoute roles={["admin"]}> <LoginAsStore url={url} /> </PrivateRoute>} />
               <Route path="/billing" element={<PrivateRoute roles={["admin", "store"]}> <Billing url={url} setSidebarOpen={setSidebarOpen} /> </PrivateRoute>} />
               <Route path="/all-bill" element={<PrivateRoute roles={["admin", "store"]}> <AllBill url={url} /> </PrivateRoute>} />
               <Route path="/all-customer" element={<PrivateRoute roles={["admin", "store"]}> <Customer url={url} /> </PrivateRoute>} />
-              <Route path="/customer/:customerId/transactions" element={<PrivateRoute roles={["admin", "store"]}> <CustomerTransactions url={url} /> </PrivateRoute>} />
+              <Route path="/all-customer/:customerId/transactions" element={<PrivateRoute roles={["admin", "store"]}> <CustomerTransactions url={url} /> </PrivateRoute>} />
               <Route path="/mastersearch" element={<PrivateRoute roles={["admin", "store"]}> <MasterSearch url={url} /> </PrivateRoute>} />
               <Route path="/requests" element={<PrivateRoute roles={["admin"]}> <Requests url={url} /> </PrivateRoute>} />
               <Route path="/requests-sent" element={<PrivateRoute roles={["store"]}> <RequestsSent url={url} /> </PrivateRoute>} />

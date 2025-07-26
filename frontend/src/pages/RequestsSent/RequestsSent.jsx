@@ -9,7 +9,7 @@ const RequestsSent = ({ url }) => {
   }, []);
 
   const [requests, setRequests] = useState([]);
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
 
   const fetchRequests = async () => {
     try {
@@ -31,7 +31,7 @@ const RequestsSent = ({ url }) => {
     <>
       <p className="bread">Requests Sent</p>
       <div className="requestsSent rounded mb-3">
-        <table className="table align-middle table-striped">
+        <table className="table align-middle table-striped table-hover">
           <thead className="table-warning">
             <tr>
               <th scope="col">Requested To</th>

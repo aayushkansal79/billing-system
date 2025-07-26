@@ -19,12 +19,12 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
       <div className="d-flex justify-content-between">
         <h2>INVOICE</h2>
         <p>
-          <b>Date:</b> {new Date(date).toLocaleDateString()}
+          <b>Purchase Date:</b> {new Date(date).toLocaleDateString()}
         </p>
       </div>
       <div className="d-flex justify-content-between">
         <div>
-          <b>Seller Details:</b>
+          <b>SELLER INFORMATION</b>
           <br />
           <strong>{company?.name}</strong>
           <br />
@@ -37,7 +37,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
           GST: {company?.gstNumber}
         </div>
         <div className="text-end">
-          <b>Purchaser Details:</b>
+          <b>PURCHASER INFORMATION</b>
           <br />
           <strong>Ajjawam</strong>
           <br />
@@ -68,9 +68,9 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               <td>{idx + 1}.</td>
               <td>{p.name}</td>
               <td>{p.quantity}</td>
-              <td>₹{p.purchasePrice}</td>
-              <td>₹{p.purchasePriceAfterDiscount}</td>
-              <td>₹{(p.quantity * p.purchasePriceAfterDiscount).toFixed(2)}</td>
+              <td>₹{Number(p.purchasePrice).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td>₹{Number(p.purchasePriceAfterDiscount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td>₹{Number(p.quantity * p.purchasePriceAfterDiscount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
             </tr>
           ))}
         </tbody>
@@ -80,7 +80,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               <strong>Grand Total</strong>
             </td>
             <td>
-              <strong>₹{total.toFixed(2)}</strong>
+              <strong>₹{Number(total).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
             </td>
           </tr>
         </tfoot>
@@ -98,7 +98,7 @@ const Order = ({ url }) => {
   const [selectedPurchase, setSelectedPurchase] = useState(null);
   const componentRef = useRef();
 
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
 
   useEffect(() => {
     const fetchPurchases = async () => {
@@ -178,7 +178,7 @@ const Order = ({ url }) => {
     <>
       <p className="bread">Purchases</p>
       <div className="orders rounded mb-3">
-        <table className="table align-middle table-striped my-0">
+        <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-danger">
             <tr>
               <th>Purchase ID</th>
@@ -201,7 +201,7 @@ const Order = ({ url }) => {
                 </td>
                 <th className="text-danger">
                   {/* ₹ {purchase.totalPriceAfterDiscount || 0} */}
-                  ₹ {purchase.totalPriceAfterDiscount || 0}
+                  ₹ {Number(purchase.totalPriceAfterDiscount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </th>
                 <td>{purchase.company?.name}</td>
                 <td>{purchase.company?.city}</td>

@@ -12,7 +12,7 @@ const RequestsRecieved = ({ url }) => {
 
   const [requests, setRequests] = useState([]);
   const [acceptedQty, setAcceptedQty] = useState({});
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
   const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
 
@@ -82,7 +82,7 @@ const RequestsRecieved = ({ url }) => {
     <>
       <p className="bread">Requests Recieved</p>
       <div className="requestsRecieved rounded mb-3">
-        <table className="table align-middle table-striped">
+        <table className="table align-middle table-striped table-hover">
           <thead className="table-warning">
             <tr>
               <th scope="col">Requested By</th>

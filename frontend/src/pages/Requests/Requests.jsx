@@ -11,7 +11,7 @@ const Requests = ({ url }) => {
 
   const [requests, setRequests] = useState([]);
   const [acceptedQty, setAcceptedQty] = useState({});
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
   const { user } = useContext(AuthContext);
 
   const fetchRequests = async () => {
@@ -34,7 +34,7 @@ const Requests = ({ url }) => {
     <>
       <p className="bread">Requests</p>
       <div className="requests rounded mb-3">
-        <table className="table align-middle table-striped">
+        <table className="table align-middle table-striped table-hover">
           <thead className="table-warning">
             <tr>
               <th scope="col">Requested By</th>

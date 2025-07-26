@@ -19,7 +19,7 @@ const Dashboard = ({ url }) => {
     document.title = "Dashboard | Ajjawam";
   }, []);
 
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
 
   const [counts, setCounts] = useState({
     companies: 0,

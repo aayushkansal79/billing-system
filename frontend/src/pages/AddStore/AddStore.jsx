@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "./AddStore.css";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -10,7 +10,8 @@ const AddStore = ({ url }) => {
     document.title = "Add Store | Ajjawam";
   }, []);
 
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({

@@ -13,7 +13,7 @@ const ChangePass = ({url}) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
 
   
   const handleChangePassword = async (e) => {

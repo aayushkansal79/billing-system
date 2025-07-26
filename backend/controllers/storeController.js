@@ -156,3 +156,62 @@ export const changeStorePassword = async (req, res) => {
         res.status(500).json({ message: "Server error while changing password." });
     }
 };
+
+export const adminChangeStorePassword = async (req, res) => {
+  try {
+    const { storeId } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 8) {
+      return res
+        .status(400)
+        .json({ message: "New password must be at least 8 characters long." });
+    }
+
+    const store = await Store.findById(storeId).select("+password");
+    if (!store) {
+      return res.status(404).json({ message: "Store not found." });
+    }
+
+    store.password = newPassword; // gets hashed via pre("save")
+    await store.save();
+
+    res.json({ message: "Store password updated successfully." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error changing store password." });
+  }
+};
+
+// Admin-only: Log in as a store (without password)
+export const loginAsStoreByAdmin = async (req, res) => {
+  try {
+    const { storeId } = req.params;
+
+    if (req.store.type !== "admin") {
+      return res.status(403).json({ message: "Only admin can use this feature." });
+    }
+
+    const store = await Store.findById(storeId);
+    if (!store) {
+      return res.status(404).json({ message: "Store not found." });
+    }
+
+    if (!store.status) {
+      return res.status(403).json({ message: "This store is disabled." });
+    }
+
+    const token = generateToken(store._id, store.type, store.status);
+
+    res.json({
+      _id: store._id,
+      username: store.username,
+      type: store.type,
+      status: store.status,
+      token,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error logging in as store." });
+  }
+};

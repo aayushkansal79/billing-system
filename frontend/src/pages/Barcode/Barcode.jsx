@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { useReactToPrint } from "react-to-print";
 import Barcode from "react-barcode";
 import "./Barcode.css";
+import Loader from "../../components/Loader/Loader";
 
 const PrintBarcode = ({ url }) => {
   const { purchaseId } = useParams();
@@ -12,7 +13,7 @@ const PrintBarcode = ({ url }) => {
   const [loading, setLoading] = useState(true);
   const componentRef = useRef();
 
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
 
   const navigate = useNavigate();
 
@@ -65,7 +66,7 @@ const PrintBarcode = ({ url }) => {
     }, 500);
   };
 
-  if (loading) return <div className="text-center mt-5">Loading...</div>;
+  if (loading) return <Loader/>;
   if (!purchase)
     return <div className="text-center mt-5">Purchase not found.</div>;
 

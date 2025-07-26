@@ -11,7 +11,7 @@ const AssignProductModal = ({ url, product, onClose }) => {
   const [assignments, setAssignments] = useState([]);
   const [quantities, setQuantities] = useState({});
 
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -136,7 +136,7 @@ const Products = ({ url }) => {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
   const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
 
@@ -248,7 +248,7 @@ const Products = ({ url }) => {
     <>
       <p className="bread">Products</p>
       <div className="products rounded mb-3">
-        <table className="table align-middle table-striped my-0">
+        <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-info">
             <tr>
               <th scope="col">Product Name</th>
@@ -432,10 +432,10 @@ const Products = ({ url }) => {
                   <tr key={sp._id}>
                     <th>{sp.product.name}</th>
                     <th className="text-primary">{sp.quantity}</th>
-                    <td>₹{sp.product.priceBeforeGst.toFixed(2)}</td>
+                    <td>₹{Number((sp.product.printPrice)/(1+(0.01*sp.product.gstPercentage))).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td>{sp.product.gstPercentage}%</td>
                     <th className="text-danger">
-                      ₹{sp.product.price.toFixed(2)}
+                      ₹{Number(sp.product.printPrice).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </th>
                   </tr>
                 ))}

@@ -4,7 +4,7 @@ const BillProductSchema = new mongoose.Schema({
     product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
     productName: { type: String, required: true },
     quantity: { type: Number, required: true },
-    priceBeforeGst: { type: Number, required: true },
+    priceBeforeGst: { type: Number },
     discountMethod: { type: String, enum: ["percentage", "flat"] },
     discount: { type: Number },
     discountAmt: { type: Number },
@@ -16,6 +16,7 @@ const BillProductSchema = new mongoose.Schema({
 
 const BillSchema = new mongoose.Schema({
     store: { type: mongoose.Schema.Types.ObjectId, ref: "Store", required: true },
+    customer: { type: mongoose.Schema.Types.ObjectId, ref: "Customer" },
     invoiceNumber: { type: String, unique: true, required: true },
     discount: { type: Number },
     discountMethod: { type: String, enum: ["percentage", "flat"] },

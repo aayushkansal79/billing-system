@@ -12,7 +12,8 @@ export const AuthProvider = ({ children }) => {
   const url = "https://ajjawam-backend.onrender.com";
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    // Use sessionStorage first for tab-isolated impersonation
+    const token = sessionStorage.getItem("token") || localStorage.getItem("token");
 
     const fetchUser = async () => {
       if (!token) {
@@ -23,18 +24,20 @@ export const AuthProvider = ({ children }) => {
 
       try {
         const res = await axios.get(`${url}/api/stores/profile`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (res.data.status) {
           setUser(res.data); // store user details from backend
         } else {
           toast.error("Account disabled. Logging out.");
+          sessionStorage.removeItem("token");
           localStorage.removeItem("token");
           setUser(null);
         }
       } catch (error) {
         console.error("Failed to fetch user:", error);
+        sessionStorage.removeItem("token");
         localStorage.removeItem("token");
         setUser(null);
       } finally {
@@ -45,28 +48,37 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, []);
 
-  const login = async (token) => {
-    localStorage.setItem("token", token);
+  const login = async (token, useSession = false) => {
+    if (useSession) {
+      sessionStorage.setItem("token", token); // for impersonation
+    } else {
+      localStorage.setItem("token", token); // for regular login
+    }
+
     try {
       const res = await axios.get(`${url}/api/stores/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
+
       if (res.data.status) {
         setUser(res.data);
       } else {
         toast.error("Account disabled. Cannot login.");
+        sessionStorage.removeItem("token");
         localStorage.removeItem("token");
         setUser(null);
       }
     } catch (error) {
       console.error("Login fetch failed:", error);
       toast.error("Login failed.");
+      sessionStorage.removeItem("token");
       localStorage.removeItem("token");
       setUser(null);
     }
   };
 
   const logout = () => {
+    sessionStorage.removeItem("token");
     localStorage.removeItem("token");
     setUser(null);
   };

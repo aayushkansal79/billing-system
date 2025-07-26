@@ -9,7 +9,14 @@ const AllStores = ({ url }) => {
   const [loading, setLoading] = useState(false);
   const [editingStoreId, setEditingStoreId] = useState(null);
   const [editData, setEditData] = useState({});
-  const token = localStorage.getItem("token");
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
+
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    storeId: "",
+    password: "",
+  });
 
   useEffect(() => {
     document.title = "All Stores | Ajjawam";
@@ -89,11 +96,62 @@ const AllStores = ({ url }) => {
     }
   };
 
+  const openPasswordModal = (storeId) => {
+    setPasswordData({ storeId, password: "" });
+    setShowPasswordModal(true);
+  };
+
+  const handlePasswordChange = async () => {
+    if (!passwordData.password) {
+      toast.warning("Password cannot be empty");
+      return;
+    }
+
+    if(passwordData.password.length < 8){
+      toast.warning("New password must be at least 8 characters long.")
+    }
+
+    try {
+      await axios.put(
+        `${url}/api/stores/admin-change-password/${passwordData.storeId}`,
+        { newPassword: passwordData.password },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Password updated successfully!");
+      setShowPasswordModal(false);
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        error.response?.data?.message || "Failed to change password."
+      );
+    }
+  };
+
+  const handleLoginAsStore = async (storeId) => {
+    const storetoken = token;
+    try {
+      const response = await axios.get(
+        `${url}/api/stores/login-as-store/${storeId}`,
+        {
+          headers: { Authorization: `Bearer ${storetoken}` },
+        }
+      );
+
+      const { token } = response.data;
+
+      const storeUrl = `${window.location.origin}/login-as-store?token=${token}`;
+
+      window.open(storeUrl, "_blank");
+    } catch (error) {
+      toast.error("Unable to login as store.");
+    }
+  };
+
   return (
     <>
       <p className="bread">All Stores</p>
       <div className="all-stores rounded mb-3">
-        <table className="table align-middle table-striped my-0">
+        <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-danger">
             <tr>
               <th scope="col">Username</th>
@@ -128,64 +186,6 @@ const AllStores = ({ url }) => {
                     </h5>
                   )}
                 </th>
-                {/* <td>
-                  {editingStoreId === store._id ? (
-                    <>
-                      <label className="form-label mb-1">
-                          <b>Address:</b>
-                        </label>
-                      <input
-                        type="text"
-                        className="form-control mb-2"
-                        value={editData.address}
-                        onChange={(e) =>
-                          setEditData({
-                            ...editData,
-                            address: e.target.value,
-                          })
-                        }
-                      />
-                      <input
-                        type="text"
-                        className="form-control mb-2"
-                        value={editData.city}
-                        onChange={(e) =>
-                          setEditData({ ...editData, city: e.target.value })
-                        }
-                      />
-                      <input
-                        type="text"
-                        className="form-control mb-2"
-                        value={editData.state}
-                        onChange={(e) =>
-                          setEditData({ ...editData, state: e.target.value })
-                        }
-                      />
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={editData.zipCode}
-                        onChange={(e) =>
-                          setEditData({
-                            ...editData,
-                            zipCode: e.target.value,
-                          })
-                        }
-                      />
-                    </>
-                  ) : (
-                    <>
-                      {store.address}
-                      <br />
-                      <b>City -</b> {store.city}
-                      <br />
-                      <b>State -</b> {store.state}
-                      <br />
-                      <b>Zip -</b> {store.zipCode}
-                    </>
-                  )}
-                </td> */}
-
                 <td>
                   {editingStoreId === store._id ? (
                     <input
@@ -267,8 +267,6 @@ const AllStores = ({ url }) => {
                 </td>
                 <td>{new Date(store.createdAt).toLocaleString()}</td>
                 <td>
-                  {/* {new Date(store.createdAt).toLocaleString()}
-                  <hr /> */}
                   <div
                     style={{
                       display: "flex",
@@ -319,6 +317,7 @@ const AllStores = ({ url }) => {
                         <button
                           className="str-btn"
                           onClick={() => handleEditClick(store)}
+                          title="Edit"
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -330,9 +329,38 @@ const AllStores = ({ url }) => {
                             <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h357l-80 80H200v560h560v-278l80-80v358q0 33-23.5 56.5T760-120H200Zm280-360ZM360-360v-170l367-367q12-12 27-18t30-6q16 0 30.5 6t26.5 18l56 57q11 12 17 26.5t6 29.5q0 15-5.5 29.5T897-728L530-360H360Zm481-424-56-56 56 56ZM440-440h56l232-232-28-28-29-28-231 231v57Zm260-260-29-28 29 28 28 28-28-28Z" />
                           </svg>
                         </button>
-                        {/* <button className="btn btn-secondary btn-sm">
-                            View
-                          </button> */}
+
+                        <button
+                          className="str-btn"
+                          title="Change Password"
+                          onClick={() => openPasswordModal(store._id)}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            height="24px"
+                            viewBox="0 -960 960 960"
+                            width="24px"
+                            fill="green"
+                          >
+                            <path d="M80-200v-80h800v80H80Zm46-242-52-30 34-60H40v-60h68l-34-58 52-30 34 58 34-58 52 30-34 58h68v60h-68l34 60-52 30-34-60-34 60Zm320 0-52-30 34-60h-68v-60h68l-34-58 52-30 34 58 34-58 52 30-34 58h68v60h-68l34 60-52 30-34-60-34 60Zm320 0-52-30 34-60h-68v-60h68l-34-58 52-30 34 58 34-58 52 30-34 58h68v60h-68l34 60-52 30-34-60-34 60Z" />
+                          </svg>
+                        </button>
+
+                        {/* <button
+                          className="str-btn"
+                          onClick={() => handleLoginAsStore(store._id)}
+                          title="Login"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            height="24px"
+                            viewBox="0 -960 960 960"
+                            width="24px"
+                            fill="blue"
+                          >
+                            <path d="M480-120v-80h280v-560H480v-80h280q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H480Zm-80-160-55-58 102-102H120v-80h327L345-622l55-58 200 200-200 200Z" />
+                          </svg>
+                        </button> */}
                       </>
                     )}
                   </div>
@@ -341,6 +369,36 @@ const AllStores = ({ url }) => {
             ))}
           </tbody>
         </table>
+        {showPasswordModal && (
+          <div className="modal-overlay">
+            <div className="modal-box">
+              <h5>Change Store Password</h5>
+              <input
+                type="password"
+                className="form-control mb-3"
+                placeholder="Enter new password"
+                value={passwordData.password}
+                onChange={(e) =>
+                  setPasswordData({ ...passwordData, password: e.target.value })
+                }
+              />
+              <div className="d-flex justify-content-end gap-2">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowPasswordModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-success"
+                  onClick={handlePasswordChange}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       {loading && <Loader />}
     </>

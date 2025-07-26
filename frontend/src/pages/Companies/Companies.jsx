@@ -12,7 +12,7 @@ const Companies = ({ url }) => {
   const [allCompanies, setAllCompanies] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
   const [editData, setEditData] = useState({});
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
   const [loading, setLoading] = useState(false);
 
   const fetchAllCompanies = async () => {
@@ -63,7 +63,7 @@ const Companies = ({ url }) => {
     <>
       <p className="bread">Vendors</p>
       <div className="company row rounded mb-3">
-        <table className="table align-middle table-striped  my-0">
+        <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-danger">
             <tr>
               <th scope="col">Vendor Name</th>

@@ -55,7 +55,8 @@ const Billing = ({ url, setSidebarOpen }) => {
   const [selectedTransactions, setSelectedTransactions] = useState([]);
   const [selectedTransactionsTotal, setSelectedTransactionsTotal] = useState(0);
 
-  const token = localStorage.getItem("token");
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
 
   const indianStatesAndUTs = [
     {
@@ -685,7 +686,7 @@ const Billing = ({ url, setSidebarOpen }) => {
               </div> */}
 
               <div className="col-md-1">
-                <label className="form-label">Used Coins</label>
+                <label className="form-label">Coins</label>
                 <div
                   className="d-flex bg-dark align-items-center p-2 rounded"
                   style={{ height: "32px" }}
@@ -711,6 +712,7 @@ const Billing = ({ url, setSidebarOpen }) => {
                   value={usedCoins}
                   onChange={(e) => setUsedCoins(parseInt(e.target.value) || 0)}
                   min={0}
+                  max={customer.coins}
                 />
               </div>
             </div>
@@ -850,31 +852,6 @@ const Billing = ({ url, setSidebarOpen }) => {
                     disabled
                   />
                 </div>
-                {/* <div className="col-md-1 mt-1">
-                <select
-                  className="form-select"
-                  name="discOpt"
-                  value={p.discountMethod}
-                  onChange={(e) =>
-                    handleChangeProd(index, "discountMethod", e.target.value)
-                  }
-                >
-                  <option value="percentage">%</option>
-                  <option value="flat">Flat</option>
-                </select>
-              </div>
-              <div className="col-md-1 mt-1">
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="Discount"
-                  value={p.discount}
-                  onChange={(e) =>
-                    handleChangeProd(index, "discount", e.target.value)
-                  }
-                  min={0}
-                />
-              </div> */}
                 <div className="col-md-2 mt-1">
                   <input
                     type="number"
@@ -929,8 +906,6 @@ const Billing = ({ url, setSidebarOpen }) => {
                     </button>
                   )}
                 </div>
-                {/* <div className="col-md-1 d-flex justify-content-center">
-                </div> */}
               </div>
             ))}
             <div className="row mt-3 gx-2">
@@ -962,8 +937,14 @@ const Billing = ({ url, setSidebarOpen }) => {
             </div>
             <div className="row mt-3 gx-2">
               <div className="col-md-3">
-                <h6 className="text-secondary fw-bold">Net Total</h6>
-                <h6 className="text-secondary fw-bold">Outstanding Amounts</h6>
+                {(usedCoins > 0 || selectedTransactionsTotal > 0) && (
+                  <h6 className="text-secondary fw-bold">Net Total</h6>
+                )}
+                {selectedTransactionsTotal > 0 && (
+                  <h6 className="text-secondary fw-bold">
+                    Outstanding Amounts
+                  </h6>
+                )}
                 {usedCoins > 0 && (
                   <h6 className="text-secondary fw-bold">Coins Used</h6>
                 )}
@@ -971,12 +952,16 @@ const Billing = ({ url, setSidebarOpen }) => {
               </div>
               <div className="col-md-7"></div>
               <div className="col-md-2">
-                <h6 className="text-secondary fw-bold">
-                  ₹ {Math.round(grandTotal).toFixed(2)}
-                </h6>
-                <h6 className="text-secondary fw-bold">
-                  ₹ {Math.round(selectedTransactionsTotal).toFixed(2)}
-                </h6>
+                {(usedCoins > 0 || selectedTransactionsTotal > 0) && (
+                  <h6 className="text-secondary fw-bold">
+                    ₹ {Math.round(grandTotal).toFixed(2)}
+                  </h6>
+                )}
+                {selectedTransactionsTotal > 0 && (
+                  <h6 className="text-secondary fw-bold">
+                    ₹ {Math.round(selectedTransactionsTotal).toFixed(2)}
+                  </h6>
+                )}
                 {usedCoins > 0 && (
                   <h6 className="text-secondary fw-bold">
                     ₹ -{usedCoins.toFixed(2)}

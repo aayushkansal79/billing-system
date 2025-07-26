@@ -4,6 +4,7 @@ import "./AllBill.css";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../context/AuthContext";
 import { assets } from "../../assets/assets";
+import Barcode from "react-barcode";
 
 const InvoiceContent = React.forwardRef(function InvoiceContent(
   {
@@ -43,28 +44,53 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
   );
 
   return (
-    <div ref={ref} style={{ padding: "20px" }}>
+    <div ref={ref} style={{ padding: "20px" }} className="bill-invoice">
+      <div className="text-center bill-title">TAX INVOICE</div>
       <div className="d-flex justify-content-between align-items-center">
         {/* <h2>INVOICE</h2> */}
-        <img src={assets.main_logo} width={85} alt="" />
+        <img src={assets.main_logo} width={90} alt="" />
         <div className="text-end">
           <p className="m-0">
-            <b>Invoice No.:</b> {invoiceNumber}
+            <b>Ajjawam</b>
           </p>
           <p className="m-0">
-            <b>Date:</b> {new Date(date).toLocaleDateString()}
+            <b>G-23 Gujarat, ZipCode: 110080, India</b>
           </p>
-          <p>
-            <b>Payment Method:</b>{" "}
-            {paymentStatus === "paid" ? paymentMethod || "--" : "Unpaid"}
+          <p className="m-0">
+            <b>GST No.: AJJ329482</b>
           </p>
         </div>
       </div>
-
+      <br />
+      <div>
+        <b>INVOICE DETAILS</b>
+        <br />
+        <p className="m-0">Invoice No.: {invoiceNumber}</p>
+        <p className="m-0">
+          Invoice Date: {new Date(date).toLocaleDateString()}
+        </p>
+      </div>
       <br />
       <div className="d-flex justify-content-between">
         <div>
-          <b>Store Details:</b>
+          <b>CUSTOMER INFORMATION</b>
+          <br />
+          {customerName ? (
+            <>
+              {customerName}
+              <br />
+            </>
+          ) : (
+            ""
+          )}
+          State: {state}
+          <br />
+          Mobile: {mobileNo || "N/A"}
+          <br />
+          GST: {gstNumber || "N/A"}
+        </div>
+        <div className="text-end">
+          <b>STORE INFORMATION</b>
           <br />
           {store.address},
           <br />
@@ -74,26 +100,9 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
           <br />
           {store.contactNumber}
         </div>
-        <div className="text-end">
-          <b>Customer Details:</b>
-          <br />
-          {customerName ? (
-            <>
-              <strong>{customerName}</strong>
-              <br />
-            </>
-          ) : (
-            ""
-          )}
-          {state}
-          <br />
-          {mobileNo || "N/A"}
-          <br />
-          GST: {gstNumber || "N/A"}
-        </div>
       </div>
-
-      <table className="table table-bordered mt-3">
+      <hr />
+      <table className="table table-bordered mt-3 text-end">
         <thead className="table-light">
           <tr>
             <th>#</th>
@@ -109,7 +118,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <th>GST %</th>
             <th>GST Type</th>
             <th>GST Amount</th>
-            <th>Per Item Price</th>
+            <th>Unit Price</th>
             <th>Total</th>
           </tr>
         </thead>
@@ -119,11 +128,29 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               <td>{idx + 1}.</td>
               <td>{p.productName}</td>
               <td>{p.quantity}</td>
-              <td>₹{p.priceBeforeGst}</td>
+              <td>
+                ₹
+                {Number(p.priceBeforeGst)?.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </td>
               {discount > 0 && (
                 <>
-                  <td>₹{p.discountAmt?.toFixed(2) || 0}</td>
-                  <td>₹{p.priceAfterDiscount?.toFixed(2)}</td>
+                  <td>
+                    ₹
+                    {Number(p.discountAmt)?.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td>
+                    ₹
+                    {Number(p.priceAfterDiscount)?.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
                 </>
               )}
               <td>
@@ -151,74 +178,143 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
                 {store.state === state ? (
                   <>
                     ₹
-                    {(
-                      (p.priceAfterDiscount * p.gstPercentage) /
-                      100 /
-                      2
-                    ).toFixed(2)}{" "}
+                    {Number(
+                      (p.priceAfterDiscount * p.gstPercentage) / 100 / 2
+                    )?.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
                     <br />₹
-                    {(
-                      (p.priceAfterDiscount * p.gstPercentage) /
-                      100 /
-                      2
-                    ).toFixed(2)}
+                    {Number(
+                      (p.priceAfterDiscount * p.gstPercentage) / 100 / 2
+                    )?.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </>
                 ) : (
                   <>
                     ₹
-                    {((p.priceAfterDiscount * p.gstPercentage) / 100).toFixed(
-                      2
-                    )}
+                    {Number(
+                      (p.priceAfterDiscount * p.gstPercentage) / 100
+                    )?.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </>
                 )}
               </td>
-              <td>₹{p.finalPrice?.toFixed(2)}</td>
-              <td>₹{(p.quantity * p.finalPrice)?.toFixed(2)}</td>
+              <td>
+                ₹
+                {Number(p.finalPrice)?.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </td>
+              <td>
+                ₹
+                {Number(p.quantity * p.finalPrice)?.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </td>
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr>
-            <td colSpan={discount>0 ? 5 : 3}>
-              <strong>Total</strong>
+            <td colSpan={discount > 0 ? 5 : 3} className="text-start">
+              <strong>Sub Total</strong>
             </td>
             <td>
-              <strong>₹{totalPriceAfterDiscount.toFixed(2)}</strong>
+              <strong>
+                ₹
+                {Number(totalPriceAfterDiscount)?.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </strong>
             </td>
             <td colSpan="2"></td>
             <td>
-              <strong>₹{totalGST.toFixed(2)}</strong>
+              <strong>
+                ₹
+                {Number(totalGST)?.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </strong>
             </td>
             <td></td>
             <td>
-              <strong>₹{totalAmount}</strong>
+              <strong>
+                ₹
+                {Number(totalAmount)?.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </strong>
             </td>
           </tr>
+          {usedCoins > 0 && (
+            <tr>
+              <td colSpan={discount > 0 ? 10 : 8}>
+                <strong>Coins Used</strong>
+              </td>
+              <td>
+                <strong>₹ {usedCoins || 0}</strong>
+              </td>
+            </tr>
+          )}
           <tr>
-            <td colSpan={discount>0 ? 10 : 8}>
-              <strong>Coins Used</strong>
-            </td>
-            <td>
-              <strong>₹ {usedCoins || 0}</strong>
-            </td>
-          </tr>
-          <tr>
-            <td colSpan={discount>0 ? 10 : 8}>
+            <td colSpan={discount > 0 ? 10 : 8}>
               <strong>Grand Total</strong>
             </td>
             <td>
-              <strong>₹ {totalAmount - (usedCoins || 0)}</strong>
+              <strong>
+                ₹{(totalAmount - (usedCoins || 0)).toLocaleString("en-IN")}
+              </strong>
             </td>
           </tr>
         </tfoot>
       </table>
+      <hr />
+      <div className="d-flex justify-content-between align-items-center">
+        <p className="m-0">Payment Method: {paymentMethod}</p>
+        <p className="m-0">Amount Paid: ₹{(totalAmount - (usedCoins || 0)).toLocaleString("en-IN")}</p>
+      </div>
+      <hr />
+      <div className="d-flex justify-content-between align-items-center">
+        <p>Thank you for shopping at Ajjawam! </p>
+        <div className="text-end">
+          <Barcode
+            value={invoiceNumber}
+            format="CODE128"
+            lineColor="#000"
+            width={2}
+            height={40}
+            displayValue={false}
+          />
+        </div>
+      </div>
+      <div>
+        <b>Refund Note </b>
+        <div>
+          Returns/Exchanges within 7 days of purchase only. <br />
+          Color differences due to lighting are not valid for return. <br />
+          Saree must be unused, unwashed, and with original tags. No returns on
+          stitched, altered, or discounted sarees. <br />
+          Invoice is required for all returns/exchanges. Refunds will be made
+          via original payment method or store credit. <br />
+        </div>
+      </div>
     </div>
   );
 });
 
 const AllBill = ({ url }) => {
   const [bills, setBills] = useState([]);
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
   const [selectedBill, setSelectedBill] = useState(null);
 
   useEffect(() => {
@@ -291,7 +387,7 @@ const AllBill = ({ url }) => {
           <p>No bills found.</p>
         ) : (
           <div className="">
-            <table className="table align-middle table-striped  my-0">
+            <table className="table align-middle table-striped table-hover my-0">
               <thead className="table-info">
                 <tr>
                   <th>Invoice No.</th>
@@ -330,7 +426,11 @@ const AllBill = ({ url }) => {
                       </h5>
                     </td>
                     <th className="text-danger">
-                      ₹ {bill.totalAmount.toFixed(2)}
+                      ₹{" "}
+                      {Number(bill.totalAmount).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                       {/* <hr /> */}
                     </th>
                     <th className="text-danger">

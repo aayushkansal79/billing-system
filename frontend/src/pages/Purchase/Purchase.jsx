@@ -31,7 +31,7 @@ const Purchase = ({ url }) => {
   const [orderNo, setOrderNo] = useState("");
   const [discount, setDiscount] = useState(0);
 
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
 
   const [products, setProducts] = useState([
     {
