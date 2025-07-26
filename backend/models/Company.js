@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const CompanySchema = new mongoose.Schema({
     name: { type: String, required: true },
+    shortName: { type: String, required: true },
     city: { type: String},
     contactPhone: { type: String, unique: true },
     gstNumber: { type: String, unique: true },

@@ -12,6 +12,11 @@ const Customer = ({ url }) => {
   const [customerList, setCustomerList] = useState([]);
   const token = localStorage.getItem("token");
 
+  const [showPendingModal, setShowPendingModal] = useState(false);
+  const [pendingBills, setPendingBills] = useState([]);
+  const [selectedBills, setSelectedBills] = useState([]);
+  const [modalCustomer, setModalCustomer] = useState(null);
+
   const fetchCustomers = async () => {
     try {
       const res = await axios.get(`${url}/api/customer`, {
@@ -29,6 +34,54 @@ const Customer = ({ url }) => {
   }, []);
 
   const navigate = useNavigate();
+
+  const handlePayPendingBills = async (customer) => {
+    try {
+      const res = await axios.get(
+        `${url}/api/transactions/customer/unpaid/${customer._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setPendingBills(res.data.transactions);
+      setSelectedBills([]);
+      setModalCustomer(customer);
+      setShowPendingModal(true);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch pending bills.");
+    }
+  };
+
+  const handleSubmitPayBills = async () => {
+    if (selectedBills.length === 0) {
+      toast.error("Select at least one bill to pay.");
+      return;
+    }
+    try {
+      await axios.post(
+        `${url}/api/transaction/pay-multiple`,
+        { transactionIds: selectedBills },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Selected bills marked as paid!");
+      setShowPendingModal(false);
+      fetchCustomers();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to mark bills as paid.");
+    }
+  };
+
+  const handleCheckboxChange = (billId) => {
+    if (selectedBills.includes(billId)) {
+      setSelectedBills(selectedBills.filter((id) => id !== billId));
+    } else {
+      setSelectedBills([...selectedBills, billId]);
+    }
+  };
 
   const handleCustomerClick = (customerId) => {
     navigate(`/customer/${customerId}/transactions`);
@@ -106,7 +159,13 @@ const Customer = ({ url }) => {
                 </td>
                 <td>{new Date(customer.updatedAt).toLocaleString()}</td>
                 <td>
-                  <button className="cpy-btn">
+                  <button
+                    className="cpy-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePayPendingBills(customer);
+                    }}
+                  >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       height="24px"
@@ -123,6 +182,93 @@ const Customer = ({ url }) => {
           </tbody>
         </table>
       </div>
+
+      {showPendingModal && (
+        <div
+          className="modal d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header bg-danger text-white fw-bold">
+                <h5 className="modal-title mx-3">
+                  Pending Bills - {modalCustomer?.name}
+                </h5>|
+                <h5 className="modal-title mx-3">
+                  {modalCustomer?.mobile}
+                </h5>|
+                <h5 className="modal-title mx-3">Wallet: ₹ {modalCustomer.pendingAmount}</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowPendingModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                {pendingBills.length === 0 ? (
+                  <p className="text-center">
+                    No pending bills for this customer!
+                  </p>
+                ) : (
+                  <ul className="list-group">
+                    <table className="table align-middle table-striped my-0">
+                  <thead className="table-danger">
+                    <tr>
+                      <th>#</th>
+                      <th>Amt.</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingBills.map((bill) => (
+                      <tr key={bill._id}>
+                        <td className="d-flex">
+                          <div className="form-check">
+                            <input
+                            type="checkbox"
+                            className="form-check-input me-2"
+                            checked={selectedBills.includes(bill._id)}
+                            onChange={() => handleCheckboxChange(bill._id)}
+                          />
+                          </div>
+                          {bill.invoiceNo}
+                        </td>
+                        <th className="text-danger">₹ {bill.billAmount}</th>
+                        <td>
+                          <small>
+                            {new Date(bill.createdAt).toLocaleDateString()}
+                          </small>
+                        </td>
+                      </tr>
+                    ))}
+                    </tbody>
+                    </table>
+                  </ul>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowPendingModal(false)}
+                >
+                  Close
+                </button>
+                {pendingBills.length > 0 && (
+                  <button
+                    type="button"
+                    className="btn btn-success"
+                    onClick={handleSubmitPayBills}
+                  >
+                    Pay Selected
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

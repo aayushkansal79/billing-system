@@ -16,16 +16,21 @@ export const getCompany = async (req, res) => {
 // Create company
 export const createCompany = async (req, res) => {
     try {
-        const { name, city, contactPhone, gstNumber, address } = req.body;
+        const { name, shortName, city, contactPhone, gstNumber, address } = req.body;
 
         if (!name || name.trim() === "") {
             return res.status(400).json({ error: "Company name is required." });
         }
+        
+        if (!shortName || shortName.trim() === "") {
+            return res.status(400).json({ error: "Company shortName is required." });
+        }
 
-        // Check for duplicates by name, contactPhone, or gstNumber
+        // Check for duplicates by name, shortName, contactPhone, or gstNumber
         const existingCompany = await Company.findOne({
             $or: [
                 { name: name.trim() },
+                { shortName: shortName.trim() },
                 { contactPhone: contactPhone?.trim() },
                 { gstNumber: gstNumber?.trim() }
             ]
@@ -40,6 +45,7 @@ export const createCompany = async (req, res) => {
 
         const company = new Company({
             name: name.trim(),
+            shortName: shortName.trim(),
             city: city?.trim(),
             contactPhone: contactPhone?.trim(),
             gstNumber: gstNumber?.trim(),

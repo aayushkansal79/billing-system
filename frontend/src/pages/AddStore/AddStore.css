@@ -1,6 +1,6 @@
-.stores{
-    padding: 1rem;
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+.stores {
+  padding: 1rem;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
 
 .stores .head {
@@ -8,14 +8,28 @@
   font-weight: 700;
 }
 
-.stores form{
-    padding: 0 1rem;
+.stores form {
+  padding: 0 1rem;
 }
 
 .stores label {
   font-weight: 700;
 }
 
-.form-label{
+.form-label {
   font-size: 14px !important;
+}
+
+.select__control {
+  min-height: 33px !important;
+  height: 33px !important;
+}
+
+.select__value-container {
+  padding: 0 8px !important;
+  height: 33px !important;
+}
+
+.select__indicators {
+  height: 33px !important;
 }

@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import "./Orders.css";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const InvoiceContent = React.forwardRef(function InvoiceContent(
   { company, products, date },
@@ -16,10 +17,10 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
   return (
     <div ref={ref} style={{ padding: "20px" }}>
       <div className="d-flex justify-content-between">
-      <h2>INVOICE</h2>
-      <p>
+        <h2>INVOICE</h2>
+        <p>
           <b>Date:</b> {new Date(date).toLocaleDateString()}
-      </p>
+        </p>
       </div>
       <div className="d-flex justify-content-between">
         <div>
@@ -119,6 +120,12 @@ const Order = ({ url }) => {
   //   documentTitle: "Invoice",
   // });
 
+  const navigate = useNavigate();
+
+  const handleClick = (purchaseId) => {
+    navigate(`/purchase-list/barcode/${purchaseId}`);
+  };
+
   const openModal = (purchase) => {
     setSelectedPurchase(purchase);
   };
@@ -181,6 +188,7 @@ const Order = ({ url }) => {
               <th>Contact</th>
               <th>GST No.</th>
               <th>Invoice</th>
+              <th>Tags</th>
               <th>Date & Time</th>
             </tr>
           </thead>
@@ -191,10 +199,11 @@ const Order = ({ url }) => {
                   <b>Invoice No. -</b> {purchase.invoiceNumber} <br />
                   <b>Order No. -</b> {purchase.orderNumber}
                 </td>
-                <th className="text-danger">₹ {purchase.totalPriceAfterDiscount || 0}</th>
-                <td>
-                  {purchase.company?.name}
-                </td>
+                <th className="text-danger">
+                  {/* ₹ {purchase.totalPriceAfterDiscount || 0} */}
+                  ₹ {purchase.totalPriceAfterDiscount || 0}
+                </th>
+                <td>{purchase.company?.name}</td>
                 <td>{purchase.company?.city}</td>
                 <td>{purchase.company?.contactPhone}</td>
                 <td>{purchase.company?.gstNumber}</td>
@@ -209,8 +218,24 @@ const Order = ({ url }) => {
                   </button>
                 </td>
                 <td>
-                  {new Date(purchase.date).toLocaleString()}
+                  <button
+                    type="button"
+                    onClick={() => handleClick(purchase._id)}
+                    title="Print Barcode"
+                    style={{ border: "none", backgroundColor: "transparent" }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      height="24px"
+                      viewBox="0 -960 960 960"
+                      width="24px"
+                      fill="blueviolet"
+                    >
+                      <path d="M40-200v-560h80v560H40Zm120 0v-560h80v560h-80Zm120 0v-560h40v560h-40Zm120 0v-560h80v560h-80Zm120 0v-560h120v560H520Zm160 0v-560h40v560h-40Zm120 0v-560h120v560H800Z" />
+                    </svg>
+                  </button>
                 </td>
+                <td>{new Date(purchase.date).toLocaleString()}</td>
               </tr>
             ))}
           </tbody>

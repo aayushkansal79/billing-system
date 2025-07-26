@@ -16,6 +16,7 @@ const Purchase = ({ url }) => {
 
   const [companyData, setCompanyData] = useState({
     name: "",
+    shortName: "",
     city: "",
     contactPhone: "",
     gstNumber: "",
@@ -28,7 +29,7 @@ const Purchase = ({ url }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [invoiceNo, setInvoiceNo] = useState("");
   const [orderNo, setOrderNo] = useState("");
-  const [discount, setDiscount] = useState(10);
+  const [discount, setDiscount] = useState(0);
 
   const token = localStorage.getItem("token");
 
@@ -42,6 +43,7 @@ const Purchase = ({ url }) => {
       priceBeforeGst: "",
       gstPercentage: "",
       sellingPrice: "",
+      printPrice: "",
     },
   ]);
   const [productDropdowns, setProductDropdowns] = useState({});
@@ -73,6 +75,7 @@ const Purchase = ({ url }) => {
   const handleCompanySelect = (company) => {
     setCompanyData({
       name: company.name || "",
+      shortName: company.shortName || "",
       city: company.city || "",
       contactPhone: company.contactPhone || "",
       gstNumber: company.gstNumber || "",
@@ -80,6 +83,22 @@ const Purchase = ({ url }) => {
     });
     setSelectedCompany(company);
     setShowCompanyDropdown(false);
+  };
+
+  const adjustPrintPrice = (price) => {
+    if (price > 0) {
+      price = Math.round(price);
+      const lastTwo = price % 100;
+
+      if (lastTwo >= 1 && lastTwo <= 50) {
+        return price - lastTwo + 49;
+      } else if (lastTwo >= 51 && lastTwo <= 99) {
+        return price - lastTwo + 99;
+      } else if (lastTwo == 0) {
+        return price - 1;
+      }
+    }
+    return price;
   };
 
   const fetchProductSuggestions = async (index, value) => {
@@ -124,11 +143,14 @@ const Purchase = ({ url }) => {
         purchasePriceAfterDiscount * (1 + profitPercentage / 100);
       let sellingPrice = priceBeforeGst * (1 + gstPercentage / 100);
 
+      const printPrice = adjustPrintPrice(sellingPrice);
+
       return {
         ...product,
         purchasePriceAfterDiscount: purchasePriceAfterDiscount.toFixed(2),
         priceBeforeGst: priceBeforeGst.toFixed(2),
         sellingPrice: sellingPrice.toFixed(2),
+        printPrice: printPrice.toFixed(2),
       };
     });
 
@@ -196,12 +218,15 @@ const Purchase = ({ url }) => {
       }
 
       if (!isNaN(gstPercentage)) {
-        newProducts[index].sellingPrice =
+        let sellingPrice =
           (purchasePrice - (purchasePrice * discountValue) / 100) *
           (1 + profitPercentage / 100) *
           (1 + gstPercentage / 100);
-        newProducts[index].sellingPrice =
-          newProducts[index].sellingPrice.toFixed(2);
+
+        newProducts[index].sellingPrice = sellingPrice.toFixed(2);
+
+        const printPrice = adjustPrintPrice(sellingPrice);
+        newProducts[index].printPrice = printPrice.toFixed(2);
       }
     }
     setProducts([...newProducts]);
@@ -240,6 +265,7 @@ const Purchase = ({ url }) => {
           priceBeforeGst: "",
           gstPercentage: "",
           sellingPrice: "",
+          printPrice: "",
         },
       ]);
       setSelectedProducts([...selectedProducts, null]);
@@ -329,6 +355,7 @@ const Purchase = ({ url }) => {
                 priceBeforeGst: p.priceBeforeGst || "0",
                 gstPercentage: p.gstPercentage || "0",
                 price: p.sellingPrice || "0",
+                printPrice: p.printPrice || "0",
               },
               {
                 headers: { Authorization: `Bearer ${token}` },
@@ -348,6 +375,7 @@ const Purchase = ({ url }) => {
           priceBeforeGst: Number(p.priceBeforeGst),
           gstPercentage: Number(p.gstPercentage),
           sellingPrice: Number(p.sellingPrice),
+          printPrice: Number(p.printPrice),
         });
       }
 
@@ -367,6 +395,7 @@ const Purchase = ({ url }) => {
 
       setCompanyData({
         name: "",
+        shortName: "",
         city: "",
         contactPhone: "",
         gstNumber: "",
@@ -388,7 +417,7 @@ const Purchase = ({ url }) => {
       setSelectedProducts([null]);
       setInvoiceNo("");
       setOrderNo("");
-      setDiscount(10);
+      setDiscount(0);
     } catch (err) {
       console.error(err);
       toast.error("Error saving purchase.");
@@ -403,7 +432,12 @@ const Purchase = ({ url }) => {
 
       <div className="purchase-container d-flex flex-wrap rounded">
         <div className="purchase text-bg-light col-md-6 rounded">
-          <div className="head p-2 mb-3" style={{background: '#FBEBD3', color: '#6D0616'}}>Company Details</div>
+          <div
+            className="head p-2 mb-3"
+            style={{ background: "#FBEBD3", color: "#6D0616" }}
+          >
+            Company Details
+          </div>
           <form className="row g-3">
             <div className="col-md-4 position-relative" ref={companyRef}>
               <label className="form-label">Company Name*</label>
@@ -432,6 +466,22 @@ const Purchase = ({ url }) => {
                   ))}
                 </ul>
               )}
+            </div>
+            <div className="col-md-4">
+              <label className="form-label">Company Short Name*</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Enter Short Name"
+                value={companyData.shortName}
+                onChange={(e) =>
+                  setCompanyData((prev) => ({
+                    ...prev,
+                    shortName: e.target.value,
+                  }))
+                }
+                required
+              />
             </div>
             <div className="col-md-4">
               <label className="form-label">City*</label>
@@ -477,7 +527,7 @@ const Purchase = ({ url }) => {
                 }
               />
             </div>
-            <div className="col-md-8">
+            <div className="col-md-4">
               <label className="form-label">Address</label>
               <input
                 type="text"
@@ -496,7 +546,12 @@ const Purchase = ({ url }) => {
         </div>
 
         <div className="purchase text-bg-light col-md-6 rounded">
-          <div className="head p-2 mb-3" style={{background: '#FBEBD3', color: '#6D0616'}}>Purchase Details</div>
+          <div
+            className="head p-2 mb-3"
+            style={{ background: "#FBEBD3", color: "#6D0616" }}
+          >
+            Purchase Details
+          </div>
           <form className="row g-3">
             <div className="col-md-4">
               <label className="form-label">Date*</label>
@@ -543,7 +598,12 @@ const Purchase = ({ url }) => {
       </div>
 
       <div className="purchase purchase-container text-bg-light mt-4 mb-3 rounded">
-        <div className="head p-2 mb-3" style={{background: '#FBEBD3', color: '#6D0616'}}>Product Details</div>
+        <div
+          className="head p-2 mb-3"
+          style={{ background: "#FBEBD3", color: "#6D0616" }}
+        >
+          Product Details
+        </div>
         <form className="row g-3" onSubmit={handleSubmit}>
           <div className="col-md-2">
             <label className="form-label">Product Name*</label>
@@ -551,13 +611,16 @@ const Purchase = ({ url }) => {
           <div className="col-md-1">
             <label className="form-label">Quantity*</label>
           </div>
-          <div className="col-md-2">
-            <label className="form-label">Purchase Price (in Rs.)*</label>
+          <div className="col-md-1">
+            <label className="form-label">Purchase Price (₹)*</label>
           </div>
           <div className="col-md-2">
             <label className="form-label">
               Purchase Price After Discount ({discount}%)*
             </label>
+          </div>
+          <div className="col-md-1">
+            <label className="form-label">Total (₹)*</label>
           </div>
           <div className="col-md-1">
             <label className="form-label">Profit %*</label>
@@ -568,8 +631,11 @@ const Purchase = ({ url }) => {
           <div className="col-md-1">
             <label className="form-label">GST %*</label>
           </div>
+          <div className="col-md-1">
+            <label className="form-label">Selling Price (₹)*</label>
+          </div>
           <div className="col-md-2">
-            <label className="form-label">Selling Price (in Rs.)*</label>
+            <label className="form-label">Print Price (₹)*</label>
           </div>
           {products.map((product, index) => (
             <div
@@ -622,11 +688,11 @@ const Purchase = ({ url }) => {
                   required
                 />
               </div>
-              <div className="col-md-2">
+              <div className="col-md-1">
                 <input
                   type="number"
                   className="form-control"
-                  placeholder="Purchase Price"
+                  placeholder="Price"
                   min="0"
                   value={product.purchasePrice}
                   onChange={(e) =>
@@ -641,6 +707,24 @@ const Purchase = ({ url }) => {
                   className="form-control"
                   placeholder="Price After Discount"
                   value={product.purchasePriceAfterDiscount}
+                  // onChange={(e) =>
+                  //   handleChangeProd(
+                  //     index,
+                  //     "purchasePriceAfterDiscount",
+                  //     e.target.value
+                  //   )
+                  // }
+                  disabled
+                />
+              </div>
+              <div className="col-md-1">
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="Price After Discount"
+                  value={(
+                    product.quantity * product.purchasePriceAfterDiscount
+                  ).toFixed(2)}
                   // onChange={(e) =>
                   //   handleChangeProd(
                   //     index,
@@ -700,7 +784,7 @@ const Purchase = ({ url }) => {
                   ))}
                 </select>
               </div>
-              <div className="col-md-2">
+              <div className="col-md-1">
                 <input
                   type="number"
                   className="form-control"
@@ -712,11 +796,21 @@ const Purchase = ({ url }) => {
                   disabled
                 />
               </div>
-              <div className="col-md-1 d-flex">
+              <div className="col-md-2 d-flex">
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="Print Price"
+                  value={product.printPrice}
+                  // onChange={(e) =>
+                  //   handleChangeProd(index, "sellingPrice", e.target.value)
+                  // }
+                  disabled
+                />
                 {products.length > 1 && (
                   <button
                     type="button"
-                    className="btn btn-danger"
+                    className="pur-btn"
                     onClick={() => removeProduct(index)}
                   >
                     <svg
@@ -724,7 +818,7 @@ const Purchase = ({ url }) => {
                       height="24px"
                       viewBox="0 -960 960 960"
                       width="24px"
-                      fill="#FFFFFF"
+                      fill="red"
                     >
                       <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />
                     </svg>
@@ -737,14 +831,16 @@ const Purchase = ({ url }) => {
             <div className="col-md-2">
               <h6 className="text-danger fw-bold">Grand Total</h6>
             </div>
-            <div className="col-md-3"></div>
+            <div className="col-md-4"></div>
             <div className="col-md-2">
-              <h6 className="text-danger fw-bold">₹ {totalPriceAfterDiscount}</h6>
+              <h6 className="text-danger fw-bold">
+                ₹ {totalPriceAfterDiscount}
+              </h6>
             </div>
-            <div className="col-md-2"></div>
+            {/* <div className="col-md-2"></div>
             <div className="col-md-2">
               <h6 className="text-danger fw-bold">₹ {totalSellingPrice}</h6>
-            </div>
+            </div> */}
           </div>
           <div className="col-md-2">
             <button type="submit" className="btn btn-success">

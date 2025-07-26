@@ -3,6 +3,7 @@ import "./Billing.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
+import Select from "react-select";
 import Loader from "../../components/Loader/Loader";
 
 const Billing = ({ url, setSidebarOpen }) => {
@@ -55,6 +56,57 @@ const Billing = ({ url, setSidebarOpen }) => {
   const [selectedTransactionsTotal, setSelectedTransactionsTotal] = useState(0);
 
   const token = localStorage.getItem("token");
+
+  const indianStatesAndUTs = [
+    {
+      value: "Andaman and Nicobar Islands",
+      label: "Andaman and Nicobar Islands",
+    },
+    { value: "Andhra Pradesh", label: "Andhra Pradesh" },
+    { value: "Arunachal Pradesh", label: "Arunachal Pradesh" },
+    { value: "Assam", label: "Assam" },
+    { value: "Bihar", label: "Bihar" },
+    { value: "Chandigarh", label: "Chandigarh" },
+    { value: "Chhattisgarh", label: "Chhattisgarh" },
+    {
+      value: "Dadra and Nagar Haveli and Daman and Diu",
+      label: "Dadra and Nagar Haveli and Daman and Diu",
+    },
+    { value: "Delhi", label: "Delhi" },
+    { value: "Goa", label: "Goa" },
+    { value: "Gujarat", label: "Gujarat" },
+    { value: "Haryana", label: "Haryana" },
+    { value: "Himachal Pradesh", label: "Himachal Pradesh" },
+    { value: "Jammu and Kashmir", label: "Jammu and Kashmir" },
+    { value: "Jharkhand", label: "Jharkhand" },
+    { value: "Karnataka", label: "Karnataka" },
+    { value: "Kerala", label: "Kerala" },
+    { value: "Ladakh", label: "Ladakh" },
+    { value: "Lakshadweep", label: "Lakshadweep" },
+    { value: "Madhya Pradesh", label: "Madhya Pradesh" },
+    { value: "Maharashtra", label: "Maharashtra" },
+    { value: "Manipur", label: "Manipur" },
+    { value: "Meghalaya", label: "Meghalaya" },
+    { value: "Mizoram", label: "Mizoram" },
+    { value: "Nagaland", label: "Nagaland" },
+    { value: "Odisha", label: "Odisha" },
+    { value: "Puducherry", label: "Puducherry" },
+    { value: "Punjab", label: "Punjab" },
+    { value: "Rajasthan", label: "Rajasthan" },
+    { value: "Sikkim", label: "Sikkim" },
+    { value: "Tamil Nadu", label: "Tamil Nadu" },
+    { value: "Telangana", label: "Telangana" },
+    { value: "Tripura", label: "Tripura" },
+    { value: "Uttar Pradesh", label: "Uttar Pradesh" },
+    { value: "Uttarakhand", label: "Uttarakhand" },
+    { value: "West Bengal", label: "West Bengal" },
+  ];
+
+  const quantityRefs = useRef([]);
+
+  useEffect(() => {
+    quantityRefs.current = quantityRefs.current.slice(0, products.length);
+  }, [products.length]);
 
   const handleMobileChange = async (e) => {
     const mobile = e.target.value.replace(/\D/g, "").slice(0, 10);
@@ -162,7 +214,11 @@ const Billing = ({ url, setSidebarOpen }) => {
       ...newProducts[index],
       product: product._id,
       productName: product.name,
-      priceBeforeGst: product.priceBeforeGst,
+      // priceBeforeGst: product.priceBeforeGst,
+      priceBeforeGst: (
+        product.printPrice /
+        (1 + 0.01 * product.gstPercentage)
+      ).toFixed(2),
       gstPercentage: product.gstPercentage,
       priceAfterDiscount: "",
       finalPrice: "",
@@ -204,18 +260,15 @@ const Billing = ({ url, setSidebarOpen }) => {
 
     const p = newProducts[index];
     const priceBeforeGst = parseFloat(p.priceBeforeGst) || 0;
-    // const discount = parseFloat(p.discount) || 0;
     const discount = parseFloat(discountValue) || 0;
     const gstPercentage = parseFloat(p.gstPercentage) || 0;
     const quantity = parseFloat(p.quantity) || 0;
     let discountAmt = 0;
 
     let priceAfterDiscount = priceBeforeGst;
-    // if (p.discountMethod === "percentage") {
     if (discountMethod === "percentage") {
       priceAfterDiscount = priceBeforeGst - (priceBeforeGst * discount) / 100;
       discountAmt = (priceBeforeGst * discount) / 100;
-      // } else if (p.discountMethod === "flat") {
     } else if (discountMethod === "flat") {
       priceAfterDiscount = priceBeforeGst - discount;
       discountAmt = discount;
@@ -232,15 +285,64 @@ const Billing = ({ url, setSidebarOpen }) => {
     setProducts(newProducts);
 
     if (field === "productName") {
-      fetchProductSuggestions(index, value);
+      const barcodePattern = /^\d{5}$/;
+      const trimmedValue = value.trim();
 
-      if (
-        selectedProducts[index] &&
-        selectedProducts[index].name.trim() !== value.trim()
-      ) {
-        const newSelected = [...selectedProducts];
-        newSelected[index] = null;
-        setSelectedProducts(newSelected);
+      if (barcodePattern.test(trimmedValue)) {
+        // Barcode detected, fetch product by barcode
+        axios
+          .get(`${url}/api/store-products/by-barcode/${trimmedValue}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          .then((res) => {
+            const sp = res.data;
+            if (sp && sp.product) {
+              const updatedProducts = [...products];
+              updatedProducts[index] = {
+                ...updatedProducts[index],
+                product: sp.product._id,
+                productName: sp.product.name,
+                // priceBeforeGst: sp.product.priceBeforeGst,
+                priceBeforeGst: (
+                  sp.product.printPrice /
+                  (1 + 0.01 * sp.product.gstPercentage)
+                ).toFixed(2),
+                gstPercentage: sp.product.gstPercentage,
+                priceAfterDiscount: "",
+                finalPrice: "",
+                total: "",
+              };
+              setProducts(updatedProducts);
+
+              const updatedSelected = [...selectedProducts];
+              updatedSelected[index] = sp.product;
+              setSelectedProducts(updatedSelected);
+
+              // Auto-focus quantity field for fast billing
+              setTimeout(() => {
+                if (quantityRefs.current[index]) {
+                  quantityRefs.current[index].focus();
+                }
+              }, 100);
+            } else {
+              toast.error("No product found for this barcode.");
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+            toast.error("Error fetching product by barcode.");
+          });
+      } else {
+        fetchProductSuggestions(index, value);
+
+        if (
+          selectedProducts[index] &&
+          selectedProducts[index].name.trim() !== trimmedValue
+        ) {
+          const newSelected = [...selectedProducts];
+          newSelected[index] = null;
+          setSelectedProducts(newSelected);
+        }
       }
     }
 
@@ -464,7 +566,7 @@ const Billing = ({ url, setSidebarOpen }) => {
 
               <div className="col-md-2">
                 <label className="form-label">State*</label>
-                <select
+                {/* <select
                   className="form-select"
                   name="state"
                   value={customer.state}
@@ -491,7 +593,21 @@ const Billing = ({ url, setSidebarOpen }) => {
                       {state}
                     </option>
                   ))}
-                </select>
+                </select> */}
+                <Select
+                  options={indianStatesAndUTs}
+                  value={indianStatesAndUTs.find(
+                    (option) => option.value === customer.state
+                  )}
+                  onChange={(selectedOption) =>
+                    setCustomer({
+                      ...customer,
+                      state: selectedOption?.value || "",
+                    })
+                  }
+                  className="basic-single-select"
+                  classNamePrefix="select"
+                />
               </div>
               <div className="col-md-2">
                 <label className="form-label">Customer Name</label>
@@ -720,6 +836,7 @@ const Billing = ({ url, setSidebarOpen }) => {
                     onChange={(e) =>
                       handleChangeProd(index, "quantity", e.target.value)
                     }
+                    ref={(el) => (quantityRefs.current[index] = el)}
                     required
                     min={1}
                   />
@@ -818,8 +935,8 @@ const Billing = ({ url, setSidebarOpen }) => {
             ))}
             <div className="row mt-3 gx-2">
               <div className="col-md-8"></div>
-              <div className="col-md-1">
-                <label className="form-label">Discount</label>
+              <div className="col-md-1 my-1">
+                <label className="form-label">Discount:</label>
               </div>
               <div className="col-md-1">
                 <select
@@ -827,7 +944,6 @@ const Billing = ({ url, setSidebarOpen }) => {
                   value={discountMethod}
                   onChange={(e) => setDiscountMethod(e.target.value)}
                 >
-                  <option value="">--Choose--</option>
                   <option value="percentage">%</option>
                   <option value="flat">Flat</option>
                 </select>

@@ -35,6 +35,7 @@ export const createPurchase = async (req, res) => {
                     priceBeforeGst: p.priceBeforeGst,
                     gstPercentage: p.gstPercentage,
                     price: p.sellingPrice,
+                    printPrice: p.printPrice,
                 });
             }
 
@@ -49,6 +50,9 @@ export const createPurchase = async (req, res) => {
             if (p.sellingPrice) {
                 product.price = Number(p.sellingPrice);
             }
+            if (p.printPrice) {
+                product.printPrice = Number(p.printPrice);
+            }
 
             await product.save();
 
@@ -61,6 +65,7 @@ export const createPurchase = async (req, res) => {
                 priceBeforeGst: p.priceBeforeGst,
                 gstPercentage: p.gstPercentage,
                 sellingPrice: p.sellingPrice,
+                printPrice: p.printPrice,
             });
         }
 
@@ -105,5 +110,40 @@ export const getAllPurchases = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Failed to fetch purchases." });
+    }
+};
+
+export const getPurchaseById = async (req, res) => {
+    try {
+        const purchase = await Purchase.findById(req.params.id)
+            .populate('company')
+            .populate({
+                path: 'products.product',
+                model: 'Product'
+            });
+
+        if (!purchase) {
+            return res.status(404).json({ error: "Purchase not found." });
+        }
+
+        // Map product fields to include barcode:
+        const productsWithBarcode = purchase.products.map(p => ({
+            name: p.product.name,
+            barcode: p.product.barcode,
+            // sellingPrice: p.sellingPrice,
+            printPrice: p.printPrice,
+            quantity: p.quantity
+        }));
+
+        res.json({
+            _id: purchase._id,
+            invoiceNumber: purchase.invoiceNumber,
+            date: purchase.date,
+            company: purchase.company,
+            products: productsWithBarcode
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Server error while fetching purchase." });
     }
 };

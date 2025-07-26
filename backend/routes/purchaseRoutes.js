@@ -1,10 +1,11 @@
 import express from "express";
-import { createPurchase, getAllPurchases } from "../controllers/purchaseController.js";
+import { createPurchase, getAllPurchases, getPurchaseById } from "../controllers/purchaseController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.post("/", protect("admin"), createPurchase);
 router.get("/", protect("admin"), getAllPurchases);
+router.get("/:id", protect("admin"), getPurchaseById);
 
 export default router;

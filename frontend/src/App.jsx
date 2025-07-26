@@ -7,6 +7,7 @@ import Navbar from "./components/Navbar/Navbar";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Purchase from "./pages/Purchase/Purchase";
 import Orders from "./pages/Orders/Orders";
+import Barcode from "./pages/Barcode/Barcode";
 import Companies from "./pages/Companies/Companies";
 import Products from "./pages/Products/Products";
 import AddStore from "./pages/AddStore/AddStore";
@@ -56,6 +57,7 @@ function App() {
               <Route path="/dashboard" element={<PrivateRoute roles={["admin"]}> <Dashboard url={url} /> </PrivateRoute>} />
               <Route path="/purchase" element={<PrivateRoute roles={["admin"]}> <Purchase url={url} /> </PrivateRoute>} />
               <Route path="/purchase-list" element={<PrivateRoute roles={["admin"]}> <Orders url={url} /> </PrivateRoute>} />
+              <Route path="/purchase-list/barcode/:purchaseId" element={<PrivateRoute roles={["admin"]}> <Barcode url={url} /> </PrivateRoute>} />
               <Route path="/vendors" element={<PrivateRoute roles={["admin"]}> <Companies url={url} /> </PrivateRoute>} />
               <Route path="/products" element={<PrivateRoute roles={["admin", "store"]}> <Products url={url} /> </PrivateRoute>} />
               <Route path="/add-store" element={<PrivateRoute roles={["admin"]}> <AddStore url={url} /> </PrivateRoute>} />

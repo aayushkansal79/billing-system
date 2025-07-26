@@ -84,8 +84,8 @@ const CustomerTransactions = ({ url }) => {
                   <tr key={idx}>
                     <td>{idx + 1}</td>
                     <th>{t.invoiceNo}</th>
-                    <td>₹ {t.billAmount?.toFixed(2)}</td>
-                    <td>₹ {(t.paidAmount - t.usedCoins)?.toFixed(2)}</td>
+                    <th>₹ {t.billAmount?.toFixed(2)}</th>
+                    <th className="text-primary">₹ {(t.paidAmount - t.usedCoins)?.toFixed(2)}</th>
                     <td>
                       <div className="d-flex align-items-center p-2 rounded">
                         <svg
@@ -101,7 +101,7 @@ const CustomerTransactions = ({ url }) => {
                         <b className="m-0">{t.usedCoins}</b>
                       </div>
                     </td>
-                    <th>₹ {t.paidAmount?.toFixed(2)}</th>
+                    <th className="text-success">₹ {t.paidAmount?.toFixed(2)}</th>
                     <th className="text-danger">₹ {t.wallet?.toFixed(2)}</th>
                     <td>{t.paymentType || "Unpaid"}</td>
                     <td>

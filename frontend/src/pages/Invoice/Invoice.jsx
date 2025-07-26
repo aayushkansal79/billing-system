@@ -108,45 +108,131 @@
 // };
 
 // export default Invoice;
-import React, { useEffect, useState } from "react";
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import axios from "axios";
-import { toast } from "react-toastify";
+// import React, { useEffect, useState } from "react";
+// import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+// import axios from "axios";
+// import { toast } from "react-toastify";
 
-const BillGraph = ({ url }) => {
-    const [data, setData] = useState([]);
-    const token = localStorage.getItem("token");
+// const BillGraph = ({ url }) => {
+//     const [data, setData] = useState([]);
+//     const token = localStorage.getItem("token");
 
-    const fetchData = async () => {
-        try {
-            const res = await axios.get(`${url}/api/bill/daily-count`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setData(res.data);
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to fetch bill graph data.");
-        }
-    };
+//     const fetchData = async () => {
+//         try {
+//             const res = await axios.get(`${url}/api/bill/daily-count`, {
+//                 headers: { Authorization: `Bearer ${token}` }
+//             });
+//             setData(res.data);
+//         } catch (err) {
+//             console.error(err);
+//             toast.error("Failed to fetch bill graph data.");
+//         }
+//     };
 
-    useEffect(() => {
-        fetchData();
-    }, [url]);
+//     useEffect(() => {
+//         fetchData();
+//     }, [url]);
 
-    return (
-        <div className="card p-3 mt-3">
-            <h5 className="text-center">Bills Generated Per Day</h5>
-            <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={data}>
-                    <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="count" stroke="#8884d8" strokeWidth={2} />
-                </LineChart>
-            </ResponsiveContainer>
-        </div>
-    );
+//     return (
+//         <div className="card p-3 mt-3">
+//             <h5 className="text-center">Bills Generated Per Day</h5>
+//             <ResponsiveContainer width="100%" height={300}>
+//                 <LineChart data={data}>
+//                     <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+//                     <XAxis dataKey="date" />
+//                     <YAxis />
+//                     <Tooltip />
+//                     <Line type="monotone" dataKey="count" stroke="#8884d8" strokeWidth={2} />
+//                 </LineChart>
+//             </ResponsiveContainer>
+//         </div>
+//     );
+// };
+
+// export default BillGraph;
+
+
+// import React, { useState } from 'react';
+// import Barcode from 'react-barcode';
+// import './Invoice.css'; // Import the CSS for styling
+
+// const MultipleBarcodes = () => {
+//   const [values] = useState([
+//     '12345',
+//     '98765',
+//     '57534',
+//     '74877',
+//   ]);
+
+//   const [products] = useState([
+//     {
+//       name: "S-101",
+//       barcode: "12345",
+//       quantity: 5,
+//     },
+//     {
+//       name: "S-102",
+//       barcode: "78910",
+//       quantity: 2,
+//     },
+//     {
+//       name: "S-103",
+//       barcode: "11121",
+//       quantity: 3,
+//     },
+//   ]);
+
+//   const handlePrint = () => {
+//     window.print();
+//   };
+
+//   return (
+//     <div className="barcode-container">
+//       <h2>Multiple Barcodes</h2>
+//       <button onClick={handlePrint} className="no-print">Print Barcodes</button>
+
+//       <div className="barcode-print-area">
+//         {products.map((product, productIdx) =>
+//           Array.from({ length: product.quantity }).map((_, qtyIdx) => (
+//             <div key={`${productIdx}-${qtyIdx}`} className="barcode-item d-flex flex-column text-center m-4" style={{width: "178px"}}>
+//               <b className="barcode-label">AJJAWAM</b>
+//               <Barcode value={product.barcode} format="CODE128" lineColor="#000" width={2} height={100} displayValue={false} />
+//               <b className="barcode-label">{product.barcode}</b>
+//               <b className="barcode-label">{product.name}</b>
+//               <b className="barcode-label">1749/-</b>
+//             </div>
+//           ))
+//         )}
+//         <div></div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default MultipleBarcodes;
+
+import React from 'react';
+import Select from 'react-select';
+
+const options = [
+  { value: 'apple', label: 'Apple' },
+  { value: 'banana', label: 'Banana' },
+  { value: 'cherry', label: 'Cherry' },
+];
+
+const MySelect = () => {
+  const handleChange = (selectedOption) => {
+    console.log('Selected:', selectedOption);
+  };
+
+  return (
+    <Select
+      options={options}
+      onChange={handleChange}
+      className="basic-multi-select"
+      classNamePrefix="select"
+    />
+  );
 };
 
-export default BillGraph;
+export default MySelect;

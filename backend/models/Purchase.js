@@ -21,6 +21,7 @@ const PurchaseSchema = new mongoose.Schema({
             priceBeforeGst: { type: Number },
             gstPercentage: { type: Number },
             sellingPrice: { type: Number },
+            printPrice: { type: Number },
         },
     ],
     status: { type: Boolean, default: true },

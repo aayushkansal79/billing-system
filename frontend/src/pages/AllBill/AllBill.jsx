@@ -48,9 +48,16 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
         {/* <h2>INVOICE</h2> */}
         <img src={assets.main_logo} width={85} alt="" />
         <div className="text-end">
-          <p className="m-0"><b>Invoice No.:</b> {invoiceNumber}</p>
-          <p className="m-0"><b>Date:</b> {new Date(date).toLocaleDateString()}</p>
-          <p><b>Payment Method:</b> {paymentStatus === "paid" ? paymentMethod || "--" : "Unpaid"}</p>
+          <p className="m-0">
+            <b>Invoice No.:</b> {invoiceNumber}
+          </p>
+          <p className="m-0">
+            <b>Date:</b> {new Date(date).toLocaleDateString()}
+          </p>
+          <p>
+            <b>Payment Method:</b>{" "}
+            {paymentStatus === "paid" ? paymentMethod || "--" : "Unpaid"}
+          </p>
         </div>
       </div>
 
@@ -93,8 +100,12 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <th>Product</th>
             <th>Qty</th>
             <th>Price</th>
-            <th>Discount</th>
-            <th>Price After Discount</th>
+            {discount > 0 && (
+              <>
+                <th>Discount</th>
+                <th>Price After Discount</th>
+              </>
+            )}
             <th>GST %</th>
             <th>GST Type</th>
             <th>GST Amount</th>
@@ -109,8 +120,12 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               <td>{p.productName}</td>
               <td>{p.quantity}</td>
               <td>₹{p.priceBeforeGst}</td>
-              <td>₹{p.discountAmt?.toFixed(2) || 0}</td>
-              <td>₹{p.priceAfterDiscount?.toFixed(2)}</td>
+              {discount > 0 && (
+                <>
+                  <td>₹{p.discountAmt?.toFixed(2) || 0}</td>
+                  <td>₹{p.priceAfterDiscount?.toFixed(2)}</td>
+                </>
+              )}
               <td>
                 {store.state === state ? (
                   <>
@@ -164,7 +179,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
         </tbody>
         <tfoot>
           <tr>
-            <td colSpan="5">
+            <td colSpan={discount>0 ? 5 : 3}>
               <strong>Total</strong>
             </td>
             <td>
@@ -180,15 +195,15 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             </td>
           </tr>
           <tr>
-            <td colSpan="10">
+            <td colSpan={discount>0 ? 10 : 8}>
               <strong>Coins Used</strong>
             </td>
             <td>
-              <strong>₹ -{usedCoins || 0}</strong>
+              <strong>₹ {usedCoins || 0}</strong>
             </td>
           </tr>
           <tr>
-            <td colSpan="10">
+            <td colSpan={discount>0 ? 10 : 8}>
               <strong>Grand Total</strong>
             </td>
             <td>

@@ -29,3 +29,8 @@
 .purchase input[type="number"] {
   -moz-appearance: textfield;
 }
+
+.purchase .pur-btn{
+    border: none;
+    background-color: transparent;
+}

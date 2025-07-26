@@ -307,7 +307,7 @@ const Products = ({ url }) => {
                           }
                         />
                       ) : (
-                        `₹${product.priceBeforeGst.toFixed(2)}`
+                        `₹${((product.printPrice)/(1+(0.01*product.gstPercentage))).toFixed(2)}`
                       )}
                     </td>
                     <td>
@@ -344,7 +344,7 @@ const Products = ({ url }) => {
                           }
                         />
                       ) : (
-                        `₹${product.price.toFixed(2)}`
+                        `₹${product.printPrice.toFixed(2)}`
                       )}
                     </th>
                     <td>{new Date(product.updatedAt).toLocaleString()}</td>

@@ -67,6 +67,7 @@ const Companies = ({ url }) => {
           <thead className="table-danger">
             <tr>
               <th scope="col">Vendor Name</th>
+              <th scope="col">Short Name</th>
               <th scope="col">Address</th>
               <th scope="col">Contact No.</th>
               <th scope="col">GST Number</th>
@@ -89,6 +90,20 @@ const Companies = ({ url }) => {
                     />
                   ) : (
                     company.name
+                  )}
+                </th>
+                <th>
+                  {editIndex === index ? (
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editData.shortName}
+                      onChange={(e) =>
+                        handleInputChange("shortName", e.target.value)
+                      }
+                    />
+                  ) : (
+                    company.shortName
                   )}
                 </th>
                 <td>

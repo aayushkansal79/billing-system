@@ -138,6 +138,33 @@ export const getStoreProducts = async (req, res) => {
     }
 };
 
+//Get store product by barcode
+export const getStoreProductByBarcode = async (req, res) => {
+    try {
+        const { barcode } = req.params;
+        const storeId = req.store._id;
+
+        const product = await Product.findOne({ barcode });
+        if (!product) {
+            return res.status(404).json({ error: "Product with this barcode not found." });
+        }
+
+        const storeProduct = await StoreProduct.findOne({
+            store: storeId,
+            product: product._id
+        }).populate("product");
+
+        if (!storeProduct) {
+            return res.status(404).json({ error: "Product not found in this store." });
+        }
+
+        res.json(storeProduct);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Server error while fetching product by barcode." });
+    }
+};
+
 // Search store products by product name
 export const searchStoreProducts = async (req, res) => {
     try {
