@@ -1,10 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import "./Billing.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import Select from "react-select";
 import Loader from "../../components/Loader/Loader";
+import Invoice from "../Invoice/Invoice";
+import { AuthContext } from "../../context/AuthContext";
 
 const Billing = ({ url, setSidebarOpen }) => {
   useEffect(() => {
@@ -12,8 +14,9 @@ const Billing = ({ url, setSidebarOpen }) => {
   }, []);
 
   // setSidebarOpen(false);
-
   const [loading, setLoading] = useState(false);
+  const componentRef = useRef();
+  const { user } = useContext(AuthContext);
 
   const [products, setProducts] = useState([
     {
@@ -48,9 +51,13 @@ const Billing = ({ url, setSidebarOpen }) => {
   const [discountMethod, setDiscountMethod] = useState("percentage");
   const [discountValue, setDiscountValue] = useState("");
 
-  const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("");
-  const [usedCoins, setUsedCoins] = useState(0);
+  // const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMethods, setPaymentMethods] = useState([
+    { method: "", amount: "" },
+  ]);
+  const [paidAmount, setPaidAmount] = useState();
+  const [usedCoins, setUsedCoins] = useState();
 
   const [selectedTransactions, setSelectedTransactions] = useState([]);
   const [selectedTransactionsTotal, setSelectedTransactionsTotal] = useState(0);
@@ -145,7 +152,7 @@ const Billing = ({ url, setSidebarOpen }) => {
         toast.success("Existing customer data loaded.");
       } catch (err) {
         if (err.response?.status === 404) {
-          toast.info("Customer not found. Enter details manually.");
+          // toast.info("Customer not found. Enter details manually.");
         } else {
           console.error(err);
           toast.error("Error fetching customer data.");
@@ -191,9 +198,10 @@ const Billing = ({ url, setSidebarOpen }) => {
     if (discountMethod === "percentage") {
       priceAfterDiscount = priceBeforeGst - (priceBeforeGst * discount) / 100;
       discountAmt = (priceBeforeGst * discount) / 100;
-    } else if (discountMethod === "flat") {
-      priceAfterDiscount = priceBeforeGst - discount;
-      discountAmt = discount;
+    } else {
+      // For flat discount, skip per-product discount
+      priceAfterDiscount = priceBeforeGst;
+      discountAmt = 0;
     }
 
     const finalPrice = priceAfterDiscount * (1 + gstPercentage / 100);
@@ -270,9 +278,10 @@ const Billing = ({ url, setSidebarOpen }) => {
     if (discountMethod === "percentage") {
       priceAfterDiscount = priceBeforeGst - (priceBeforeGst * discount) / 100;
       discountAmt = (priceBeforeGst * discount) / 100;
-    } else if (discountMethod === "flat") {
-      priceAfterDiscount = priceBeforeGst - discount;
-      discountAmt = discount;
+    } else {
+      // priceAfterDiscount = priceBeforeGst - discount;
+      // discountAmt = discount;
+      discountAmt = 0;
     }
 
     const finalPrice = priceAfterDiscount * (1 + gstPercentage / 100);
@@ -393,31 +402,70 @@ const Billing = ({ url, setSidebarOpen }) => {
     });
   };
 
-  const handleTransactionSelection = (
-    transactionId,
-    unpaidAmount,
-    isChecked
-  ) => {
-    setSelectedTransactions((prev) => {
-      const updated = isChecked
-        ? [...prev, transactionId]
-        : prev.filter((id) => id !== transactionId);
+  // const handleTransactionSelection = (
+  //   transactionId,
+  //   unpaidAmount,
+  //   isChecked
+  // ) => {
+  //   setSelectedTransactions((prev) => {
+  //     const updated = isChecked
+  //       ? [...prev, transactionId]
+  //       : prev.filter((id) => id !== transactionId);
 
-      return updated;
-    });
+  //     return updated;
+  //   });
 
-    setSelectedTransactionsTotal((prevTotal) => {
-      return isChecked ? prevTotal + unpaidAmount : prevTotal - unpaidAmount;
-    });
+  //   setSelectedTransactionsTotal((prevTotal) => {
+  //     return isChecked ? prevTotal + unpaidAmount : prevTotal - unpaidAmount;
+  //   });
+  // };
+
+  // const grandTotal = products
+  //   .reduce((acc, p) => {
+  //     const qty = parseFloat(p.quantity) || 0;
+  //     const finalPrice = parseFloat(p.finalPrice) || 0;
+  //     return acc + qty * finalPrice;
+  //   }, 0)
+  //   .toFixed(2);
+
+  const baseTotal = products.reduce((acc, p) => {
+    const qty = parseFloat(p.quantity) || 0;
+    const finalPrice = parseFloat(p.finalPrice) || 0;
+    return acc + qty * finalPrice;
+  }, 0);
+
+  let discountedTotal = baseTotal;
+
+  if (discountMethod === "flat") {
+    discountedTotal = Math.max(0, baseTotal - parseFloat(discountValue || 0));
+  }
+  const grandTotal = discountedTotal.toFixed(2);
+
+  const [billInvoice, setBillInvoice] = useState(null);
+
+  const handlePaymentChange = (index, field, value) => {
+    const updated = [...paymentMethods];
+    updated[index][field] =
+      field === "amount" ? value.replace(/^0+(?=\d)/, "") : value;
+    setPaymentMethods(updated);
+
+    if (
+      index === paymentMethods.length - 1 &&
+      field === "amount" &&
+      updated[index].method &&
+      parseFloat(value) > 0
+    ) {
+      setPaymentMethods([...updated, { method: "", amount: "" }]);
+    }
   };
 
-  const grandTotal = products
-    .reduce((acc, p) => {
-      const qty = parseFloat(p.quantity) || 0;
-      const finalPrice = parseFloat(p.finalPrice) || 0;
-      return acc + qty * finalPrice;
-    }, 0)
-    .toFixed(2);
+  useEffect(() => {
+    const sum = paymentMethods.reduce((acc, curr) => {
+      const amt = parseFloat(curr.amount);
+      return acc + (isNaN(amt) ? 0 : amt);
+    }, 0);
+    setPaidAmount(sum);
+  }, [paymentMethods]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -433,22 +481,45 @@ const Billing = ({ url, setSidebarOpen }) => {
         return;
       }
 
-      if (paymentStatus === "paid" && !paymentMethod) {
-        toast.error("Enter Payment Method");
+      if (!customer.state) {
+        toast.error("Please Enter State");
         setLoading(false);
         return;
       }
 
-      if (paymentStatus === "unpaid" && selectedTransactions.length > 0) {
-        toast.error("Uncheck Previous Order");
+      if (paymentStatus !== "unpaid" && !paymentMethods) {
+        toast.error("Enter Payment Status/Method");
         setLoading(false);
         return;
       }
 
-      const totalAmount = filteredProducts.reduce(
+      if (paymentStatus !== "unpaid" && !paidAmount) {
+        toast.error("Enter Paid Amount");
+        setLoading(false);
+        return;
+      }
+
+      // if (paymentStatus === "unpaid" && selectedTransactions.length > 0) {
+      //   toast.error("Uncheck Previous Order");
+      //   setLoading(false);
+      //   return;
+      // }
+
+      // const totalAmount = filteredProducts.reduce(
+      //   (acc, p) => acc + parseFloat(p.total || 0),
+      //   0
+      // );
+
+      const baseTotal = filteredProducts.reduce(
         (acc, p) => acc + parseFloat(p.total || 0),
         0
       );
+
+      let totalAmount = baseTotal;
+
+      if (discountMethod === "flat") {
+        totalAmount = Math.max(0, baseTotal - parseFloat(discountValue || 0));
+      }
 
       if (usedCoins > (customer.coins || 0)) {
         toast.error(
@@ -461,7 +532,7 @@ const Billing = ({ url, setSidebarOpen }) => {
       }
 
       // Calculate paidAmount
-      const paidAmount = paymentStatus === "paid" ? totalAmount : 0;
+      // const paidAmount = paymentStatus === "paid" ? totalAmount : 0;
 
       // Calculate generated coins
       const generatedCoins = Math.floor(totalAmount / 100);
@@ -488,20 +559,21 @@ const Billing = ({ url, setSidebarOpen }) => {
         })),
         discount: parseFloat(discountValue),
         discountMethod,
+        baseTotal,
         totalAmount,
-        paymentMethod,
+        paymentMethods,
         paymentStatus,
         paidAmount,
         usedCoins,
         generatedCoins,
-        selectedTransactionIds: selectedTransactions,
+        // selectedTransactionIds: selectedTransactions,
       };
 
-      await axios.post(`${url}/api/bill`, billPayload, {
+      const res = await axios.post(`${url}/api/bill`, billPayload, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("Bill and transaction logged successfully!");
-
+      setBillInvoice(res.data.bill);
       setProducts([
         {
           product: null,
@@ -528,8 +600,9 @@ const Billing = ({ url, setSidebarOpen }) => {
       });
       setDiscountMethod("percentage");
       setDiscountValue("");
-      setPaymentMethod("");
+      setPaymentMethods([]);
       setPaymentStatus("");
+      setPaidAmount(0);
       setUsedCoins(0);
       setTransactions([]);
       setSelectedTransactionsTotal(0);
@@ -539,6 +612,42 @@ const Billing = ({ url, setSidebarOpen }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePrint = () => {
+    const contents = componentRef.current.innerHTML;
+    const frame1 = document.createElement("iframe");
+    frame1.name = "frame1";
+    frame1.style.position = "absolute";
+    frame1.style.top = "-1000000px";
+    document.body.appendChild(frame1);
+
+    const frameDoc = frame1.contentWindow.document;
+
+    frameDoc.open();
+    frameDoc.write("<html><head><title>Invoice Print</title>");
+
+    // Clone current styles
+    document
+      .querySelectorAll('link[rel="stylesheet"], style')
+      .forEach((style) => {
+        frameDoc.write(style.outerHTML);
+      });
+
+    frameDoc.write("</head><body>");
+    frameDoc.write(contents);
+    frameDoc.write("</body></html>");
+    frameDoc.close();
+
+    setTimeout(() => {
+      frame1.contentWindow.focus();
+      frame1.contentWindow.print();
+      document.body.removeChild(frame1);
+    }, 500);
+  };
+
+  const closeModal = () => {
+    setBillInvoice(null);
   };
 
   return (
@@ -567,34 +676,6 @@ const Billing = ({ url, setSidebarOpen }) => {
 
               <div className="col-md-2">
                 <label className="form-label">State*</label>
-                {/* <select
-                  className="form-select"
-                  name="state"
-                  value={customer.state}
-                  onChange={(e) =>
-                    setCustomer({ ...customer, state: e.target.value })
-                  }
-                  required
-                >
-                  <option value="">Choose State...</option>
-                  {[
-                    "Gujarat",
-                    "Delhi",
-                    "Maharashtra",
-                    "Rajasthan",
-                    "Uttar Pradesh",
-                    "Bihar",
-                    "Punjab",
-                    "Haryana",
-                    "Madhya Pradesh",
-                    "Karnataka",
-                    "Tamil Nadu",
-                  ].map((state) => (
-                    <option key={state} value={state}>
-                      {state}
-                    </option>
-                  ))}
-                </select> */}
                 <Select
                   options={indianStatesAndUTs}
                   value={indianStatesAndUTs.find(
@@ -636,55 +717,6 @@ const Billing = ({ url, setSidebarOpen }) => {
                 />
               </div>
 
-              {/* <div className="col-md-2">
-                <label className="form-label">Payment Method</label>
-                <select
-                  className="form-select"
-                  name="payMethod"
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                >
-                  <option value="">Choose...</option>
-                  <option value="Cash">Cash</option>
-                  <option value="UPI">UPI</option>
-                  <option value="Bank Transfer">Bank Transfer</option>
-                </select>
-              </div>
-
-              <div className="col-md-2">
-                <label className="form-label">Payment Status</label>
-                <div className="d-flex">
-                  <div className="form-check mx-3">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="paymentStatus"
-                      id="paidRadio"
-                      value="paid"
-                      checked={paymentStatus === "paid"}
-                      onChange={(e) => setPaymentStatus(e.target.value)}
-                    />
-                    <label className="form-check-label" htmlFor="paidRadio">
-                      Paid
-                    </label>
-                  </div>
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="paymentStatus"
-                      id="unpaidRadio"
-                      value="unpaid"
-                      checked={paymentStatus === "unpaid"}
-                      onChange={(e) => setPaymentStatus(e.target.value)}
-                    />
-                    <label className="form-check-label" htmlFor="unpaidRadio">
-                      Unpaid
-                    </label>
-                  </div>
-                </div>
-              </div> */}
-
               <div className="col-md-1">
                 <label className="form-label">Coins</label>
                 <div
@@ -709,63 +741,37 @@ const Billing = ({ url, setSidebarOpen }) => {
                 <input
                   type="number"
                   className="form-control"
+                  placeholder="Coins"
                   value={usedCoins}
                   onChange={(e) => setUsedCoins(parseInt(e.target.value) || 0)}
                   min={0}
                   max={customer.coins}
                 />
               </div>
+              <div className="col-md-1">
+                <label className="form-label">Wallet</label>
+                <div
+                  className="d-flex bg-dark align-items-center py-2 rounded"
+                  style={{ height: "32px", width: "110px" }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="20px"
+                    viewBox="0 -960 960 960"
+                    width="20px"
+                    fill="#ff9000"
+                    className="mx-2"
+                  >
+                    <path d="M200-200v-560 560Zm0 80q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v100h-80v-100H200v560h560v-100h80v100q0 33-23.5 56.5T760-120H200Zm320-160q-33 0-56.5-23.5T440-360v-240q0-33 23.5-56.5T520-680h280q33 0 56.5 23.5T880-600v240q0 33-23.5 56.5T800-280H520Zm280-80v-240H520v240h280Zm-160-60q25 0 42.5-17.5T700-480q0-25-17.5-42.5T640-540q-25 0-42.5 17.5T580-480q0 25 17.5 42.5T640-420Z" />
+                  </svg>
+                  <b className="m-0 text-white">₹ {customer.pendingAmount}</b>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* {transactions.length > 0 && (
-            <div className="col-md-3">
-              <label className="form-label text-danger">
-                Outstanding Amounts:
-              </label>
-              <table className="table align-middle table-striped my-0">
-                <thead className="table-danger">
-                  <tr>
-                    <th>#</th>
-                    <th>Amt.</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map((t, idx) => (
-                    <tr key={idx}>
-                      <td className="d-flex">
-                        <div className="form-check">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={selectedTransactions.includes(t._id)}
-                            onChange={(e) =>
-                              handleTransactionSelection(
-                                t._id,
-                                t.billAmount - t.paidAmount,
-                                e.target.checked
-                              )
-                            }
-                          />
-                        </div>
-                        {t.invoiceNo}
-                      </td>
-                      <th className="text-danger">₹ {t.billAmount}</th>
-                      <td>
-                        <small>
-                          {new Date(t.createdAt).toLocaleDateString()}
-                        </small>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )} */}
-
           <div className="col-md-9">
-            <div className="row">
+            <div className="row g-1">
               <div
                 className="head p-2 mb-2"
                 style={{ background: "#FBEBD3", color: "#6D0616" }}
@@ -809,7 +815,7 @@ const Billing = ({ url, setSidebarOpen }) => {
                     onChange={(e) =>
                       handleChangeProd(index, "productName", e.target.value)
                     }
-                    required
+                    // required
                   />
                   {productDropdowns[index] &&
                     productDropdowns[index].length > 0 && (
@@ -839,7 +845,7 @@ const Billing = ({ url, setSidebarOpen }) => {
                       handleChangeProd(index, "quantity", e.target.value)
                     }
                     ref={(el) => (quantityRefs.current[index] = el)}
-                    required
+                    // required
                     min={1}
                   />
                 </div>
@@ -936,130 +942,69 @@ const Billing = ({ url, setSidebarOpen }) => {
               </div>
             </div>
             <div className="row mt-3 gx-2">
+              <div className="col-md-7"></div>
               <div className="col-md-3">
-                {(usedCoins > 0 || selectedTransactionsTotal > 0) && (
+                {(usedCoins > 0 ||
+                  customer?.pendingAmount !== 0 ||
+                  (discountMethod === "flat" && discountValue > 0)) && (
                   <h6 className="text-secondary fw-bold">Net Total</h6>
                 )}
-                {selectedTransactionsTotal > 0 && (
-                  <h6 className="text-secondary fw-bold">
-                    Outstanding Amounts
+                {parseFloat(customer?.pendingAmount) < 0 && (
+                  <h6 className="text-danger fw-bold">
+                    Outstanding Amounts (+)
+                  </h6>
+                )}
+                {parseFloat(customer?.pendingAmount) > 0 && (
+                  <h6 className="text-success fw-bold">
+                    Outstanding Amounts (-)
                   </h6>
                 )}
                 {usedCoins > 0 && (
-                  <h6 className="text-secondary fw-bold">Coins Used</h6>
+                  <h6 className="text-success fw-bold">Coins Used (-)</h6>
                 )}
-                <h6 className="text-danger fw-bold">Grand Total</h6>
+                {discountMethod === "flat" && discountValue > 0 && (
+                  <h6 className="text-success fw-bold">Discount (-)</h6>
+                )}
+                <h6 className="text-primary fw-bold">Grand Total</h6>
               </div>
-              <div className="col-md-7"></div>
               <div className="col-md-2">
-                {(usedCoins > 0 || selectedTransactionsTotal > 0) && (
+                {(usedCoins > 0 ||
+                  customer?.pendingAmount !== 0 ||
+                  (discountMethod === "flat" && discountValue > 0)) && (
                   <h6 className="text-secondary fw-bold">
                     ₹ {Math.round(grandTotal).toFixed(2)}
                   </h6>
                 )}
-                {selectedTransactionsTotal > 0 && (
-                  <h6 className="text-secondary fw-bold">
-                    ₹ {Math.round(selectedTransactionsTotal).toFixed(2)}
+                {customer?.pendingAmount < 0 && (
+                  <h6 className="text-danger fw-bold">
+                    ₹ {(-customer?.pendingAmount).toFixed(2)}
+                  </h6>
+                )}
+                {customer?.pendingAmount > 0 && (
+                  <h6 className="text-success fw-bold">
+                    ₹ {(customer?.pendingAmount).toFixed(2)}
                   </h6>
                 )}
                 {usedCoins > 0 && (
-                  <h6 className="text-secondary fw-bold">
-                    ₹ -{usedCoins.toFixed(2)}
+                  <h6 className="text-success fw-bold">
+                    ₹ {usedCoins.toFixed(2)}
                   </h6>
                 )}
-                <h6 className="text-danger fw-bold">
+                {discountMethod === "flat" && discountValue > 0 && (
+                  <h6 className="text-success fw-bold">
+                    ₹ {parseFloat(discountValue).toFixed(2)}
+                  </h6>
+                )}
+                <h6 className="text-primary fw-bold">
                   ₹{" "}
                   {Math.round(
-                    parseFloat(grandTotal) +
-                      parseFloat(selectedTransactionsTotal) -
-                      usedCoins
+                    parseFloat(grandTotal) -
+                      parseFloat(customer?.pendingAmount) -
+                      (usedCoins || 0)
                   ).toFixed(2)}
                 </h6>
               </div>
             </div>
-
-            {/* <div className="row align-items-end mt-3 gx-2">
-              <div className="col-md-2">
-                <button type="submit" className="btn btn-success">
-                  Submit
-                </button>
-              </div>
-
-              <div className="col-md-6"></div>
-
-              <div className="col-md-1">
-                <label className="form-label">Disc. In</label>
-                <select
-                  className="form-select"
-                  value={discountMethod}
-                  onChange={(e) => setDiscountMethod(e.target.value)}
-                >
-                  <option value="">--Choose--</option>
-                  <option value="percentage">%</option>
-                  <option value="flat">Flat</option>
-                </select>
-              </div>
-
-              <div className="col-md-1">
-                <label className="form-label">Disc. Amt.</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={discountValue}
-                  onChange={(e) => setDiscountValue(e.target.value) || 0}
-                  min={0}
-                />
-              </div>
-
-              <div className="col-md-2">
-                <label className="form-label">Payment Method</label>
-                <select
-                  className="form-select"
-                  name="payMethod"
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                >
-                  <option value="">Choose...</option>
-                  <option value="Cash">Cash</option>
-                  <option value="UPI">UPI</option>
-                  <option value="Bank Transfer">Bank Transfer</option>
-                </select>
-              </div>
-
-              <div className="col-md-2">
-                <label className="form-label">Payment Status</label>
-                <div className="d-flex">
-                  <div className="form-check mx-3">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="paymentStatus"
-                      id="paidRadio"
-                      value="paid"
-                      checked={paymentStatus === "paid"}
-                      onChange={(e) => setPaymentStatus(e.target.value)}
-                    />
-                    <label className="form-check-label" htmlFor="paidRadio">
-                      Paid
-                    </label>
-                  </div>
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="paymentStatus"
-                      id="unpaidRadio"
-                      value="unpaid"
-                      checked={paymentStatus === "unpaid"}
-                      onChange={(e) => setPaymentStatus(e.target.value)}
-                    />
-                    <label className="form-check-label" htmlFor="unpaidRadio">
-                      Unpaid
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div> */}
           </div>
 
           <div className="col-md-3">
@@ -1084,18 +1029,19 @@ const Billing = ({ url, setSidebarOpen }) => {
                       <tr key={idx}>
                         <td className="d-flex">
                           <div className="form-check">
-                            <input
+                            {/* <input
                               className="form-check-input"
                               type="checkbox"
                               checked={selectedTransactions.includes(t._id)}
                               onChange={(e) =>
                                 handleTransactionSelection(
                                   t._id,
-                                  t.billAmount - t.paidAmount,
+                                  // t.billAmount - t.paidAmount,
+                                  t.billAmount,
                                   e.target.checked
                                 )
                               }
-                            />
+                            /> */}
                           </div>
                           {t.invoiceNo}
                         </td>
@@ -1117,11 +1063,13 @@ const Billing = ({ url, setSidebarOpen }) => {
             )}
           </div>
 
-          <div className="row align-items-end gx-3 border-top py-2">
-            <div className="col-md-2">
+          <hr className="m-2" />
+
+          <div className="row align-items-start gx-1 py-2">
+            <div className="col-md-3">
               <label className="form-label">Payment Status</label>
-              <div className="d-flex">
-                <div className="form-check mx-3">
+              <div className="d-flex mt-2">
+                <div className="form-check mx-2">
                   <input
                     className="form-check-input"
                     type="radio"
@@ -1135,7 +1083,24 @@ const Billing = ({ url, setSidebarOpen }) => {
                     Paid
                   </label>
                 </div>
-                <div className="form-check">
+                <div className="form-check mx-2">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="paymentStatus"
+                    id="partiallypaidRadio"
+                    value="partial"
+                    checked={paymentStatus === "partial"}
+                    onChange={(e) => setPaymentStatus(e.target.value)}
+                  />
+                  <label
+                    className="form-check-label"
+                    htmlFor="partiallypaidRadio"
+                  >
+                    Partially Paid
+                  </label>
+                </div>
+                <div className="form-check mx-2">
                   <input
                     className="form-check-input"
                     type="radio"
@@ -1152,13 +1117,14 @@ const Billing = ({ url, setSidebarOpen }) => {
               </div>
             </div>
 
-            <div className="col-md-2">
+            {/* <div className="col-md-2">
               <label className="form-label">Payment Method</label>
               <select
                 className="form-select"
                 name="payMethod"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
+                disabled={paymentStatus === "unpaid"}
               >
                 <option value="">Choose...</option>
                 <option value="Cash">Cash</option>
@@ -1167,41 +1133,138 @@ const Billing = ({ url, setSidebarOpen }) => {
               </select>
             </div>
 
-            <div className="col-md-7"></div>
+            <div className="col-md-2">
+              <label className="form-label">Paid Amount</label>
+              <input
+              type="number"
+              className="form-control"
+              placeholder="Paid Amount"
+              value={paidAmount}
+              onChange={(e) => setPaidAmount(e.target.value) || 0}
+              min={0}
+              disabled={paymentStatus === "unpaid"}
+              />
+              </div> */}
+            <div className="col-md-3">
+              <div className="mb-2">
+                <label className="form-label">Payment Methods</label>
+              </div>
+
+              {paymentMethods.map((pm, index) => (
+                <div key={index} className="mb-1">
+                  <div className="row g-2 align-items-center">
+                    {/* Payment Method Selector */}
+                    <div className="col-6">
+                      <select
+                        className="form-select"
+                        name="payMethod"
+                        value={pm.method}
+                        onChange={(e) =>
+                          handlePaymentChange(index, "method", e.target.value)
+                        }
+                        disabled={paymentStatus === "unpaid"}
+                      >
+                        <option value="">Select Method</option>
+                        <option value="Cash">Cash</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                      </select>
+                    </div>
+
+                    {/* Paid Amount Input */}
+                    <div className="col-6">
+                      <input
+                        type="number"
+                        className="form-control"
+                        placeholder="Amount"
+                        min="0"
+                        value={pm.amount}
+                        onChange={(e) =>
+                          handlePaymentChange(index, "amount", e.target.value)
+                        }
+                        disabled={paymentStatus === "unpaid"}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="col-md-2 mx-4">
+              <label className="form-label">Total Paid Amt:</label>
+              {/* <input
+                type="number"
+                className="form-control"
+                value={paidAmount}
+                disabled
+              /> */}
+              <p className="text-success"><b>₹ {paidAmount}</b></p>
+            </div>
+
+            <div className="col-md-2"></div>
 
             <div className="col-md-1">
               <button type="submit" className="btn btn-success">
                 Submit
               </button>
             </div>
-            {/* <div className="col-md-1">
-                <label className="form-label">Disc. In</label>
-                <select
-                  className="form-select"
-                  value={discountMethod}
-                  onChange={(e) => setDiscountMethod(e.target.value)}
-                >
-                  <option value="">--Choose--</option>
-                  <option value="percentage">%</option>
-                  <option value="flat">Flat</option>
-                </select>
-              </div>
-
-              <div className="col-md-1">
-                <label className="form-label">Disc. Amt.</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={discountValue}
-                  onChange={(e) => setDiscountValue(e.target.value) || 0}
-                  min={0}
-                />
-                </div> */}
           </div>
         </form>
       </div>
 
       {loading && <Loader />}
+
+      {billInvoice && (
+        <div
+          className="modal-bill modal show d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-lg" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Invoice Preview</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={closeModal}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <Invoice
+                  ref={componentRef}
+                  store={user}
+                  url={url}
+                  invoiceNumber={billInvoice.invoiceNumber}
+                  customerName={billInvoice.customerName}
+                  mobileNo={billInvoice.mobileNo}
+                  gstNumber={billInvoice.gstNumber}
+                  state={billInvoice.state}
+                  discount={billInvoice.discount}
+                  discountMethod={billInvoice.discountMethod}
+                  products={billInvoice.products}
+                  paymentMethods={billInvoice.paymentMethods}
+                  paymentStatus={billInvoice.paymentStatus}
+                  baseTotal={billInvoice.baseTotal}
+                  totalAmount={billInvoice.totalAmount}
+                  paidAmount={billInvoice.paidAmount}
+                  usedCoins={billInvoice.usedCoins}
+                  date={billInvoice.date}
+                />
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={closeModal}>
+                  Close
+                </button>
+                <button className="btn btn-primary" onClick={handlePrint}>
+                  Print
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

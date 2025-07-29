@@ -59,23 +59,10 @@ const RequestsSent = ({ url }) => {
                   <b>Zip -</b> {req.supplyingStore?.zipCode} */}
                 </td>
                 <th>{req.product?.name}</th>
-                <td>{req.requestedQuantity}</td>
-                <td>
+                <th>{req.requestedQuantity}</th>
+                <th>
                   <span className="mx-4">{req.acceptedQuantity || "-"}</span>
-                  {/* <span>
-                    {req.status === 0 && (
-                      <span className="badge bg-warning text-dark">
-                        Pending
-                      </span>
-                    )}
-                    {req.status === 1 && (
-                      <span className="badge bg-success">Accepted</span>
-                    )}
-                    {req.status === 2 && (
-                      <span className="badge bg-danger">Rejected</span>
-                    )}
-                  </span> */}
-                </td>
+                </th>
                 <td>
                   <small>
                     Req At: {new Date(req.requestedAt).toLocaleString()}

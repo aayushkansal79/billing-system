@@ -707,13 +707,6 @@ const Purchase = ({ url }) => {
                   className="form-control"
                   placeholder="Price After Discount"
                   value={product.purchasePriceAfterDiscount}
-                  // onChange={(e) =>
-                  //   handleChangeProd(
-                  //     index,
-                  //     "purchasePriceAfterDiscount",
-                  //     e.target.value
-                  //   )
-                  // }
                   disabled
                 />
               </div>
@@ -725,13 +718,6 @@ const Purchase = ({ url }) => {
                   value={(
                     product.quantity * product.purchasePriceAfterDiscount
                   ).toFixed(2)}
-                  // onChange={(e) =>
-                  //   handleChangeProd(
-                  //     index,
-                  //     "purchasePriceAfterDiscount",
-                  //     e.target.value
-                  //   )
-                  // }
                   disabled
                 />
               </div>
@@ -748,26 +734,7 @@ const Purchase = ({ url }) => {
                   required
                 />
               </div>
-              {/* <div className="col-md-1">
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="Price Before GST"
-                  value={product.priceBeforeGst}
-                  disabled
-                />
-              </div> */}
               <div className="col-md-1">
-                {/* <input
-                  type="number"
-                  className="form-control"
-                  placeholder="GST %"
-                  value={product.gstPercentage}
-                  onChange={(e) =>
-                    handleChangeProd(index, "gstPercentage", e.target.value)
-                  }
-                  required
-                /> */}
                 <select
                   className="form-select"
                   name="gst"
@@ -815,9 +782,9 @@ const Purchase = ({ url }) => {
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      height="24px"
+                      height="20px"
                       viewBox="0 -960 960 960"
-                      width="24px"
+                      width="20px"
                       fill="red"
                     >
                       <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />

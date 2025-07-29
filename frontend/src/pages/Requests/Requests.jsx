@@ -77,8 +77,8 @@ const Requests = ({ url }) => {
                   <b>Zip -</b> {req.supplyingStore?.zipCode} */}
                 </td>
                 <th>{req.product?.name}</th>
-                <td>{req.requestedQuantity}</td>
-                <td>{req.acceptedQuantity || "-"}</td>
+                <th>{req.requestedQuantity}</th>
+                <th>{req.acceptedQuantity || "-"}</th>
                 <td>
                   <small>
                     Req At: {new Date(req.requestedAt).toLocaleString()}

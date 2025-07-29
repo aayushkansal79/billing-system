@@ -1,238 +1,557 @@
-// import React, { useRef, useState } from 'react';
-// import { useReactToPrint } from 'react-to-print';
+import React, { useEffect, useState } from "react";
+import Barcode from "react-barcode";
+import { toWords } from "number-to-words";
+import { assets } from "../../assets/assets";
+import axios from "axios";
+import "./Invoice.css";
 
-// const InvoiceContent = React.forwardRef(function InvoiceContent({ company, products }, ref) {
-//   const total = products.reduce((sum, item) => sum + item.quantity * item.price, 0);
+const Invoice = (
+  {
+    url,
+    invoiceNumber,
+    store,
+    customerName,
+    mobileNo,
+    gstNumber,
+    state,
+    discount,
+    discountMethod,
+    products,
+    paymentMethods,
+    paymentStatus,
+    baseTotal,
+    totalAmount,
+    paidAmount,
+    usedCoins,
+    date,
+  },
+  ref
+) => {
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
+  const [form, setForm] = useState({
+    websiteTitle: "",
+    websiteAddress: "",
+    CompanyName: "",
+    CompanyAddress: "",
+    CompanyState: "",
+    CompanyZip: "",
+    CompanyContact: "",
+    CompanyGST: "",
+    Extra: "",
+  });
 
-//   return (
-//     <div ref={ref} style={{ padding: '20px' }}>
-//       <h2>INVOICE</h2>
-//       <div className="d-flex justify-content-between">
-//         <div>
-//           <strong>{company.name}</strong><br />
-//           {company.address}<br />
-//           {company.city}, {company.contact}<br />
-//           GST: {company.gst}
-//         </div>
-//         <div>
-//           Date: {new Date().toLocaleDateString()}
-//         </div>
-//       </div>
+  const [data, setData] = useState();
 
-//       <table className="table table-bordered mt-3">
-//         <thead className="table-light">
-//           <tr>
-//             <th>#</th>
-//             <th>Product</th>
-//             <th>Qty</th>
-//             <th>Rate</th>
-//             <th>Total</th>
-//           </tr>
-//         </thead>
-//         <tbody>
-//           {products.map((p, idx) => (
-//             <tr key={idx}>
-//               <td>{idx + 1}</td>
-//               <td>{p.name}</td>
-//               <td>{p.quantity}</td>
-//               <td>₹{p.price}</td>
-//               <td>₹{p.quantity * p.price}</td>
-//             </tr>
-//           ))}
-//         </tbody>
-//         <tfoot>
-//           <tr>
-//             <td colSpan="4" className="text-end"><strong>Grand Total</strong></td>
-//             <td><strong>₹{total}</strong></td>
-//           </tr>
-//         </tfoot>
-//       </table>
-//     </div>
-//   );
-// });
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get(`${url}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data) setForm(res.data);
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+      }
+    };
 
-// const Invoice = () => {
-//   const componentRef = useRef();
-//   const [showModal, setShowModal] = useState(false);
+    fetchProfile();
+  }, []);
 
-//   const handlePrint = useReactToPrint({
-//     content: () => componentRef.current,
-//     documentTitle: 'Invoice',
-//   });
+  useEffect(() => {
+    const fetchCoins = async () => {
+      try {
+        const { data } = await axios.get(
+          `${url}/api/customer/by-mobile/${mobileNo}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setData(data);
+      } catch (error) {
+        console.error("Failed to fetch customer data:", error);
+      }
+    };
 
-//   const openModal = () => setShowModal(true);
-//   const closeModal = () => setShowModal(false);
+    fetchCoins();
+  }, []);
 
-//   const company = {
-//     name: "ABC Traders",
-//     address: "123 Main Street",
-//     city: "Pune",
-//     contact: "9876543210",
-//     gst: "27ABCDE1234F1Z5",
-//   };
+  const totalGST = products.reduce(
+    (sum, item) =>
+      sum +
+      item.quantity * ((item.priceAfterDiscount * item.gstPercentage) / 100),
+    0
+  );
 
-//   const products = [
-//     { name: "Product A", quantity: 2, price: 100 },
-//     { name: "Product B", quantity: 1, price: 250 },
-//     { name: "Product C", quantity: 3, price: 75 },
-//   ];
+  const totalDiscount = products.reduce(
+    (sum, item) => sum + item.quantity * item.discountAmt,
+    0
+  );
 
-//   return (
-//     <div>
-//       <button className="btn btn-primary my-3" onClick={openModal}>
-//         🧾 Show Invoice
-//       </button>
+  const totalPriceAfterDiscount = products.reduce(
+    (sum, item) => sum + item.quantity * item.priceAfterDiscount,
+    0
+  );
 
-//       {/* Modal */}
-//       {showModal && (
-//         <div className="modal show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-//           <div className="modal-dialog modal-lg" role="document">
-//             <div className="modal-content">
-//               <div className="modal-header">
-//                 <h5 className="modal-title">Invoice Preview</h5>
-//                 <button type="button" className="btn-close" onClick={closeModal}></button>
-//               </div>
-//               <div className="modal-body">
-//                 <InvoiceContent ref={componentRef} company={company} products={products} />
-//               </div>
-//               <div className="modal-footer">
-//                 <button className="btn btn-secondary" onClick={closeModal}>Close</button>
-//                 <button className="btn btn-primary" onClick={handlePrint}>🖨️ Print</button>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default Invoice;
-// import React, { useEffect, useState } from "react";
-// import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-// import axios from "axios";
-// import { toast } from "react-toastify";
-
-// const BillGraph = ({ url }) => {
-//     const [data, setData] = useState([]);
-//     const token = localStorage.getItem("token");
-
-//     const fetchData = async () => {
-//         try {
-//             const res = await axios.get(`${url}/api/bill/daily-count`, {
-//                 headers: { Authorization: `Bearer ${token}` }
-//             });
-//             setData(res.data);
-//         } catch (err) {
-//             console.error(err);
-//             toast.error("Failed to fetch bill graph data.");
-//         }
-//     };
-
-//     useEffect(() => {
-//         fetchData();
-//     }, [url]);
-
-//     return (
-//         <div className="card p-3 mt-3">
-//             <h5 className="text-center">Bills Generated Per Day</h5>
-//             <ResponsiveContainer width="100%" height={300}>
-//                 <LineChart data={data}>
-//                     <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-//                     <XAxis dataKey="date" />
-//                     <YAxis />
-//                     <Tooltip />
-//                     <Line type="monotone" dataKey="count" stroke="#8884d8" strokeWidth={2} />
-//                 </LineChart>
-//             </ResponsiveContainer>
-//         </div>
-//     );
-// };
-
-// export default BillGraph;
-
-
-// import React, { useState } from 'react';
-// import Barcode from 'react-barcode';
-// import './Invoice.css'; // Import the CSS for styling
-
-// const MultipleBarcodes = () => {
-//   const [values] = useState([
-//     '12345',
-//     '98765',
-//     '57534',
-//     '74877',
-//   ]);
-
-//   const [products] = useState([
-//     {
-//       name: "S-101",
-//       barcode: "12345",
-//       quantity: 5,
-//     },
-//     {
-//       name: "S-102",
-//       barcode: "78910",
-//       quantity: 2,
-//     },
-//     {
-//       name: "S-103",
-//       barcode: "11121",
-//       quantity: 3,
-//     },
-//   ]);
-
-//   const handlePrint = () => {
-//     window.print();
-//   };
-
-//   return (
-//     <div className="barcode-container">
-//       <h2>Multiple Barcodes</h2>
-//       <button onClick={handlePrint} className="no-print">Print Barcodes</button>
-
-//       <div className="barcode-print-area">
-//         {products.map((product, productIdx) =>
-//           Array.from({ length: product.quantity }).map((_, qtyIdx) => (
-//             <div key={`${productIdx}-${qtyIdx}`} className="barcode-item d-flex flex-column text-center m-4" style={{width: "178px"}}>
-//               <b className="barcode-label">AJJAWAM</b>
-//               <Barcode value={product.barcode} format="CODE128" lineColor="#000" width={2} height={100} displayValue={false} />
-//               <b className="barcode-label">{product.barcode}</b>
-//               <b className="barcode-label">{product.name}</b>
-//               <b className="barcode-label">1749/-</b>
-//             </div>
-//           ))
-//         )}
-//         <div></div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default MultipleBarcodes;
-
-import React from 'react';
-import Select from 'react-select';
-
-const options = [
-  { value: 'apple', label: 'Apple' },
-  { value: 'banana', label: 'Banana' },
-  { value: 'cherry', label: 'Cherry' },
-];
-
-const MySelect = () => {
-  const handleChange = (selectedOption) => {
-    console.log('Selected:', selectedOption);
-  };
+  const toTitleCase = (str) =>
+    str
+      .toLowerCase()
+      .split(/[\s-]/)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  const formatted = toTitleCase(toWords(Math.floor(totalAmount)));
 
   return (
-    <Select
-      options={options}
-      onChange={handleChange}
-      className="basic-multi-select"
-      classNamePrefix="select"
-    />
+    <div ref={ref} style={{ padding: "20px" }} className="bill-invoice">
+      <div className="text-center bill-title">TAX INVOICE</div>
+      <div className="d-flex justify-content-between align-items-center">
+        {/* <h2>INVOICE</h2> */}
+        <img src={assets.main_logo} width={90} alt="" />
+        <div className="text-end">
+          <p className="m-0">
+            <b>{form.CompanyName}</b>
+          </p>
+          <p className="m-0">
+            <b>
+              {form.CompanyAddress}, {form.CompanyState}, ZipCode:{" "}
+              {form.CompanyZip}, India
+            </b>
+          </p>
+          <p className="m-0">
+            <b>GST No.: {form.CompanyGST}</b>
+          </p>
+        </div>
+      </div>
+      <br />
+      <div>
+        <b>INVOICE DETAILS</b>
+        <br />
+        <p className="m-0">Invoice No.: {invoiceNumber}</p>
+        <p className="m-0">
+          Invoice Date: {new Date(date).toLocaleDateString()}
+        </p>
+      </div>
+      <br />
+      <div className="d-flex justify-content-between">
+        <div>
+          <b>CUSTOMER INFORMATION</b>
+          <br />
+          {customerName ? (
+            <>
+              {customerName}
+              <br />
+            </>
+          ) : (
+            ""
+          )}
+          State: {state}
+          <br />
+          Mobile: {mobileNo || "N/A"}
+          <br />
+          GST: {gstNumber || "N/A"}
+        </div>
+        <div className="text-end">
+          <b>STORE INFORMATION</b>
+          <br />
+          {store.address},
+          <br />
+          {store.city},
+          <br />
+          {store.state} - {store.zipCode}
+          <br />
+          {store.contactNumber}
+        </div>
+      </div>
+      <hr />
+      <table className="table table-bordered mt-3 text-end">
+        <thead className="table-light">
+          <tr>
+            <th>#</th>
+            <th>Product</th>
+            <th>Qty</th>
+            <th>Price</th>
+            {discountMethod === "percentage" && discount > 0 && (
+              <>
+                <th>Discount</th>
+                <th>Price After Discount</th>
+              </>
+            )}
+            <th>GST %</th>
+            <th>GST Type</th>
+            <th>GST Amount</th>
+            <th>Unit Price</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map((p, idx) => (
+            <tr key={idx}>
+              <td>{idx + 1}.</td>
+              <td>{p.productName}</td>
+              <td>{p.quantity}</td>
+              <td>
+                ₹
+                {Number(p.priceBeforeGst)?.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </td>
+              {discountMethod === "percentage" && discount > 0 && (
+                <>
+                  <td>
+                    ₹
+                    {Number(p.discountAmt)?.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td>
+                    ₹
+                    {Number(p.priceAfterDiscount)?.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                </>
+              )}
+              <td>
+                {store.state === state ? (
+                  <>
+                    {p.gstPercentage / 2}% <br />
+                    {p.gstPercentage / 2}%
+                  </>
+                ) : (
+                  <>{p.gstPercentage}%</>
+                )}
+              </td>
+              <td>
+                {store.state === state ? (
+                  <>
+                    CGST
+                    <br />
+                    SGST
+                  </>
+                ) : (
+                  <>IGST</>
+                )}
+              </td>
+              <td>
+                {store.state === state ? (
+                  <>
+                    ₹
+                    {Number(
+                      (p.priceAfterDiscount * p.gstPercentage) / 100 / 2
+                    )?.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    <br />₹
+                    {Number(
+                      (p.priceAfterDiscount * p.gstPercentage) / 100 / 2
+                    )?.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </>
+                ) : (
+                  <>
+                    ₹
+                    {Number(
+                      (p.priceAfterDiscount * p.gstPercentage) / 100
+                    )?.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </>
+                )}
+              </td>
+              <td>
+                ₹
+                {Number(p.finalPrice)?.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </td>
+              <td>
+                ₹
+                {Number(p.quantity * p.finalPrice)?.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td
+              colSpan={discountMethod === "percentage" && discount > 0 ? 4 : 3}
+              className="text-start"
+            >
+              <strong>Sub Total</strong>
+            </td>
+            {discountMethod === "percentage" && discount > 0 && (
+              <td>
+                <strong>
+                  ₹
+                  {Number(totalDiscount)?.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </strong>
+              </td>
+            )}
+            <td>
+              <strong>
+                ₹
+                {Number(totalPriceAfterDiscount)?.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </strong>
+            </td>
+            <td colSpan="2"></td>
+            <td>
+              <strong>
+                ₹
+                {Number(totalGST)?.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </strong>
+            </td>
+            <td></td>
+            <td>
+              <strong>
+                ₹
+                {Number(baseTotal)?.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </strong>
+            </td>
+          </tr>
+          {usedCoins > 0 && (
+            <tr>
+              <td
+                colSpan={
+                  discountMethod === "percentage" && discount > 0 ? 10 : 8
+                }
+              >
+                <strong>Coins Used</strong>
+              </td>
+              <td>
+                <strong>₹ {usedCoins || 0}</strong>
+              </td>
+            </tr>
+          )}
+          {discountMethod === "flat" && discount > 0 && (
+            <tr>
+              <td colSpan="8">
+                <strong>Discount</strong>
+              </td>
+              <td>
+                <strong>₹ {discount || 0}</strong>
+              </td>
+            </tr>
+          )}
+          <tr>
+            <td
+              colSpan={discountMethod === "percentage" && discount > 0 ? 10 : 8}
+            >
+              <strong>Grand Total</strong>
+            </td>
+            <td>
+              <strong>
+                ₹ {Math.floor(baseTotal - (usedCoins || 0) - (discountMethod === "flat" ? discount : 0)).toLocaleString("en-IN")}
+              </strong>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <hr className="m-0" />
+
+      <div
+        className="d-flex justify-content-center align-items-center p-2"
+        style={{ background: "#f2f7f9" }}
+      >
+        <b>Total Amount Incl. GST: {formatted + " Rupees Only"}</b>
+      </div>
+
+      <br />
+      <div className="row">
+        <div className="col-md-7"></div>
+        <div className="text-end" style={{ width: "300px" }}>
+          <table className="table table-bordered">
+            <thead>
+              <tr>
+                <th>Amount Excl. GST</th>
+                <th>GST Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  ₹
+                  {Number(totalAmount - totalGST).toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </td>
+                <td>
+                  ₹
+                  {Number(totalGST)?.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* <hr /> */}
+
+      <table className="table bill-foot">
+        <tbody>
+          <tr>
+            {discount > 0 ? (
+              <>
+                <td>Discount</td>
+                <td>
+                  :{" "}
+                  {discountMethod === "percentage"
+                    ? `${discount}%`
+                    : `₹${discount}`}
+                </td>
+              </>
+            ) : (
+              <>
+                <th></th>
+                <th></th>
+              </>
+            )}
+            <td>Prev. Coins Balance</td>
+            {mobileNo ? (
+              <td>
+                :{" "}
+                {(
+                  (data?.coins || 0) - Math.floor((paidAmount || 0) / 100)
+                )?.toLocaleString("en-IN")}
+              </td>
+            ) : (
+              <td>: 0</td>
+            )}
+          </tr>
+          <tr>
+            <td>Payment Method</td>
+            <td>: {paymentMethods.map((m) => m.method).join(" + ")}</td>
+            <td>Coins Earned</td>
+            {paymentStatus !== "unpaid" && mobileNo ? (
+              <td>
+                : {Math.floor((paidAmount || 0) / 100)?.toLocaleString("en-IN")}
+              </td>
+            ) : (
+              <td>: 0</td>
+            )}
+          </tr>
+          <tr>
+            <td>Amount Paid</td>
+            <td>
+              :{" "}
+              {paymentMethods.length
+                ? paymentMethods.map((m) => `₹${Number(m.amount)}`).join(" + ")
+                : "0.00"}{" "}
+              {paymentMethods.length > 1 &&
+                `= ₹ ${(paidAmount || 0).toLocaleString("en-IN")}`}
+            </td>
+            <td>New Coins Balance</td>
+            {mobileNo ? (
+              <td>: {data?.coins?.toLocaleString("en-IN")}</td>
+            ) : (
+              <td>: 0</td>
+            )}
+          </tr>
+        </tbody>
+      </table>
+      {/* 
+      <div className="d-flex justify-content-between">
+        <div>
+          <div>
+            {discount > 0 && (
+              <p className="m-0">
+                Discount:{" "}
+                {discountMethod === "percentage"
+                  ? `${discount}%`
+                  : `₹${discount}`}
+              </p>
+            )}
+            <p className="m-0">Payment Method: {paymentMethod}</p>
+          </div>
+          {paymentStatus === "paid" ? (
+            <p className="m-0">
+              Amount Paid: ₹
+              {(totalAmount - (usedCoins || 0)).toLocaleString("en-IN")}
+            </p>
+          ) : (
+            <p className="m-0">Unpaid</p>
+          )}
+        </div>
+
+        <div>
+          {paymentStatus === "paid" && (
+            <p className="m-0">
+              Prev. Coins Balance:{" "}
+              {(data?.coins - Math.floor(totalAmount / 100))?.toLocaleString(
+                "en-IN"
+              )}
+            </p>
+          )}
+          {paymentStatus === "paid" && (
+            <p className="m-0">
+              Coins Earned:{" "}
+              {Math.floor(totalAmount / 100)?.toLocaleString("en-IN")}
+            </p>
+          )}
+          {paymentStatus === "paid" && (
+            <p className="m-0">
+              New Coins Balance: {data?.coins?.toLocaleString("en-IN")}
+            </p>
+          )}
+        </div>
+      </div> */}
+
+      {/* <hr /> */}
+      <div className="d-flex justify-content-between align-items-center">
+        <p>Thank you for shopping at Ajjawam! </p>
+        <div className="text-end">
+          <Barcode
+            value={invoiceNumber}
+            format="CODE128"
+            lineColor="#000"
+            width={2}
+            height={40}
+            displayValue={false}
+          />
+        </div>
+      </div>
+      <div>
+        <b>Refund Note: </b>
+        <div className="refund-note">
+          Returns/Exchanges within 7 days of purchase only. <br />
+          Color differences due to lighting are not valid for return. <br />
+          Saree must be unused, unwashed, and with original tags. No returns on
+          stitched, altered, or discounted sarees. <br />
+          Invoice is required for all returns/exchanges. Refunds will be made
+          via original payment method or store credit. <br />
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default MySelect;
+export default React.forwardRef(Invoice);

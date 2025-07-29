@@ -7,6 +7,7 @@ const customerSchema = new mongoose.Schema({
     state: { type: String, required: true },
     totalAmount: { type: Number, default: 0 },
     paidAmount: { type: Number, default: 0 },
+    remainingPaid: { type: Number, default: 0 },
     pendingAmount: { type: Number, default: 0 },
     coins: { type: Number, default: 0 },
     usedCoins: { type: Number, default: 0 },

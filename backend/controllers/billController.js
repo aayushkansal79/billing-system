@@ -5,188 +5,364 @@ import StoreProduct from "../models/StoreProduct.js";
 import { getNextInvoiceNumber } from "../controllers/counterController.js";
 
 //create new bill
+// export const createBill = async (req, res) => {
+//     try {
+//         const {
+//             customer = {},
+//             products = [],
+//             discount = 0,
+//             discountMethod = "percentage",
+//             totalAmount = 0,
+//             baseTotal = 0,
+//             paymentMethod = "",
+//             paymentStatus = "",
+//             paidAmount = 0,
+//             usedCoins = 0,
+//             selectedTransactionIds = []
+//         } = req.body;
+
+//         const {
+//             name: customerName = "N/A",
+//             mobile: mobileNo = "",
+//             gst: gstNumber = "",
+//             state = ""
+//         } = customer;
+
+//         if (!req.store || !req.store._id) {
+//             return res.status(400).json({ error: "Store information is missing." });
+//         }
+//         const store = req.store._id;
+
+//         if (!state) return res.status(400).json({ error: "State is required for billing." });
+//         if (!paymentStatus) return res.status(400).json({ error: "Payment Status is required for billing." });
+//         if (mobileNo && mobileNo.length !== 10) {
+//             return res.status(400).json({ error: "Enter Correct Mobile No." });
+//         }
+//         if (totalAmount <=0){
+//             return res.status(400).json({ error: "Total Amount must be greater than zero" });
+//         }
+
+//         for (const p of products) {
+//             const storeProduct = await StoreProduct.findOne({ store, product: p.product });
+//             if (!storeProduct || p.quantity > storeProduct.quantity) {
+//                 return res.status(400).json({
+//                     error: `Insufficient stock for product ${p.productName || p.product}`,
+//                 });
+//             }
+//             if( !p.priceAfterDiscount || !p.gstPercentage || !p.finalPrice || !p.total){
+//                 return res.status(400).json({
+//                     error: "Fill all fields",
+//                 });
+//             }
+//         }
+
+//         let customerDoc = null;
+//         if (mobileNo) {
+//             customerDoc = await Customer.findOne({ mobile: mobileNo });
+//             if (!customerDoc) {
+//                 customerDoc = new Customer({
+//                     mobile: mobileNo,
+//                     name: customerName,
+//                     gst: gstNumber,
+//                     state
+//                 });
+//             } else {
+//                 customerDoc.name = customerName || customerDoc.name;
+//                 customerDoc.gst = gstNumber || customerDoc.gst;
+//                 customerDoc.state = state || customerDoc.state;
+//                 customerDoc.updatedAt = new Date();
+//             }
+//         }
+
+//         if (usedCoins > (customerDoc?.coins || 0)) {
+//             return res.status(400).json({
+//                 error: `Used coins (${usedCoins}) cannot exceed customer's available coins (${customerDoc?.coins || 0}).`
+//             });
+//         }
+
+//         const invoiceNumber = await getNextInvoiceNumber();
+//         const roundedTotalAmount = Math.round(totalAmount);
+
+//         const newBill = new Bill({
+//             store,
+//             customer: customerDoc._id,
+//             invoiceNumber,
+//             state,
+//             customerName,
+//             mobileNo,
+//             gstNumber,
+//             discount,
+//             discountMethod,
+//             products,
+//             baseTotal,
+//             totalAmount: roundedTotalAmount,
+//             usedCoins,
+//             paymentMethod,
+//             paymentStatus,
+//             paidAmount,
+//         });
+//         await newBill.save();
+
+//         for (const p of products) {
+//             const storeProduct = await StoreProduct.findOne({ store, product: p.product });
+//             storeProduct.quantity = Math.max(0, storeProduct.quantity - p.quantity);
+//             await storeProduct.save();
+//         }
+
+//         const generatedCoins = Math.floor(paidAmount / 100) || 0;
+//         // const generatedCoins = paymentStatus === "paid" ? Math.floor(roundedTotalAmount / 100) : 0;
+//         // const paidAmount = paymentStatus === "paid" ? roundedTotalAmount : 0;
+
+//         if (customerDoc) {
+//             let settledCoins = 0;
+//             let settledAmount = 0;
+
+//             for (const transId of selectedTransactionIds) {
+//                 const trans = await Transaction.findById(transId);
+//                 if (trans && trans.paymentStatus !== "paid") {
+//                     const settleCoins = Math.floor(trans.billAmount / 100);
+
+//                     trans.paymentStatus = "paid";
+//                     await trans.save();
+
+//                     const oldBill = await Bill.findOne({ store: trans.storeId, invoiceNumber: trans.invoiceNo });
+//                     if (oldBill) {
+//                         oldBill.paymentMethod = paymentMethod;
+//                         oldBill.paymentStatus = "paid";
+//                         await oldBill.save();
+//                     }
+
+//                     // Update aggregates before settlement transaction creation
+//                     settledCoins += settleCoins;
+//                     settledAmount += trans.billAmount;
+
+//                     // Update customer aggregates for pendingAmount before saving transaction
+//                     customerDoc.paidAmount += trans.billAmount;
+//                     customerDoc.pendingAmount = customerDoc.paidAmount - customerDoc.totalAmount ;
+
+//                     // const settlementTransaction = new Transaction({
+//                     //     customerId: trans.customerId,
+//                     //     storeId: trans.storeId,
+//                     //     invoiceNo: trans.invoiceNo,
+//                     //     billAmount: trans.billAmount,
+//                     //     paymentType: paymentMethod,
+//                     //     paidAmount: trans.billAmount,
+//                     //     paymentStatus: "paid",
+//                     //     generatedCoins: settleCoins,
+//                     //     usedCoins: 0,
+//                     //     wallet: customerDoc.pendingAmount,
+//                     //     isSettlement: true,
+//                     // });
+//                     // await settlementTransaction.save();
+//                 }
+//             }
+
+//             // Update customer aggregates for the current bill
+//             customerDoc.totalAmount += roundedTotalAmount;
+//             customerDoc.paidAmount += paidAmount;
+//             customerDoc.pendingAmount = customerDoc.paidAmount - customerDoc.totalAmount;
+//             customerDoc.coins += generatedCoins + settledCoins;
+//             customerDoc.coins -= usedCoins;
+//             customerDoc.usedCoins += usedCoins;
+//             customerDoc.updatedAt = new Date();
+//             await customerDoc.save();
+
+//             const newTransaction = new Transaction({
+//                 customerId: customerDoc._id,
+//                 storeId: store,
+//                 invoiceNo: invoiceNumber,
+//                 billAmount: roundedTotalAmount,
+//                 paymentType: paymentMethod,
+//                 paidAmount : paidAmount + settledAmount,
+//                 paymentStatus,
+//                 generatedCoins: generatedCoins + settledCoins,
+//                 usedCoins,
+//                 wallet: customerDoc.pendingAmount,
+//             });
+//             await newTransaction.save();
+//         }
+
+//         res.status(201).json({
+//             message: "Bill created successfully, transactions settled, and customer updated.",
+//             bill: newBill,
+//             customer: customerDoc || null
+//         });
+
+//     } catch (err) {
+//         console.error("Error in createBill:", err);
+//         res.status(500).json({ error: "Server error while creating bill." });
+//     }
+// };
+
+//create bill
 export const createBill = async (req, res) => {
-    try {
-        const {
-            customer = {},
-            products = [],
-            discount = 0,
-            discountMethod = "percentage",
-            totalAmount = 0,
-            paymentMethod = "",
-            paymentStatus = "",
-            usedCoins = 0,
-            selectedTransactionIds = []
-        } = req.body;
+  try {
+    const {
+      customer = {},
+      products = [],
+      discount = 0,
+      discountMethod = "percentage",
+      totalAmount = 0,
+      baseTotal = 0,
+      paymentMethods = [],
+      paymentStatus = "",
+      paidAmount = 0,
+      usedCoins = 0,
+    } = req.body;
 
-        const {
-            name: customerName = "N/A",
-            mobile: mobileNo = "",
-            gst: gstNumber = "",
-            state = ""
-        } = customer;
+    const {
+      name: customerName = "N/A",
+      mobile: mobileNo = "",
+      gst: gstNumber = "",
+      state = "",
+    } = customer;
 
-        if (!req.store || !req.store._id) {
-            return res.status(400).json({ error: "Store information is missing." });
-        }
-        const store = req.store._id;
+    if (!req.store || !req.store._id) return res.status(400).json({ error: "Store info missing" });
+    const store = req.store._id;
 
-        if (!state) return res.status(400).json({ error: "State is required for billing." });
-        if (!paymentStatus) return res.status(400).json({ error: "Payment Status is required for billing." });
-        if (mobileNo && mobileNo.length !== 10) {
-            return res.status(400).json({ error: "Enter Correct Mobile No." });
-        }
-        if (totalAmount <=0){
-            return res.status(400).json({ error: "Total Amount must be greater than zero" });
-        }
+    if (!state) return res.status(400).json({ error: "State is required" });
+    if (!paymentStatus) return res.status(400).json({ error: "Payment status required" });
+    if (mobileNo && mobileNo.length !== 10) return res.status(400).json({ error: "Invalid mobile number" });
+    if (totalAmount <= 0) return res.status(400).json({ error: "Total amount must be positive" });
 
-        for (const p of products) {
-            const storeProduct = await StoreProduct.findOne({ store, product: p.product });
-            if (!storeProduct || p.quantity > storeProduct.quantity) {
-                return res.status(400).json({
-                    error: `Insufficient stock for product ${p.productName || p.product}`,
-                });
-            }
-            if( !p.priceAfterDiscount || !p.gstPercentage || !p.finalPrice || !p.total){
-                return res.status(400).json({
-                    error: "Fill all fields",
-                });
-            }
-        }
-
-        let customerDoc = null;
-        if (mobileNo) {
-            customerDoc = await Customer.findOne({ mobile: mobileNo });
-            if (!customerDoc) {
-                customerDoc = new Customer({
-                    mobile: mobileNo,
-                    name: customerName,
-                    gst: gstNumber,
-                    state
-                });
-            } else {
-                customerDoc.name = customerName || customerDoc.name;
-                customerDoc.gst = gstNumber || customerDoc.gst;
-                customerDoc.state = state || customerDoc.state;
-                customerDoc.updatedAt = new Date();
-            }
-        }
-
-        if (usedCoins > (customerDoc?.coins || 0)) {
-            return res.status(400).json({
-                error: `Used coins (${usedCoins}) cannot exceed customer's available coins (${customerDoc?.coins || 0}).`
-            });
-        }
-
-        const invoiceNumber = await getNextInvoiceNumber();
-        const roundedTotalAmount = Math.round(totalAmount);
-
-        const newBill = new Bill({
-            store,
-            customer: customerDoc._id,
-            invoiceNumber,
-            state,
-            customerName,
-            mobileNo,
-            gstNumber,
-            discount,
-            discountMethod,
-            products,
-            totalAmount: roundedTotalAmount,
-            usedCoins,
-            paymentMethod,
-            paymentStatus
-        });
-        await newBill.save();
-
-        for (const p of products) {
-            const storeProduct = await StoreProduct.findOne({ store, product: p.product });
-            storeProduct.quantity = Math.max(0, storeProduct.quantity - p.quantity);
-            await storeProduct.save();
-        }
-
-        const generatedCoins = paymentStatus === "paid" ? Math.floor(roundedTotalAmount / 100) : 0;
-        const paidAmount = paymentStatus === "paid" ? roundedTotalAmount : 0;
-
-        if (customerDoc) {
-            let settledCoins = 0;
-            let settledAmount = 0;
-
-            for (const transId of selectedTransactionIds) {
-                const trans = await Transaction.findById(transId);
-                if (trans && trans.paymentStatus !== "paid") {
-                    const settleCoins = Math.floor(trans.billAmount / 100);
-
-                    trans.paymentStatus = "paid";
-                    await trans.save();
-
-                    const oldBill = await Bill.findOne({ store: trans.storeId, invoiceNumber: trans.invoiceNo });
-                    if (oldBill) {
-                        oldBill.paymentMethod = paymentMethod;
-                        oldBill.paymentStatus = "paid";
-                        await oldBill.save();
-                    }
-
-                    // Update aggregates before settlement transaction creation
-                    settledCoins += settleCoins;
-                    settledAmount += trans.billAmount;
-
-                    // Update customer aggregates for pendingAmount before saving transaction
-                    customerDoc.paidAmount += trans.billAmount;
-                    customerDoc.pendingAmount = customerDoc.paidAmount - customerDoc.totalAmount ;
-
-                    // const settlementTransaction = new Transaction({
-                    //     customerId: trans.customerId,
-                    //     storeId: trans.storeId,
-                    //     invoiceNo: trans.invoiceNo,
-                    //     billAmount: trans.billAmount,
-                    //     paymentType: paymentMethod,
-                    //     paidAmount: trans.billAmount,
-                    //     paymentStatus: "paid",
-                    //     generatedCoins: settleCoins,
-                    //     usedCoins: 0,
-                    //     wallet: customerDoc.pendingAmount,
-                    //     isSettlement: true,
-                    // });
-                    // await settlementTransaction.save();
-                }
-            }
-
-            // Update customer aggregates for the current bill
-            customerDoc.totalAmount += roundedTotalAmount;
-            customerDoc.paidAmount += paidAmount;
-            customerDoc.pendingAmount = customerDoc.paidAmount - customerDoc.totalAmount;
-            customerDoc.coins += generatedCoins + settledCoins;
-            customerDoc.coins -= usedCoins;
-            customerDoc.usedCoins += usedCoins;
-            customerDoc.updatedAt = new Date();
-            await customerDoc.save();
-
-            const newTransaction = new Transaction({
-                customerId: customerDoc._id,
-                storeId: store,
-                invoiceNo: invoiceNumber,
-                billAmount: roundedTotalAmount,
-                paymentType: paymentMethod,
-                paidAmount : paidAmount + settledAmount,
-                paymentStatus,
-                generatedCoins: generatedCoins + settledCoins,
-                usedCoins,
-                wallet: customerDoc.pendingAmount,
-            });
-            await newTransaction.save();
-        }
-
-        res.status(201).json({
-            message: "Bill created successfully, transactions settled, and customer updated.",
-            bill: newBill,
-            customer: customerDoc || null
-        });
-
-    } catch (err) {
-        console.error("Error in createBill:", err);
-        res.status(500).json({ error: "Server error while creating bill." });
+    for (const p of products) {
+      const storeProduct = await StoreProduct.findOne({ store, product: p.product });
+      if (!storeProduct || p.quantity > storeProduct.quantity)
+        return res.status(400).json({ error: `Insufficient stock for ${p.productName}` });
+      if (!p.priceAfterDiscount || !p.gstPercentage || !p.finalPrice || !p.total)
+        return res.status(400).json({ error: "Fill all product fields" });
     }
+
+    let customerDoc = null;
+    if (mobileNo) {
+      customerDoc = await Customer.findOne({ mobile: mobileNo });
+      if (!customerDoc) {
+        customerDoc = new Customer({ mobile: mobileNo, name: customerName, gst: gstNumber, state });
+      } else {
+        customerDoc.name = customerName || customerDoc.name;
+        customerDoc.gst = gstNumber || customerDoc.gst;
+        customerDoc.state = state || customerDoc.state;
+      }
+    }
+
+    if (usedCoins > (customerDoc?.coins || 0))
+      return res.status(400).json({ error: "Used coins exceed available coins" });
+
+    
+    const validPaymentMethods  = paymentMethods.filter(entry => {
+      return entry.method && entry.method.trim() !== "" && entry.amount && !isNaN(entry.amount);
+    });
+
+    const invoiceNumber = await getNextInvoiceNumber();
+    const roundedTotalAmount = Math.round(totalAmount);
+
+    const newBill = new Bill({
+      store,
+      customer: customerDoc?._id,
+      invoiceNumber,
+      state,
+      customerName,
+      mobileNo,
+      gstNumber,
+      discount,
+      discountMethod,
+      products,
+      baseTotal,
+      totalAmount: roundedTotalAmount - (usedCoins || 0) ,
+      usedCoins,
+      paymentMethods : validPaymentMethods ,
+      paymentStatus,
+      paidAmount,
+    });
+    await newBill.save();
+
+    // Deduct stock
+    for (const p of products) {
+      const storeProduct = await StoreProduct.findOne({ store, product: p.product });
+      storeProduct.quantity = Math.max(0, storeProduct.quantity - p.quantity);
+      await storeProduct.save();
+    }
+
+    const generatedCoins = Math.floor(parseFloat(paidAmount) / 100) || 0;
+
+    if (customerDoc) {
+      let totalPaidAvailable = parseFloat(paidAmount) + (parseFloat(customerDoc.remainingPaid) || 0);
+        let remainingAfterOldSettlements = totalPaidAvailable;
+
+        const transactionsToSettle = await Transaction.find({
+        customerId: customerDoc._id,
+        paymentStatus: { $ne: "paid" },
+        }).sort({ createdAt: 1 });
+
+        for (const trans of transactionsToSettle) {
+            if (remainingAfterOldSettlements >= trans.billAmount) {
+                trans.paymentStatus = "paid";
+                await trans.save();
+
+                const oldBill = await Bill.findOne({ invoiceNumber: trans.invoiceNo });
+                if (oldBill) {
+                oldBill.paymentStatus = "paid";
+                // oldBill.paymentMethod = paymentMethod;
+                await oldBill.save();
+                }
+
+                remainingAfterOldSettlements -= trans.billAmount;
+            } else {
+                // break;
+                continue;
+            }
+        }
+
+        // Only settle current bill if there's enough left after old bills
+        if (remainingAfterOldSettlements >= (roundedTotalAmount - (usedCoins || 0))) {
+          newBill.paymentStatus = "paid";
+          await newBill.save();
+
+          remainingAfterOldSettlements -= (roundedTotalAmount - (usedCoins || 0));
+        } else if (parseFloat(paidAmount) > 0) {
+          newBill.paymentStatus = "partial";
+          await newBill.save();
+        } else {
+          newBill.paymentStatus = "unpaid";
+          await newBill.save();
+        }
+
+      // Update customer
+      customerDoc.totalAmount += roundedTotalAmount;
+      customerDoc.paidAmount += parseFloat(paidAmount);
+      customerDoc.pendingAmount = customerDoc.paidAmount - customerDoc.totalAmount + (usedCoins || 0);
+      customerDoc.coins += generatedCoins;
+      customerDoc.coins -= usedCoins;
+      customerDoc.usedCoins += usedCoins;
+      customerDoc.remainingPaid = remainingAfterOldSettlements;
+      customerDoc.updatedAt = new Date();
+      await customerDoc.save();
+
+      const newTransaction = new Transaction({
+        customerId: customerDoc._id,
+        storeId: store,
+        invoiceNo: invoiceNumber,
+        billAmount: roundedTotalAmount,
+        paymentMethods : validPaymentMethods ,
+        paidAmount: parseFloat(paidAmount),
+        paymentStatus: newBill.paymentStatus,
+        generatedCoins,
+        usedCoins,
+        wallet: customerDoc.pendingAmount,
+      });
+      await newTransaction.save();
+    }
+
+    res.status(201).json({
+      message: "Bill created, transactions settled, customer updated.",
+      bill: newBill,
+      customer: customerDoc || null,
+    });
+
+  } catch (err) {
+    console.error("Error in createBill:", err);
+    res.status(500).json({ error: "Server error while creating bill." });
+  }
 };
 
 

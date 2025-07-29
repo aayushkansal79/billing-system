@@ -13,6 +13,7 @@ import costomerRoutes from './routes/customerRoutes.js'
 import transactionRoutes from './routes/transactionRoutes.js'
 import masterSearchRoutes from './routes/masterSearchRoutes.js';
 import productRequestRoutes from './routes/productRequestRoutes.js'
+import profileRoutes from './routes/profileRoutes.js'
 
 // app config
 const app = express();
@@ -39,6 +40,7 @@ app.use("/api/customer", costomerRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/master-search", masterSearchRoutes);
 app.use("/api/product-requests", productRequestRoutes);
+app.use("/api/profile", profileRoutes);
 
 // database connection
 mongoose.connect(process.env.MONGO_URI)

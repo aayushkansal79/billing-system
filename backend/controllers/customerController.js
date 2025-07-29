@@ -32,7 +32,7 @@ export const getCustomerByMobile = async (req, res) => {
 
 export const getAllCustomers = async (req, res) => {
     try {
-        const customers = await Customer.find(); 
+        const customers = await Customer.find().sort({ createdAt: -1 });; 
         res.status(200).json(customers);
     } catch (err) {
         console.error("Error fetching customers:", err);

@@ -14,7 +14,8 @@ const CustomerTransactions = ({ url }) => {
   const [transactions, setTransactions] = useState([]);
   const [customer, setCustomer] = useState({});
 
-  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,7 +85,13 @@ const CustomerTransactions = ({ url }) => {
                     {t.invoiceNo && t.billAmount ? (
                       <>
                         <th>{t.invoiceNo}</th>
-                        <th>₹ {Number(t.billAmount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</th>
+                        <th>
+                          ₹{" "}
+                          {Number(t.billAmount).toLocaleString("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </th>
                       </>
                     ) : (
                       <>
@@ -92,15 +99,20 @@ const CustomerTransactions = ({ url }) => {
                         <th>--</th>
                       </>
                     )}
-                    {t.usedCoins ? (
-                      <th className="text-primary">
-                        ₹ {Number(t.paidAmount - t.usedCoins).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </th>
-                    ) : (
-                      <th className="text-primary">
-                        ₹ {Number(t.paidAmount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </th>
-                    )}
+
+                    <th className="text-primary">
+                      {t.paymentMethods.length
+                        ? t.paymentMethods
+                            .map(
+                              (m) =>
+                                `₹${Number(m.amount).toLocaleString("en-IN", {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}`
+                            )
+                            .join(" + ")
+                        : "0.00"}
+                    </th>
                     <td>
                       <div className="d-flex align-items-center p-2 rounded">
                         <svg
@@ -117,10 +129,17 @@ const CustomerTransactions = ({ url }) => {
                       </div>
                     </td>
                     <th className="text-success">
-                      ₹ {t.paidAmount?.toFixed(2)}
+                      ₹{" "}
+                      {Number(t.paidAmount + t.usedCoins).toLocaleString(
+                        "en-IN",
+                        { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+                      )}
                     </th>
                     <th className="text-danger">₹ {t.wallet?.toFixed(2)}</th>
-                    <td>{t.paymentType || "Unpaid"}</td>
+                    <td>
+                      {t.paymentMethods.map((m) => m.method).join(" + ") ||
+                        "Unpaid"}
+                    </td>
                     <td>
                       <div className="d-flex align-items-center p-2 rounded">
                         <svg

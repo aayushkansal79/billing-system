@@ -27,11 +27,18 @@ const BillSchema = new mongoose.Schema({
 
     products: [BillProductSchema],
 
+    baseTotal: { type: Number, required: true },
     totalAmount: { type: Number, required: true },
     usedCoins: { type: Number },
-    paymentMethod: { type: String },
     paymentStatus: { type: String, required: true },
-    // paymentMethod: { type: String, enum: ["cash", "card", "upi", "credit"], default: "cash" },
+    // paymentMethod: { type: String },
+    paymentMethods: [
+        {
+        method: { type: String },
+        amount: { type: Number },
+        }
+    ],
+    paidAmount: { type: Number },
     date: { type: Date, default: Date.now }
 }, { timestamps: true });
 

@@ -7,7 +7,8 @@ import Navbar from "./components/Navbar/Navbar";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Purchase from "./pages/Purchase/Purchase";
 import Orders from "./pages/Orders/Orders";
-import Barcode from "./pages/Barcode/Barcode";
+import BulkBarcode from "./pages/BulkBarcode/BulkBarcode";
+import PrintBarcode from "./pages/Barcode/Barcode";
 import Companies from "./pages/Companies/Companies";
 import Products from "./pages/Products/Products";
 import AddStore from "./pages/AddStore/AddStore";
@@ -58,7 +59,8 @@ function App() {
               <Route path="/dashboard" element={<PrivateRoute roles={["admin"]}> <Dashboard url={url} /> </PrivateRoute>} />
               <Route path="/purchase" element={<PrivateRoute roles={["admin"]}> <Purchase url={url} /> </PrivateRoute>} />
               <Route path="/purchase-list" element={<PrivateRoute roles={["admin"]}> <Orders url={url} /> </PrivateRoute>} />
-              <Route path="/purchase-list/barcode/:purchaseId" element={<PrivateRoute roles={["admin"]}> <Barcode url={url} /> </PrivateRoute>} />
+              <Route path="/purchase-list/print-tags/:purchaseId" element={<PrivateRoute roles={["admin"]}> <BulkBarcode url={url} /> </PrivateRoute>} />
+              <Route path="/purchase-list/print-tag/:id" element={<PrivateRoute roles={["admin"]}> <PrintBarcode url={url} /> </PrivateRoute>} />
               <Route path="/vendors" element={<PrivateRoute roles={["admin"]}> <Companies url={url} /> </PrivateRoute>} />
               <Route path="/products" element={<PrivateRoute roles={["admin", "store"]}> <Products url={url} /> </PrivateRoute>} />
               <Route path="/add-store" element={<PrivateRoute roles={["admin"]}> <AddStore url={url} /> </PrivateRoute>} />
@@ -74,7 +76,7 @@ function App() {
               <Route path="/requests-recieved" element={<PrivateRoute roles={["store"]}> <RequestsRecieved url={url} /> </PrivateRoute>} />
               <Route path="/profile" element={<PrivateRoute roles={["admin", "store"]}> <Profile url={url} /> </PrivateRoute>} />
               <Route path="/change-password" element={<PrivateRoute roles={["admin", "store"]}> <ChangePass url={url} /> </PrivateRoute>} />
-              <Route path="/invoice" element={<Invoice url={url} />} />
+              {/* <Route path="/invoice" element={<Invoice url={url} />} /> */}
             </Routes>
           </main>
         </div>

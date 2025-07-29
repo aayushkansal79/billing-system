@@ -90,8 +90,8 @@ export const createPurchase = async (req, res) => {
 export const getAllPurchases = async (req, res) => {
     try {
         const purchases = await Purchase.find()
-            .populate("company", "name city contactPhone gstNumber address")
-            .populate("products.product", "name price")
+            .populate("company", "name shortName city contactPhone gstNumber address")
+            .populate("products.product", "name price barcode")
             .sort({ createdAt: -1 });
 
         // Compute totalPriceAfterDiscount for each purchase

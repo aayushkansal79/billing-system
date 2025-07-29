@@ -6,6 +6,6 @@ const router = express.Router();
 
 router.get("/customer/:customerId", protect(), getCustomerTransactions);
 router.get("/customer/unpaid/:customerId", protect(), getCustomerTransactionsUnpaid);
-router.post("/pay-multiple", protect(), payMultipleTransactions);
+router.post("/pay-auto", protect(), payMultipleTransactions);
 
 export default router;

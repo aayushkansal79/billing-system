@@ -1,11 +1,61 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import "./Profile.css";
+import { toast } from "react-toastify";
 
-const ImageUploader = () => {
-  const [image, setImage] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
+const Profile = ({ url }) => {
+  const [logo, setLogo] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
+
+  const [favicon, setFavicon] = useState(null);
+  const [faviconPreview, setFaviconPreview] = useState(null);
+
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
+
+  const [form, setForm] = useState({
+    websiteTitle: "",
+    websiteAddress: "",
+    CompanyName: "",
+    CompanyAddress: "",
+    CompanyState: "",
+    CompanyZip: "",
+    CompanyContact: "",
+    CompanyGST: "",
+    Extra: "",
+  });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get(`${url}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data) setForm(res.data);
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      await axios.post(`${url}/api/profile`, form, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("Profile Updated!")
+    } catch (err) {
+      toast.error("Failed to save profile")
+    }
+  };
+
+  const handleChangeImg = (e) => {
     const file = e.target.files[0];
 
     if (file && file.type.startsWith("image/")) {
@@ -25,7 +75,7 @@ const ImageUploader = () => {
     <>
       <p className="bread">Profile</p>
       <div className="profile row g-3">
-        <div className="mt-4 col-md-6">
+        {/* <div className="mt-4 col-md-6">
           <label className="mb-3">Website Header Logo *</label>
 
           <div className="mb-3">
@@ -33,7 +83,7 @@ const ImageUploader = () => {
               type="file"
               className="form-control"
               accept="image/*"
-              onChange={handleChange}
+              onChange={handleChangeImg}
             />
           </div>
 
@@ -45,17 +95,18 @@ const ImageUploader = () => {
                 className="card-img-top"
                 style={{ objectFit: "contain", maxHeight: "200px" }}
               />
-              {/* <div className="card-body text-center">
+              <div className="card-body text-center">
             <button className="btn btn-danger me-2" onClick={handleRemove}>
             Remove
             </button>
             <button className="btn btn-success" onClick={() => alert("Upload logic here!")}>
             Upload
             </button>
-          </div> */}
+          </div>
             </div>
           )}
         </div>
+
         <div className="mt-4 col-md-6">
           <label className="mb-3">Website Favicon *</label>
 
@@ -64,7 +115,7 @@ const ImageUploader = () => {
               type="file"
               className="form-control"
               accept="image/*"
-              onChange={handleChange}
+              onChange={handleChangeImg}
             />
           </div>
 
@@ -76,17 +127,17 @@ const ImageUploader = () => {
                 className="card-img-top"
                 style={{ objectFit: "contain", maxHeight: "200px" }}
               />
-              {/* <div className="card-body text-center">
+              <div className="card-body text-center">
             <button className="btn btn-danger me-2" onClick={handleRemove}>
               Remove
               </button>
             <button className="btn btn-success" onClick={() => alert("Upload logic here!")}>
             Upload
             </button>
-          </div> */}
+          </div>
             </div>
           )}
-        </div>
+        </div> */}
 
         <div className="col-md-3">
           <label className="form-label">Website Title*</label>
@@ -94,6 +145,9 @@ const ImageUploader = () => {
             type="text"
             className="form-control"
             placeholder="Enter Website Title"
+            name="websiteTitle"
+            value={form.websiteTitle}
+            onChange={handleChange}
             required
           />
         </div>
@@ -104,6 +158,9 @@ const ImageUploader = () => {
             type="text"
             className="form-control"
             placeholder="Enter Website Address"
+            name="websiteAddress"
+            value={form.websiteAddress}
+            onChange={handleChange}
             required
           />
         </div>
@@ -113,6 +170,9 @@ const ImageUploader = () => {
             type="text"
             className="form-control"
             placeholder="Enter Company Name"
+            name="CompanyName"
+            value={form.CompanyName}
+            onChange={handleChange}
             required
           />
         </div>
@@ -122,6 +182,9 @@ const ImageUploader = () => {
             type="text"
             className="form-control"
             placeholder="Enter Company Address"
+            name="CompanyAddress"
+            value={form.CompanyAddress}
+            onChange={handleChange}
             required
           />
         </div>
@@ -131,6 +194,21 @@ const ImageUploader = () => {
             type="text"
             className="form-control"
             placeholder="Enter Company State"
+            name="CompanyState"
+            value={form.CompanyState}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="col-md-3">
+          <label className="form-label">Company Zip Code*</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter Company Zip Code"
+            name="CompanyZip"
+            value={form.CompanyZip}
+            onChange={handleChange}
             required
           />
         </div>
@@ -140,6 +218,9 @@ const ImageUploader = () => {
             type="text"
             className="form-control"
             placeholder="Enter Company Contact"
+            name="CompanyContact"
+            value={form.CompanyContact}
+            onChange={handleChange}
             required
           />
         </div>
@@ -149,6 +230,9 @@ const ImageUploader = () => {
             type="text"
             className="form-control"
             placeholder="Enter Company GST"
+            name="CompanyGST"
+            value={form.CompanyGST}
+            onChange={handleChange}
             required
           />
         </div>
@@ -158,12 +242,18 @@ const ImageUploader = () => {
             type="text"
             className="form-control"
             placeholder="Enter Extra Data"
-            required
+            name="Extra"
+            value={form.Extra}
+            onChange={handleChange}
           />
         </div>
 
         <div className="col-12">
-          <button type="submit" className="btn btn-primary">
+          <button
+            type="submit"
+            className="btn btn-primary"
+            onClick={handleSubmit}
+          >
             Save Changes
           </button>
         </div>
@@ -172,4 +262,4 @@ const ImageUploader = () => {
   );
 };
 
-export default ImageUploader;
+export default Profile;

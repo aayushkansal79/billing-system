@@ -39,14 +39,14 @@
 /* BarcodePrint.css */
 
 /* General layout */
-.barcode-container {
+/* .barcode-container {
   padding: 20px;
   font-family: sans-serif;
 }
 
 .barcode-item {
   margin-bottom: 40px;
-  /* text-align: center; */
+  text-align: center;
   page-break-inside: avoid;
 }
 
@@ -55,9 +55,17 @@
   font-size: 14px;
 }
 
-/* Hide button when printing */
+Hide button when printing
 .no-print {
   margin-bottom: 20px;
+} */
+
+.refund-note{
+  font-size: 12px !important;
+}
+
+.bill-foot td{
+  /* width: 25%; */
 }
 
 @media print {

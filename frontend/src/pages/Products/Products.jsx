@@ -11,7 +11,8 @@ const AssignProductModal = ({ url, product, onClose }) => {
   const [assignments, setAssignments] = useState([]);
   const [quantities, setQuantities] = useState({});
 
-  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -136,7 +137,8 @@ const Products = ({ url }) => {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
   const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
 
@@ -252,6 +254,7 @@ const Products = ({ url }) => {
           <thead className="table-info">
             <tr>
               <th scope="col">Product Name</th>
+              <th scope="col">Barcode</th>
               <th scope="col">Quantity</th>
               <th scope="col">Price Before GST</th>
               <th scope="col">GST %</th>
@@ -279,6 +282,7 @@ const Products = ({ url }) => {
                         product.name
                       )}
                     </th>
+                    <td>[ {product.barcode} ]</td>
                     <th className="text-primary">
                       {/* {editingProductId === product._id ? (
                         <input
@@ -307,7 +311,13 @@ const Products = ({ url }) => {
                           }
                         />
                       ) : (
-                        `₹${((product.printPrice)/(1+(0.01*product.gstPercentage))).toFixed(2)}`
+                        `₹${Number(
+                          product.printPrice /
+                            (1 + 0.01 * product.gstPercentage)
+                        ).toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}`
                       )}
                     </td>
                     <td>
@@ -344,7 +354,10 @@ const Products = ({ url }) => {
                           }
                         />
                       ) : (
-                        `₹${product.printPrice.toFixed(2)}`
+                        `₹${Number(product.printPrice).toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}`
                       )}
                     </th>
                     <td>{new Date(product.updatedAt).toLocaleString()}</td>
@@ -431,11 +444,25 @@ const Products = ({ url }) => {
               : storeProducts.map((sp) => (
                   <tr key={sp._id}>
                     <th>{sp.product.name}</th>
+                    <td>[ {sp.product.barcode} ]</td>
                     <th className="text-primary">{sp.quantity}</th>
-                    <td>₹{Number((sp.product.printPrice)/(1+(0.01*sp.product.gstPercentage))).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td>
+                      ₹
+                      {Number(
+                        sp.product.printPrice /
+                          (1 + 0.01 * sp.product.gstPercentage)
+                      ).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
                     <td>{sp.product.gstPercentage}%</td>
                     <th className="text-danger">
-                      ₹{Number(sp.product.printPrice).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ₹
+                      {Number(sp.product.printPrice).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </th>
                   </tr>
                 ))}

@@ -4,15 +4,48 @@ import "./Orders.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import Barcode from "react-barcode";
 
 const InvoiceContent = React.forwardRef(function InvoiceContent(
-  { company, products, date },
+  { url, company, products, date },
   ref
 ) {
+  const navigate = useNavigate();
+
   const total = products.reduce(
     (sum, item) => sum + item.quantity * item.purchasePriceAfterDiscount,
     0
   );
+
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
+
+  const [form, setForm] = useState({
+    websiteTitle: "",
+    websiteAddress: "",
+    CompanyName: "",
+    CompanyAddress: "",
+    CompanyState: "",
+    CompanyZip: "",
+    CompanyContact: "",
+    CompanyGST: "",
+    Extra: "",
+  });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get(`${url}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data) setForm(res.data);
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   return (
     <div ref={ref} style={{ padding: "20px" }}>
@@ -39,15 +72,15 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
         <div className="text-end">
           <b>PURCHASER INFORMATION</b>
           <br />
-          <strong>Ajjawam</strong>
+          <strong>{form.CompanyName}</strong>
           <br />
-          G-123
+          {form.CompanyAddress}
           <br />
-          Gujarat
+          {form.CompanyState} - {form.CompanyZip}, India
           <br />
-          Contact: 9898989898
+          Contact: {form.CompanyContact}
           <br />
-          GST: AJJ123
+          GST: {form.CompanyGST}
         </div>
       </div>
 
@@ -60,6 +93,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <th>Purchase Price</th>
             <th>Price After Discount</th>
             <th>Total</th>
+            <th className="no-print">Tag</th>
           </tr>
         </thead>
         <tbody>
@@ -68,9 +102,49 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               <td>{idx + 1}.</td>
               <td>{p.name}</td>
               <td>{p.quantity}</td>
-              <td>₹{Number(p.purchasePrice).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-              <td>₹{Number(p.purchasePriceAfterDiscount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-              <td>₹{Number(p.quantity * p.purchasePriceAfterDiscount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td>
+                ₹
+                {Number(p.purchasePrice).toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </td>
+              <td>
+                ₹
+                {Number(p.purchasePriceAfterDiscount).toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </td>
+              <td>
+                ₹
+                {Number(
+                  p.quantity * p.purchasePriceAfterDiscount
+                ).toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </td>
+              <td className="no-print">
+                <button
+                  className="btn btn-outline-info btn-sm"
+                  onClick={() =>
+                    navigate(`/purchase-list/print-tag/${p._id}`, {
+                      state: { product: p, company, date },
+                    })
+                  }
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="24px"
+                    viewBox="0 -960 960 960"
+                    width="24px"
+                    fill="#000000"
+                  >
+                    <path d="M640-640v-120H320v120h-80v-200h480v200h-80Zm-480 80h640-640Zm560 100q17 0 28.5-11.5T760-500q0-17-11.5-28.5T720-540q-17 0-28.5 11.5T680-500q0 17 11.5 28.5T720-460Zm-80 260v-160H320v160h320Zm80 80H240v-160H80v-240q0-51 35-85.5t85-34.5h560q51 0 85.5 34.5T880-520v240H720v160Zm80-240v-160q0-17-11.5-28.5T760-560H200q-17 0-28.5 11.5T160-520v160h80v-80h480v80h80Z" />
+                  </svg>
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -80,7 +154,13 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               <strong>Grand Total</strong>
             </td>
             <td>
-              <strong>₹{Number(total).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+              <strong>
+                ₹
+                {Number(total).toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </strong>
             </td>
           </tr>
         </tfoot>
@@ -98,7 +178,8 @@ const Order = ({ url }) => {
   const [selectedPurchase, setSelectedPurchase] = useState(null);
   const componentRef = useRef();
 
-  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
 
   useEffect(() => {
     const fetchPurchases = async () => {
@@ -115,15 +196,10 @@ const Order = ({ url }) => {
     fetchPurchases();
   }, [url]);
 
-  // const handlePrint = useReactToPrint({
-  //   content: () => componentRef.current,
-  //   documentTitle: "Invoice",
-  // });
-
   const navigate = useNavigate();
 
   const handleClick = (purchaseId) => {
-    navigate(`/purchase-list/barcode/${purchaseId}`);
+    navigate(`/purchase-list/print-tags/${purchaseId}`);
   };
 
   const openModal = (purchase) => {
@@ -200,8 +276,11 @@ const Order = ({ url }) => {
                   <b>Order No. -</b> {purchase.orderNumber}
                 </td>
                 <th className="text-danger">
-                  {/* ₹ {purchase.totalPriceAfterDiscount || 0} */}
-                  ₹ {Number(purchase.totalPriceAfterDiscount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {/* ₹ {purchase.totalPriceAfterDiscount || 0} */}₹{" "}
+                  {Number(purchase.totalPriceAfterDiscount).toLocaleString(
+                    "en-IN",
+                    { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+                  )}
                 </th>
                 <td>{purchase.company?.name}</td>
                 <td>{purchase.company?.city}</td>
@@ -260,6 +339,7 @@ const Order = ({ url }) => {
                 </div>
                 <div className="modal-body">
                   <InvoiceContent
+                    url={url}
                     ref={componentRef}
                     company={selectedPurchase.company}
                     products={selectedPurchase.products}

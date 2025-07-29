@@ -1,0 +1,12 @@
+.barcode .barcode-label{
+    font-size: 16px !important;
+}
+.barcode-item{
+    page-break-inside: avoid;
+}
+
+.barcode{
+    padding: 1rem;
+    background-color: #f8f9fa;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}

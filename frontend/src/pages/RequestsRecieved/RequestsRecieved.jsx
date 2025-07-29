@@ -110,8 +110,8 @@ const RequestsRecieved = ({ url }) => {
                   <b>Zip -</b> {req.requestingStore?.zipCode} */}
                 </td>
                 <th>{req.product?.name}</th>
-                <td>{req.requestedQuantity}</td>
-                <td>
+                <th>{req.requestedQuantity}</th>
+                <th>
                   {req.status === 0 && req.supplyingStore._id === user._id ? (
                     <>
                       <input
@@ -146,7 +146,7 @@ const RequestsRecieved = ({ url }) => {
                   ) : (
                     req.acceptedQuantity || "-"
                   )}
-                </td>
+                </th>
                 {/* <td>{req.acceptedQuantity || "-"}</td> */}
                 <td>
                   <small>

@@ -5,7 +5,12 @@ const transactionSchema = new mongoose.Schema({
     storeId: { type: mongoose.Schema.Types.ObjectId, ref: "Store", required: true },
     invoiceNo: { type: String },
     billAmount: { type: Number },
-    paymentType: { type: String },
+    paymentMethods: [
+        {
+        method: { type: String },
+        amount: { type: Number },
+        }
+    ],
     paymentStatus: { type: String },
     paidAmount: { type: Number },
     wallet: { type: Number, required: true },
