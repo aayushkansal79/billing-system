@@ -977,7 +977,8 @@ const Billing = ({ url, setSidebarOpen }) => {
                   customer?.pendingAmount !== 0 ||
                   (discountMethod === "flat" && discountValue > 0)) && (
                   <h6 className="text-secondary fw-bold">
-                    ₹ {Math.round(grandTotal).toFixed(2)}
+                    {/* ₹ {Math.round(grandTotal).toFixed(2)} */}
+                    ₹ {Math.round(baseTotal).toFixed(2)}
                   </h6>
                 )}
                 {customer?.pendingAmount < 0 && (
