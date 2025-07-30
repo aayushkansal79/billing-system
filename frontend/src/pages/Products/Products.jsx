@@ -47,7 +47,7 @@ const AssignProductModal = ({ url, product, onClose }) => {
   };
 
   const handleAssign = async () => {
-    // setLoading(true);
+    setLoading(true);
     if (product.unit)
       try {
         const payload = {
@@ -69,7 +69,7 @@ const AssignProductModal = ({ url, product, onClose }) => {
         console.error(err);
         toast.error("Failed to assign product");
       } finally {
-        // setLoading(false);
+        setLoading(false);
       }
   };
 

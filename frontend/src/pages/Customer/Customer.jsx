@@ -3,6 +3,7 @@ import "./Customer.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import Loader from "../../components/Loader/Loader";
 
 const Customer = ({ url }) => {
   useEffect(() => {
@@ -12,6 +13,7 @@ const Customer = ({ url }) => {
   const [customerList, setCustomerList] = useState([]);
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
+  const [loading, setLoading] = useState(false);
 
   const [paidAmount, setPaidAmount] = useState("");
   const [showPendingModal, setShowPendingModal] = useState(false);
@@ -81,12 +83,30 @@ const Customer = ({ url }) => {
   }, [paymentMethods]);
 
   const handleSubmitPayBills = async () => {
-    if (parseFloat(paidAmount) < 0 || !paymentMethods) {
-      toast.error("Enter All Fields");
-      return;
-    }
+    setLoading(true);
 
     try {
+      const invalidEntry = paymentMethods.find(
+        (entry) =>
+          (entry.method &&
+            (entry.amount === null ||
+              entry.amount === "" ||
+              isNaN(entry.amount))) ||
+          (!entry.method && entry.amount && !isNaN(entry.amount))
+      );
+
+      if (invalidEntry) {
+        toast.error("Enter Payment Method/Amount");
+        setLoading(false);
+        return;
+      }
+      
+      if(paidAmount <= 0){
+        toast.error("Enter Paid Amount");
+        setLoading(false);
+        return;
+      }
+
       await axios.post(
         `${url}/api/transactions/pay-auto`,
         {
@@ -98,7 +118,7 @@ const Customer = ({ url }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      toast.success("Selected bills marked as paid!");
+      toast.success("Amount added!");
       setShowPendingModal(false);
       setPaidAmount("");
       setPaymentMethods([
@@ -110,7 +130,9 @@ const Customer = ({ url }) => {
       fetchCustomers();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to mark bills as paid.");
+      toast.error("Failed to add amount.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -306,7 +328,6 @@ const Customer = ({ url }) => {
                     {paymentMethods.map((pm, index) => (
                       <div key={index} className="mb-1">
                         <div className="row g-2 align-items-center">
-                          {/* Payment Method Selector */}
                           <div className="col-6">
                             <select
                               className="form-select"
@@ -329,7 +350,6 @@ const Customer = ({ url }) => {
                             </select>
                           </div>
 
-                          {/* Paid Amount Input */}
                           <div className="col-6">
                             <input
                               type="number"
@@ -375,6 +395,7 @@ const Customer = ({ url }) => {
           </div>
         </div>
       )}
+      {loading && <Loader />}
     </>
   );
 };
