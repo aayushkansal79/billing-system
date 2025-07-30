@@ -40,11 +40,15 @@ export const getCustomerTransactionsUnpaid = async (req, res) => {
 
 export const payMultipleTransactions = async (req, res) => {
   try {
-    const { customerId, paymentMethod = "", paidAmount = 0 } = req.body;
+    const { customerId, paymentMethods = [], paidAmount = 0 } = req.body;
 
     if (!customerId || isNaN(paidAmount)) {
       return res.status(400).json({ message: "Customer ID and paid amount are required." });
     }
+
+    const validPaymentMethods  = paymentMethods.filter(entry => {
+      return entry.method && entry.method.trim() !== "" && entry.amount && !isNaN(entry.amount);
+    });
 
     const customer = await Customer.findById(customerId);
     if (!customer) {
@@ -63,20 +67,20 @@ export const payMultipleTransactions = async (req, res) => {
     }).sort({ createdAt: 1 });
 
     for (const tx of transactions) {
-      if (availableAmount >= tx.billAmount) {
+      if (availableAmount >= (tx.billAmount - (tx.usedCoins || 0))) {
         tx.paymentStatus = "paid";
         await tx.save();
 
         const oldBill = await Bill.findOne({invoiceNumber: tx.invoiceNo });
         if (oldBill) {
           oldBill.paymentStatus = "paid";
-          oldBill.paymentMethod = paymentMethod;
+          // oldBill.paymentMethod = paymentMethod;
           await oldBill.save();
         }
 
         // totalUsed += tx.billAmount;
         // generatedCoins += Math.floor(tx.billAmount / 100);
-        availableAmount -= tx.billAmount;
+        availableAmount -= (tx.billAmount - (tx.usedCoins || 0));
       } else {
         continue;
       }
@@ -86,7 +90,7 @@ export const payMultipleTransactions = async (req, res) => {
     customer.paidAmount += originalPaidAmount;
     customer.coins += generatedCoins;
     customer.remainingPaid = availableAmount;
-    customer.pendingAmount = customer.paidAmount - customer.totalAmount ;
+    customer.pendingAmount = customer.paidAmount - customer.totalAmount + (customer.usedCoins || 0);
     customer.updatedAt = new Date();
     await customer.save();
 
@@ -94,7 +98,7 @@ export const payMultipleTransactions = async (req, res) => {
     const newTransaction = new Transaction({
       customerId: customer._id,
       storeId: req.store._id,
-      paymentMethod,
+      paymentMethods: validPaymentMethods,
       paidAmount: originalPaidAmount,
       paymentStatus: "paid",
       generatedCoins,

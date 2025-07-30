@@ -104,67 +104,68 @@ const Invoice = (
   const formatted = toTitleCase(toWords(Math.floor(totalAmount)));
 
   return (
-    <div ref={ref} style={{ padding: "20px" }} className="bill-invoice">
-      <div className="text-center bill-title">TAX INVOICE</div>
-      <div className="d-flex justify-content-between align-items-center">
-        {/* <h2>INVOICE</h2> */}
-        <img src={assets.main_logo} width={90} alt="" />
-        <div className="text-end">
-          <p className="m-0">
-            <b>{form.CompanyName}</b>
-          </p>
-          <p className="m-0">
-            <b>
-              {form.CompanyAddress}, {form.CompanyState}, ZipCode:{" "}
-              {form.CompanyZip}, India
-            </b>
-          </p>
-          <p className="m-0">
-            <b>GST No.: {form.CompanyGST}</b>
-          </p>
+    <div ref={ref} className="bill-invoice">
+      <div style={{ background: "#f2f7f9", padding: "20px" }}>
+        <div className="text-center bill-title">TAX INVOICE</div>
+        <div className="d-flex justify-content-between align-items-center">
+          {/* <h2>INVOICE</h2> */}
+          <img src={assets.main_logo} width={90} alt="" />
+          <div className="text-end">
+            <p className="m-0">
+              <b>{form.CompanyName}</b>
+            </p>
+            <p className="m-0">
+              <b>
+                {form.CompanyAddress}, {form.CompanyState}, ZipCode:{" "}
+                {form.CompanyZip}, India
+              </b>
+            </p>
+            <p className="m-0">
+              <b>GST No.: {form.CompanyGST}</b>
+            </p>
+          </div>
         </div>
-      </div>
-      <br />
-      <div>
-        <b>INVOICE DETAILS</b>
         <br />
-        <p className="m-0">Invoice No.: {invoiceNumber}</p>
-        <p className="m-0">
-          Invoice Date: {new Date(date).toLocaleDateString()}
-        </p>
-      </div>
-      <br />
-      <div className="d-flex justify-content-between">
         <div>
-          <b>CUSTOMER INFORMATION</b>
+          <b>INVOICE DETAILS</b>
           <br />
-          {customerName ? (
-            <>
-              {customerName}
-              <br />
-            </>
-          ) : (
-            ""
-          )}
-          State: {state}
-          <br />
-          Mobile: {mobileNo || "N/A"}
-          <br />
-          GST: {gstNumber || "N/A"}
+          <p className="m-0">Invoice No.: {invoiceNumber}</p>
+          <p className="m-0">
+            Invoice Date: {new Date(date).toLocaleDateString()}
+          </p>
         </div>
-        <div className="text-end">
-          <b>STORE INFORMATION</b>
-          <br />
-          {store.address},
-          <br />
-          {store.city},
-          <br />
-          {store.state} - {store.zipCode}
-          <br />
-          {store.contactNumber}
+        <br />
+        <div className="d-flex justify-content-between">
+          <div>
+            <b>CUSTOMER INFORMATION</b>
+            <br />
+            {customerName ? (
+              <>
+                {customerName}
+                <br />
+              </>
+            ) : (
+              ""
+            )}
+            State: {state}
+            <br />
+            Mobile: {mobileNo || "N/A"}
+            <br />
+            GST: {gstNumber || "N/A"}
+          </div>
+          <div className="text-end">
+            <b>STORE INFORMATION</b>
+            <br />
+            {store.address},
+            <br />
+            {store.city},
+            <br />
+            {store.state} - {store.zipCode}
+            <br />
+            {store.contactNumber}
+          </div>
         </div>
       </div>
-      <hr />
       <table className="table table-bordered mt-3 text-end">
         <thead className="table-light">
           <tr>
@@ -353,7 +354,13 @@ const Invoice = (
                 <strong>Discount</strong>
               </td>
               <td>
-                <strong>₹ {discount || 0}</strong>
+                <strong>
+                  ₹{" "}
+                  {Number(discount).toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </strong>
               </td>
             </tr>
           )}
@@ -365,7 +372,15 @@ const Invoice = (
             </td>
             <td>
               <strong>
-                ₹ {Math.floor(baseTotal - (usedCoins || 0) - (discountMethod === "flat" ? discount : 0)).toLocaleString("en-IN")}
+                ₹{" "}
+                {Math.floor(
+                  baseTotal -
+                    (usedCoins || 0) -
+                    (discountMethod === "flat" ? discount : 0)
+                ).toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </strong>
             </td>
           </tr>
@@ -378,12 +393,11 @@ const Invoice = (
         className="d-flex justify-content-center align-items-center p-2"
         style={{ background: "#f2f7f9" }}
       >
-        <b>Total Amount Incl. GST: {formatted + " Rupees Only"}</b>
+        <b>Total Amount (in words) : {formatted + " Rupees Only"}</b>
       </div>
 
       <br />
-      <div className="row">
-        <div className="col-md-7"></div>
+      <div className="row justify-content-end">
         <div className="text-end" style={{ width: "300px" }}>
           <table className="table table-bordered">
             <thead>
@@ -426,7 +440,10 @@ const Invoice = (
                   :{" "}
                   {discountMethod === "percentage"
                     ? `${discount}%`
-                    : `₹${discount}`}
+                    : `₹${Number(discount)?.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`}
                 </td>
               </>
             ) : (
@@ -449,7 +466,9 @@ const Invoice = (
           </tr>
           <tr>
             <td>Payment Method</td>
-            <td>: {paymentMethods.map((m) => m.method).join(" + ")}</td>
+            <td>
+              : {paymentMethods.map((m) => m.method).join(" + ") || "Unpaid"}
+            </td>
             <td>Coins Earned</td>
             {paymentStatus !== "unpaid" && mobileNo ? (
               <td>
@@ -464,8 +483,10 @@ const Invoice = (
             <td>
               :{" "}
               {paymentMethods.length
-                ? paymentMethods.map((m) => `₹${Number(m.amount)}`).join(" + ")
-                : "0.00"}{" "}
+                ? paymentMethods
+                    .map((m) => `₹${Number(m.amount)?.toLocaleString("en-IN")}`)
+                    .join(" + ")
+                : "0"}{" "}
               {paymentMethods.length > 1 &&
                 `= ₹ ${(paidAmount || 0).toLocaleString("en-IN")}`}
             </td>

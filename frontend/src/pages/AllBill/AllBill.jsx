@@ -47,7 +47,7 @@ const AllBill = ({ url }) => {
     const frameDoc = frame1.contentWindow.document;
 
     frameDoc.open();
-    frameDoc.write("<html><head><title>Invoice Print</title>");
+    frameDoc.write("<html><head><title>Tax Print</title>");
 
     // Clone current styles
     document
@@ -56,7 +56,22 @@ const AllBill = ({ url }) => {
         frameDoc.write(style.outerHTML);
       });
 
-    frameDoc.write("</head><body>");
+    frameDoc.write(`
+      <style>
+        @media print {
+          .no-print {
+          display: none !important;
+        }
+          body {
+            background: white !important;
+          }
+          @page {
+            size: auto;
+            margin: 0 10px;
+          }
+        }
+      </style>
+    </head><body>`);
     frameDoc.write(contents);
     frameDoc.write("</body></html>");
     frameDoc.close();

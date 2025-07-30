@@ -31,7 +31,8 @@ const Purchase = ({ url }) => {
   const [orderNo, setOrderNo] = useState("");
   const [discount, setDiscount] = useState(0);
 
-  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
 
   const [products, setProducts] = useState([
     {
@@ -311,6 +312,12 @@ const Purchase = ({ url }) => {
     e.preventDefault();
     setLoading(true);
     try {
+      if (products.length === 0) {
+        toast.error("Please add at least one product");
+        setLoading(false);
+        return;
+      }
+
       let company = selectedCompany;
 
       if (!company || company.name.trim() !== companyData.name.trim()) {

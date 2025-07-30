@@ -13,12 +13,13 @@ const Customer = ({ url }) => {
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
 
-  const [paymentMethod, setPaymentMethod] = useState("");
   const [paidAmount, setPaidAmount] = useState("");
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [pendingBills, setPendingBills] = useState([]);
-  const [selectedBills, setSelectedBills] = useState([]);
   const [modalCustomer, setModalCustomer] = useState(null);
+  const [paymentMethods, setPaymentMethods] = useState([
+    { method: "", amount: "" },
+  ]);
 
   const fetchCustomers = async () => {
     try {
@@ -47,7 +48,6 @@ const Customer = ({ url }) => {
         }
       );
       setPendingBills(res.data.transactions);
-      setSelectedBills([]);
       setModalCustomer(customer);
       setShowPendingModal(true);
     } catch (err) {
@@ -56,13 +56,32 @@ const Customer = ({ url }) => {
     }
   };
 
-  const handleSubmitPayBills = async () => {
-    // if (selectedBills.length === 0) {
-    //   toast.error("Select at least one bill to pay.");
-    //   return;
-    // }
+  const handlePaymentChange = (index, field, value) => {
+    const updated = [...paymentMethods];
+    updated[index][field] =
+      field === "amount" ? value.replace(/^0+(?=\d)/, "") : value;
+    setPaymentMethods(updated);
 
-    if (parseFloat(paidAmount) < 0 || !paymentMethod) {
+    if (
+      index === paymentMethods.length - 1 &&
+      field === "amount" &&
+      updated[index].method &&
+      parseFloat(value) > 0
+    ) {
+      setPaymentMethods([...updated, { method: "", amount: "" }]);
+    }
+  };
+
+  useEffect(() => {
+    const sum = paymentMethods.reduce((acc, curr) => {
+      const amt = parseFloat(curr.amount);
+      return acc + (isNaN(amt) ? 0 : amt);
+    }, 0);
+    setPaidAmount(sum);
+  }, [paymentMethods]);
+
+  const handleSubmitPayBills = async () => {
+    if (parseFloat(paidAmount) < 0 || !paymentMethods) {
       toast.error("Enter All Fields");
       return;
     }
@@ -73,7 +92,7 @@ const Customer = ({ url }) => {
         {
           customerId: modalCustomer._id,
           paidAmount: parseFloat(paidAmount),
-          paymentMethod,
+          paymentMethods,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -82,21 +101,18 @@ const Customer = ({ url }) => {
       toast.success("Selected bills marked as paid!");
       setShowPendingModal(false);
       setPaidAmount("");
-      setPaymentMethod("");
+      setPaymentMethods([
+        {
+          method: "",
+          amount: "",
+        },
+      ]);
       fetchCustomers();
     } catch (err) {
       console.error(err);
       toast.error("Failed to mark bills as paid.");
     }
   };
-
-  // const handleCheckboxChange = (billId) => {
-  //   if (selectedBills.includes(billId)) {
-  //     setSelectedBills(selectedBills.filter((id) => id !== billId));
-  //   } else {
-  //     setSelectedBills([...selectedBills, billId]);
-  //   }
-  // };
 
   const handleCustomerClick = (customerId) => {
     navigate(`/all-customer/${customerId}/transactions`);
@@ -286,33 +302,64 @@ const Customer = ({ url }) => {
               </div>
               <div className="modal-footer justify-content-between">
                 {pendingBills.length > 0 && (
-                  <>
-                    <div className="col-md-4">
-                      {/* <label className="form-label">Payment Method</label> */}
-                      <select
-                        className="form-select"
-                        name="payMethod"
-                        value={paymentMethod}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                      >
-                        <option value="">Payment Method</option>
-                        <option value="Cash">Cash</option>
-                        <option value="UPI">UPI</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                      </select>
+                  <div>
+                    {paymentMethods.map((pm, index) => (
+                      <div key={index} className="mb-1">
+                        <div className="row g-2 align-items-center">
+                          {/* Payment Method Selector */}
+                          <div className="col-6">
+                            <select
+                              className="form-select"
+                              name="payMethod"
+                              value={pm.method}
+                              onChange={(e) =>
+                                handlePaymentChange(
+                                  index,
+                                  "method",
+                                  e.target.value
+                                )
+                              }
+                            >
+                              <option value="">Select Method</option>
+                              <option value="Cash">Cash</option>
+                              <option value="UPI">UPI</option>
+                              <option value="Bank Transfer">
+                                Bank Transfer
+                              </option>
+                            </select>
+                          </div>
+
+                          {/* Paid Amount Input */}
+                          <div className="col-6">
+                            <input
+                              type="number"
+                              className="form-control"
+                              placeholder="Amount"
+                              min="0"
+                              value={pm.amount}
+                              onChange={(e) =>
+                                handlePaymentChange(
+                                  index,
+                                  "amount",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="row g-2 align-items-center mt-2 mx-2">
+                      <div className="col-6">
+                        <b>Total Amt:</b>
+                      </div>
+                      <div className="col-6">
+                        <b>₹ {paidAmount}</b>
+                      </div>
                     </div>
-                    <div className="col-md-3">
-                      <input
-                        type="number"
-                        className="form-control me-2"
-                        placeholder="Paid Amount"
-                        value={paidAmount}
-                        onChange={(e) => setPaidAmount(e.target.value)}
-                      />
-                    </div>
-                  </>
+                  </div>
                 )}
-                <div>
+                <div className="col-md-3">
                   {pendingBills.length > 0 && (
                     <button
                       type="button"

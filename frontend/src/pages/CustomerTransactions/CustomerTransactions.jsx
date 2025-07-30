@@ -71,7 +71,7 @@ const CustomerTransactions = ({ url }) => {
                   <th>Bill Amount</th>
                   <th>Paid Amount</th>
                   <th>Used Coins</th>
-                  <th>Final Amount</th>
+                  <th>Total Paid</th>
                   <th>Wallet</th>
                   <th>Payment Type</th>
                   <th>Generated Coins</th>
@@ -130,7 +130,7 @@ const CustomerTransactions = ({ url }) => {
                     </td>
                     <th className="text-success">
                       ₹{" "}
-                      {Number(t.paidAmount + t.usedCoins).toLocaleString(
+                      {Number(t.paidAmount + (t.usedCoins || 0)).toLocaleString(
                         "en-IN",
                         { minimumFractionDigits: 2, maximumFractionDigits: 2 }
                       )}

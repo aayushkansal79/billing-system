@@ -95,7 +95,8 @@ const PrintBarcode = ({ url }) => {
 
       <div
         ref={componentRef}
-        className="barcode-print-area d-flex flex-wrap justify-content-center"
+        className="barcode-print-area"
+        style={{width: "50%", display: "inline-block"}}
       >
         {purchase.products.map((product, productIdx) => {
           if (!product.barcode) {

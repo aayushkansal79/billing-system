@@ -295,7 +295,7 @@ export const createBill = async (req, res) => {
         }).sort({ createdAt: 1 });
 
         for (const trans of transactionsToSettle) {
-            if (remainingAfterOldSettlements >= trans.billAmount) {
+            if (remainingAfterOldSettlements >= trans.billAmount - (trans.usedCoins || 0)) {
                 trans.paymentStatus = "paid";
                 await trans.save();
 
@@ -306,9 +306,8 @@ export const createBill = async (req, res) => {
                 await oldBill.save();
                 }
 
-                remainingAfterOldSettlements -= trans.billAmount;
+                remainingAfterOldSettlements -= (trans.billAmount - (trans.usedCoins || 0));
             } else {
-                // break;
                 continue;
             }
         }

@@ -64,9 +64,9 @@ Hide button when printing
   font-size: 12px !important;
 }
 
-.bill-foot td{
-  /* width: 25%; */
-}
+/* .bill-foot td{
+  width: 25%;
+} */
 
 @media print {
   .no-print {

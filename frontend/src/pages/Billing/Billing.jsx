@@ -487,8 +487,35 @@ const Billing = ({ url, setSidebarOpen }) => {
         return;
       }
 
+      if (usedCoins > customer.coins) {
+        toast.error("Used Coins are more than available");
+        setLoading(false);
+        return;
+      }
+
+      const invalidEntry = paymentMethods.find(
+        (entry) =>
+          (entry.method &&
+            (entry.amount === null ||
+              entry.amount === "" ||
+              isNaN(entry.amount))) ||
+          (!entry.method && entry.amount && !isNaN(entry.amount))
+      );
+
+      if (!paymentStatus) {
+        toast.error("Select Payment Status");
+        setLoading(false);
+        return;
+      }
+
       if (paymentStatus !== "unpaid" && !paymentMethods) {
         toast.error("Enter Payment Status/Method");
+        setLoading(false);
+        return;
+      }
+
+      if (paymentStatus !== "unpaid" && invalidEntry) {
+        toast.error("Enter Payment Method/Amount");
         setLoading(false);
         return;
       }
@@ -630,7 +657,7 @@ const Billing = ({ url, setSidebarOpen }) => {
     const frameDoc = frame1.contentWindow.document;
 
     frameDoc.open();
-    frameDoc.write("<html><head><title>Invoice Print</title>");
+    frameDoc.write("<html><head><title>Tax Print</title>");
 
     // Clone current styles
     document
@@ -639,7 +666,22 @@ const Billing = ({ url, setSidebarOpen }) => {
         frameDoc.write(style.outerHTML);
       });
 
-    frameDoc.write("</head><body>");
+    frameDoc.write(`
+      <style>
+        @media print {
+          .no-print {
+          display: none !important;
+        }
+          body {
+            background: white !important;
+          }
+          @page {
+            size: auto;
+            margin: 0 10px;
+          }
+        }
+      </style>
+    </head><body>`);
     frameDoc.write(contents);
     frameDoc.write("</body></html>");
     frameDoc.close();
@@ -977,8 +1019,8 @@ const Billing = ({ url, setSidebarOpen }) => {
                   customer?.pendingAmount !== 0 ||
                   (discountMethod === "flat" && discountValue > 0)) && (
                   <h6 className="text-secondary fw-bold">
-                    {/* ₹ {Math.round(grandTotal).toFixed(2)} */}
-                    ₹ {Math.round(baseTotal).toFixed(2)}
+                    {/* ₹ {Math.round(grandTotal).toFixed(2)} */}₹{" "}
+                    {Math.round(baseTotal).toFixed(2)}
                   </h6>
                 )}
                 {customer?.pendingAmount < 0 && (
@@ -1034,8 +1076,8 @@ const Billing = ({ url, setSidebarOpen }) => {
                     {transactions.map((t, idx) => (
                       <tr key={idx}>
                         <td className="d-flex">
-                          <div className="form-check">
-                            {/* <input
+                          {/* <div className="form-check">
+                            <input
                               className="form-check-input"
                               type="checkbox"
                               checked={selectedTransactions.includes(t._id)}
@@ -1047,8 +1089,8 @@ const Billing = ({ url, setSidebarOpen }) => {
                                   e.target.checked
                                 )
                               }
-                            /> */}
-                          </div>
+                            />
+                          </div> */}
                           {t.invoiceNo}
                         </td>
                         <th className="text-danger">₹ {t.billAmount}</th>
