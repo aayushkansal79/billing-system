@@ -330,10 +330,10 @@ export const createBill = async (req, res) => {
       // Update customer
       customerDoc.totalAmount += roundedTotalAmount;
       customerDoc.paidAmount += parseFloat(paidAmount);
-      customerDoc.pendingAmount = customerDoc.paidAmount - customerDoc.totalAmount + (usedCoins || 0);
       customerDoc.coins += generatedCoins;
       customerDoc.coins -= usedCoins;
       customerDoc.usedCoins += usedCoins;
+      customerDoc.pendingAmount = customerDoc.paidAmount - customerDoc.totalAmount + (customerDoc.usedCoins || 0);
       customerDoc.remainingPaid = remainingAfterOldSettlements;
       customerDoc.updatedAt = new Date();
       await customerDoc.save();

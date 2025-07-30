@@ -600,7 +600,12 @@ const Billing = ({ url, setSidebarOpen }) => {
       });
       setDiscountMethod("percentage");
       setDiscountValue("");
-      setPaymentMethods([]);
+      setPaymentMethods([
+        {
+          method: "",
+          amount: "",
+        },
+      ]);
       setPaymentStatus("");
       setPaidAmount(0);
       setUsedCoins(0);
@@ -1198,7 +1203,9 @@ const Billing = ({ url, setSidebarOpen }) => {
                 value={paidAmount}
                 disabled
               /> */}
-              <p className="text-success"><b>₹ {paidAmount}</b></p>
+              <p className="text-success">
+                <b>₹ {paidAmount}</b>
+              </p>
             </div>
 
             <div className="col-md-2"></div>
