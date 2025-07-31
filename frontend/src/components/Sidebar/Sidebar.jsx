@@ -153,24 +153,97 @@ const Sidebar = ({ sidebarOpen }) => {
         ) : (
           ""
         )}
-        <NavLink
-          to="/products"
+
+        <div
+          onClick={() => toggleMenu("products")}
           className={sidebarOpen ? "side-item" : "side-item side-item-active"}
-          title="Products List"
+          title="Products"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             height="20px"
             viewBox="0 -960 960 960"
             width="24px"
-            fill="#1f1f1f"
+            fill="#000000"
           >
-            {" "}
-            <path d="M200-80q-33 0-56.5-23.5T120-160v-480q0-33 23.5-56.5T200-720h80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720h80q33 0 56.5 23.5T840-640v480q0 33-23.5 56.5T760-80H200Zm0-80h560v-480H200v480Zm280-240q83 0 141.5-58.5T680-600h-80q0 50-35 85t-85 35q-50 0-85-35t-35-85h-80q0 83 58.5 141.5T480-400ZM360-720h240q0-50-35-85t-85-35q-50 0-85 35t-35 85ZM200-160v-480 480Z" />{" "}
+            <path d="m260-520 220-360 220 360H260ZM700-80q-75 0-127.5-52.5T520-260q0-75 52.5-127.5T700-440q75 0 127.5 52.5T880-260q0 75-52.5 127.5T700-80Zm-580-20v-320h320v320H120Zm580-60q42 0 71-29t29-71q0-42-29-71t-71-29q-42 0-71 29t-29 71q0 42 29 71t71 29Zm-500-20h160v-160H200v160Zm202-420h156l-78-126-78 126Zm78 0ZM360-340Zm340 80Z" />
           </svg>
           {/* <div class="vr"></div> */}
-          <p>Products List</p>
-        </NavLink>
+          <p>Products</p>
+          <span className={sidebarOpen ? "arrow" : "arrow arrow-active"}>
+            {openMenu === "products" ? "▾" : "▸"}
+          </span>
+        </div>
+
+        {openMenu === "products" && (
+          <>
+            <NavLink
+              to="/products"
+              className={`side-item menu-item ${
+                sidebarOpen ? "" : "side-item-active menu-item-active"
+              }`}
+              style={{ paddingLeft: "30px" }}
+              title="Products List"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="20px"
+                viewBox="0 -960 960 960"
+                width="24px"
+                fill="#1f1f1f"
+              >
+                {" "}
+                <path d="M200-80q-33 0-56.5-23.5T120-160v-480q0-33 23.5-56.5T200-720h80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720h80q33 0 56.5 23.5T840-640v480q0 33-23.5 56.5T760-80H200Zm0-80h560v-480H200v480Zm280-240q83 0 141.5-58.5T680-600h-80q0 50-35 85t-85 35q-50 0-85-35t-35-85h-80q0 83 58.5 141.5T480-400ZM360-720h240q0-50-35-85t-85-35q-50 0-85 35t-35 85ZM200-160v-480 480Z" />{" "}
+              </svg>
+              {/* <div class="vr"></div> */}
+              <p>Products List</p>
+            </NavLink>
+
+            {user?.type === "admin" && (
+              <NavLink
+                to="/assign-products"
+                className={`side-item menu-item ${
+                  sidebarOpen ? "" : "side-item-active menu-item-active"
+                }`}
+                style={{ paddingLeft: "30px" }}
+                title="Assign Products"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height="20px"
+                  viewBox="0 -960 960 960"
+                  width="24px"
+                  fill="#000000"
+                >
+                  <path d="m720-120-56-57 63-63H480v-80h247l-63-64 56-56 160 160-160 160Zm120-400h-80v-240h-80v120H280v-120h-80v560h200v80H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h167q11-35 43-57.5t70-22.5q40 0 71.5 22.5T594-840h166q33 0 56.5 23.5T840-760v240ZM480-760q17 0 28.5-11.5T520-800q0-17-11.5-28.5T480-840q-17 0-28.5 11.5T440-800q0 17 11.5 28.5T480-760Z" />
+                </svg>
+                {/* <div class="vr"></div> */}
+                <p>Assign Products</p>
+              </NavLink>
+            )}
+            
+            <NavLink
+              to="/assignments"
+              className={`side-item menu-item ${
+                sidebarOpen ? "" : "side-item-active menu-item-active"
+              }`}
+              style={{ paddingLeft: "30px" }}
+              title="Assignments"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="20px"
+                viewBox="0 -960 960 960"
+                width="24px"
+                fill="#000000"
+              >
+                <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h168q13-36 43.5-58t68.5-22q38 0 68.5 22t43.5 58h168q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm80-80h280v-80H280v80Zm0-160h400v-80H280v80Zm0-160h400v-80H280v80Zm200-190q13 0 21.5-8.5T510-820q0-13-8.5-21.5T480-850q-13 0-21.5 8.5T450-820q0 13 8.5 21.5T480-790ZM200-200v-560 560Z" />
+              </svg>
+              {/* <div class="vr"></div> */}
+              <p>Assignments</p>
+            </NavLink>
+          </>
+        )}
 
         {user?.type === "admin" ? (
           <>

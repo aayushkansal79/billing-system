@@ -599,7 +599,8 @@ const Billing = ({ url, setSidebarOpen }) => {
       const res = await axios.post(`${url}/api/bill`, billPayload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Bill and transaction logged successfully!");
+      // toast.success("Bill and transaction logged successfully!");
+      Swal.fire("Success", "Bill created successfully!", "success");
       setBillInvoice(res.data.bill);
       setProducts([
         {

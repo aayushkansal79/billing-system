@@ -45,7 +45,22 @@ const PrintBarcode = () => {
         frameDoc.write(style.outerHTML);
       });
 
-    frameDoc.write("</head><body>");
+    frameDoc.write(`
+      <style>
+        @media print {
+          .no-print {
+          display: none !important;
+        }
+          body {
+            background: white !important;
+          }
+          @page {
+            size: auto;
+            margin: 0 10px;
+          }
+        }
+      </style>
+    </head><body>`);
     frameDoc.write(contents);
     frameDoc.write("</body></html>");
     frameDoc.close();

@@ -13,7 +13,8 @@ const PrintBarcode = ({ url }) => {
   const [loading, setLoading] = useState(true);
   const componentRef = useRef();
 
-  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
 
   const navigate = useNavigate();
 
@@ -54,7 +55,22 @@ const PrintBarcode = ({ url }) => {
         frameDoc.write(style.outerHTML);
       });
 
-    frameDoc.write("</head><body>");
+        frameDoc.write(`
+      <style>
+        @media print {
+          .no-print {
+          display: none !important;
+        }
+          body {
+            background: white !important;
+          }
+          @page {
+            size: auto;
+            margin: 0 10px;
+          }
+        }
+      </style>
+    </head><body>`);
     frameDoc.write(contents);
     frameDoc.write("</body></html>");
     frameDoc.close();
@@ -66,84 +82,92 @@ const PrintBarcode = ({ url }) => {
     }, 500);
   };
 
-  if (loading) return <Loader/>;
+  if (loading) return <Loader />;
   if (!purchase)
     return <div className="text-center mt-5">Purchase not found.</div>;
 
   return (
     <>
-    <p className="bread">Barcodes</p>
-    <div className="barcode p-3 mb-3 rounded">
-      <div className="d-flex justify-content-between align-items-center">
-        <div>
-          <button className="btn btn-secondary mb-3" onClick={() => navigate(-1)}>
-          ← Back
-        </button>
-        </div>
-        <div>
-          <button
-            onClick={handlePrint}
-            className="btn btn-success mb-3"
-            disabled={loading || !purchase?.products?.length}
-          >
-            Print Barcodes
-          </button>
-        </div>
-      </div>
-
-      <hr />
-
-      <div
-        ref={componentRef}
-        className="barcode-print-area"
-        style={{width: "50%", display: "inline-block"}}
-      >
-        {purchase.products.map((product, productIdx) => {
-          if (!product.barcode) {
-            console.warn(`Product ${product.name} does not have a barcode.`);
-            return null;
-          }
-
-          return Array.from({ length: product.quantity }).map((_, qtyIdx) => (
-            <div
-              key={`${productIdx}-${qtyIdx}`}
-              className="barcode-item d-flex flex-column align-items-center text-center m-2 p-2 border"
-              style={{ width: "180px" }}
+      <p className="bread">Barcodes</p>
+      <div className="barcode p-3 mb-3 rounded">
+        <div className="d-flex justify-content-between align-items-center">
+          <div>
+            <button
+              className="btn btn-secondary mb-3"
+              onClick={() => navigate(-1)}
             >
-              <strong>AJJAWAM</strong>
-              <Barcode
-                value={product.barcode.toString()}
-                format="CODE128"
-                lineColor="#000"
-                width={2}
-                height={30}
-                displayValue={false}
-              />
+              ← Back
+            </button>
+          </div>
+          <div>
+            <button
+              onClick={handlePrint}
+              className="btn btn-success mb-3"
+              disabled={loading || !purchase?.products?.length}
+            >
+              Print Barcodes
+            </button>
+          </div>
+        </div>
+
+        <hr />
+
+        <div
+          ref={componentRef}
+          className="barcode-print-area d-flex flex-wrap justify-content-center"
+        >
+          {purchase.products.map((product, productIdx) => {
+            if (!product.barcode) {
+              console.warn(`Product ${product.name} does not have a barcode.`);
+              return null;
+            }
+
+            return Array.from({ length: product.quantity }).map((_, qtyIdx) => (
               <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  fontSize: "16px",
-                }}
+                key={`${productIdx}-${qtyIdx}`}
+                className="barcode-item d-flex flex-column align-items-center text-center m-2 p-2 border"
+                style={{ width: "180px" }}
               >
-                <b>
-                  {product.barcode.substring(0, 2)}-
-                  {String(new Date(purchase.date).getDate()).padStart(2, "0") +
-                    String(new Date(purchase.date).getMonth() + 1).padStart(2, "0") +
-                    String(new Date(purchase.date).getFullYear())}
-                  -{product.barcode.slice(-3)}
-                </b>
-                <b>
-                  {purchase.company.shortName}-{product.name}
-                </b>
-                <b>₹{product.printPrice?.toFixed(2)}/-</b>
+                <strong>AJJAWAM</strong>
+                <Barcode
+                  value={product.barcode.toString()}
+                  format="CODE128"
+                  lineColor="#000"
+                  width={2}
+                  height={30}
+                  displayValue={false}
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    fontSize: "16px",
+                  }}
+                >
+                  <b>
+                    {product.barcode.substring(0, 2)}-
+                    {String(new Date(purchase.date).getDate()).padStart(
+                      2,
+                      "0"
+                    ) +
+                      String(new Date(purchase.date).getMonth() + 1).padStart(
+                        2,
+                        "0"
+                      ) +
+                      String(new Date(purchase.date).getFullYear())}
+                    -{product.barcode.slice(-3)}
+                  </b>
+                  <b>
+                    {purchase.company.shortName}-{product.name}
+                  </b>
+                  <b>₹{product.printPrice?.toFixed(2)}/-</b>
+                </div>
               </div>
-            </div>
-          ));
-        })}
+            ));
+          })}
+        </div>
       </div>
-    </div>
-        </>
+    </>
   );
 };
 

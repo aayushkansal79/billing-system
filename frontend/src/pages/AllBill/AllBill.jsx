@@ -87,6 +87,14 @@ const AllBill = ({ url }) => {
     setSelectedBill(null);
   };
 
+  if (!bills.length) {
+    return (
+      <div className="text-center mt-5">
+        <h3>No Bills Found !</h3>
+      </div>
+    );
+  }
+
   return (
     <>
       <p className="bread">All Bills</p>

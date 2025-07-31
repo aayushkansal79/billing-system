@@ -36,6 +36,14 @@ const CustomerTransactions = ({ url }) => {
     fetchData();
   }, [customerId]);
 
+  if (!transactions.length) {
+    return (
+      <div className="text-center mt-5">
+        <h3>No Transactions Found !</h3>
+      </div>
+    );
+  }
+
   return (
     <>
       <p className="bread">Transactions</p>

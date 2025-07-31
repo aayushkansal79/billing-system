@@ -1,4 +1,7 @@
 import Product from "../models/Product.js";
+import StoreProduct from "../models/StoreProduct.js";
+import Assignment from "../models/Assignment.js";
+import { getNextAssignmentNumber } from "./counterController.js";
 
 export const searchProductByName = async (req, res) => {
   const { name } = req.query;
@@ -81,4 +84,85 @@ export const updateProduct = async (req, res) => {
         console.error(err);
         res.status(500).json({ error: "Failed to update product." });
     }
+};
+
+export const assignProducts = async (req, res) => {
+  const { storeId, products, dispatchDateTime } = req.body;
+
+  if (!storeId || !Array.isArray(products) || products.length === 0) {
+    return res.status(400).json({ error: "Invalid data" });
+  }
+
+  const assignmentProducts = [];
+
+  try {
+    for (const item of products) {
+      const { productId, assignQuantity } = item;
+
+      if (!productId || assignQuantity <= 0) continue;
+
+      const product = await Product.findById(productId);
+      if (!product) continue;
+
+      if (product.unit < assignQuantity) {
+        return res.status(400).json({
+          error: `Not enough stock for product ${item.name}`,
+        });
+      }
+
+      product.unit -= assignQuantity;
+      await product.save();
+
+      let storeProd = await StoreProduct.findOne({
+        store: storeId,
+        product: productId,
+      });
+
+      if (storeProd) {
+        storeProd.quantity += assignQuantity;
+        await storeProd.save();
+      } else {
+        storeProd = new StoreProduct({
+          store: storeId,
+          product: productId,
+          quantity: assignQuantity,
+        });
+        await storeProd.save();
+      }
+
+      assignmentProducts.push({
+        productId,
+        productName: product.name,
+        currentQuantity: product.unit + assignQuantity,
+        assignQuantity,
+        leftQuantity: product.unit,
+      });
+    }
+
+    if (assignmentProducts.length > 0) {
+
+      let parsedDate = null;
+      if (dispatchDateTime) {
+        const date = new Date(dispatchDateTime);
+        if (!isNaN(date.getTime())) {
+          parsedDate = date;
+        }
+      }
+
+      const assignmentNo = await getNextAssignmentNumber();
+
+      const assignment = new Assignment({
+        assignmentNo,
+        store: storeId,
+        products: assignmentProducts,
+        dispatchDateTime: parsedDate || null,
+      });
+      await assignment.save();
+    }
+
+    return res.status(200).json({ message: "Products assigned successfully." });
+  } catch (err) {
+    console.error("Assign Products Error:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
 };

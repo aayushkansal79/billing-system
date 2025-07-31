@@ -78,6 +78,14 @@ const RequestsRecieved = ({ url }) => {
     fetchRequests();
   }, [url]);
 
+  if (!requests.length) {
+    return (
+      <div className="text-center mt-5">
+        <h3>No Requests Recieved !</h3>
+      </div>
+    );
+  }
+
   return (
     <>
       <p className="bread">Requests Recieved</p>

@@ -1,0 +1,19 @@
+.assign{
+    padding: 1rem;
+    background-color: #f8f9fa;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.assign label {
+  font-weight: 700;
+}
+
+.assign .head {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.assign .del-btn {
+  border: none;
+  background-color: transparent;
+}

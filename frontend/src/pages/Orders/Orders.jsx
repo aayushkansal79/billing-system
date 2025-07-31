@@ -256,7 +256,7 @@ const Order = ({ url }) => {
   if (!purchases.length) {
     return (
       <div className="text-center mt-5">
-        <h3>No Orders Found !</h3>
+        <h3>No Purchases Found !</h3>
       </div>
     );
   }
@@ -270,7 +270,7 @@ const Order = ({ url }) => {
             <tr>
               <th>Purchase ID</th>
               <th>Amount</th>
-              <th>Company Name</th>
+              <th>Vendor Name</th>
               <th>City</th>
               <th>Contact</th>
               <th>GST No.</th>
@@ -283,8 +283,8 @@ const Order = ({ url }) => {
             {purchases.map((purchase) => (
               <tr key={purchase._id}>
                 <td>
-                  <b>Invoice No. -</b> {purchase.invoiceNumber} <br />
-                  <b>Order No. -</b> {purchase.orderNumber}
+                  <b>Invoice No. -</b> {purchase.invoiceNumber || "N/A"} <br />
+                  <b>Order No. -</b> {purchase.orderNumber || "N/A"}
                 </td>
                 <th className="text-danger">
                   {/* ₹ {purchase.totalPriceAfterDiscount || 0} */}₹{" "}

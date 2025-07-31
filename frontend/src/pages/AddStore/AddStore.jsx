@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Select from 'react-select';
 import Loader from "../../components/Loader/Loader";
+import Swal from "sweetalert2";
 
 const AddStore = ({ url }) => {
   useEffect(() => {
@@ -88,7 +89,8 @@ const AddStore = ({ url }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      toast.success("Store created successfully!");
+      // toast.success("Store created successfully!");
+      Swal.fire("Success", "Store created successfully!", "success");
       setFormData({
         username: "",
         password: "",

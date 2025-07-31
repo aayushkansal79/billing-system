@@ -59,6 +59,14 @@ const Companies = ({ url }) => {
     }
   };
 
+  if (!allCompanies.length) {
+    return (
+      <div className="text-center mt-5">
+        <h3>No Vendors Found !</h3>
+      </div>
+    );
+  }
+
   return (
     <>
       <p className="bread">Vendors</p>

@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import Loader from "../../components/Loader/Loader";
+import Swal from "sweetalert2";
 
 const Customer = ({ url }) => {
   useEffect(() => {
@@ -118,7 +119,8 @@ const Customer = ({ url }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      toast.success("Amount added!");
+      // toast.success("Amount added!");
+      Swal.fire("Success", "Amount added successfully!", "success");
       setShowPendingModal(false);
       setPaidAmount("");
       setPaymentMethods([
@@ -139,6 +141,14 @@ const Customer = ({ url }) => {
   const handleCustomerClick = (customerId) => {
     navigate(`/all-customer/${customerId}/transactions`);
   };
+
+  if (!customerList.length) {
+    return (
+      <div className="text-center mt-5">
+        <h3>No Customers Found !</h3>
+      </div>
+    );
+  }
 
   return (
     <>

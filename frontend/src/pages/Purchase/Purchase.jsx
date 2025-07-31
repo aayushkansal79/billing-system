@@ -308,15 +308,65 @@ const Purchase = ({ url }) => {
     });
   };
 
+  const validateAndCleanProducts = () => {
+    let hasAtLeastOneCompleteProduct = false;
+    const cleanedProducts = [...products];
+    const lastProduct = cleanedProducts[cleanedProducts.length - 1];
+    const isLastEmpty = Object.values(lastProduct).every(
+      (value) => value === "" || value === null || value === undefined
+    );
+    if (isLastEmpty) {
+      cleanedProducts.pop();
+    }
+    for (const product of cleanedProducts) {
+      const hasName = product.name.trim() !== "";
+
+      if (hasName) {
+        hasAtLeastOneCompleteProduct = true;
+
+        for (const [key, value] of Object.entries(product)) {
+          if (
+            key !== "name" &&
+            (value === "" || value === null || value === undefined)
+          ) {
+            toast.error(
+              `All fields must be filled for product ${product.name}`
+            );
+            return null;
+          }
+        }
+      }
+    }
+
+    if (!hasAtLeastOneCompleteProduct) {
+      toast.error(
+        "Enter at least one complete product with all fields filled."
+      );
+      return null;
+    }
+
+    return cleanedProducts;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (products.length === 0) {
-        toast.error("Please add at least one product");
-        setLoading(false);
+      const isAnyFieldEmpty = Object.values(companyData).some(
+        (value) =>
+          value === null ||
+          value === undefined ||
+          value.toString().trim() === ""
+      );
+
+      if (isAnyFieldEmpty) {
+        toast.error("Please fill in all company details.");
         return;
       }
+
+      const cleaned = validateAndCleanProducts();
+      if (!cleaned) return;
+      setProducts(cleaned);
 
       let company = selectedCompany;
 
@@ -398,7 +448,8 @@ const Purchase = ({ url }) => {
       await axios.post(`${url}/api/purchase`, purchaseData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Purchase saved!");
+      // toast.success("Purchase saved!");
+      Swal.fire("Success", "Products saved successfully!", "success");
 
       setCompanyData({
         name: "",
@@ -443,11 +494,11 @@ const Purchase = ({ url }) => {
             className="head p-2 mb-3"
             style={{ background: "#FBEBD3", color: "#6D0616" }}
           >
-            Company Details
+            Vendor Details
           </div>
           <form className="row g-3">
             <div className="col-md-4 position-relative" ref={companyRef}>
-              <label className="form-label">Company Name*</label>
+              <label className="form-label">Vendor Name*</label>
               <input
                 type="text"
                 className="form-control"
@@ -475,7 +526,7 @@ const Purchase = ({ url }) => {
               )}
             </div>
             <div className="col-md-4">
-              <label className="form-label">Company Short Name*</label>
+              <label className="form-label">Vendor Short Name*</label>
               <input
                 type="text"
                 className="form-control"
@@ -539,7 +590,7 @@ const Purchase = ({ url }) => {
               <input
                 type="text"
                 className="form-control"
-                placeholder="Enter Company Address"
+                placeholder="Enter Vendor Address"
                 value={companyData.address}
                 onChange={(e) =>
                   setCompanyData((prev) => ({
@@ -590,7 +641,7 @@ const Purchase = ({ url }) => {
               />
             </div>
             <div className="col-md-4">
-              <label className="form-label">Discount %*</label>
+              <label className="form-label">Discount %</label>
               <input
                 type="number"
                 className="form-control"
@@ -661,7 +712,7 @@ const Purchase = ({ url }) => {
                   onChange={(e) =>
                     handleChangeProd(index, "name", e.target.value)
                   }
-                  required
+                  // required
                 />
                 {productDropdowns[index] &&
                   productDropdowns[index].length > 0 && (
@@ -692,7 +743,7 @@ const Purchase = ({ url }) => {
                   onChange={(e) =>
                     handleChangeProd(index, "quantity", e.target.value)
                   }
-                  required
+                  // required
                 />
               </div>
               <div className="col-md-1">
@@ -705,7 +756,7 @@ const Purchase = ({ url }) => {
                   onChange={(e) =>
                     handleChangeProd(index, "purchasePrice", e.target.value)
                   }
-                  required
+                  // required
                 />
               </div>
               <div className="col-md-2">
@@ -738,7 +789,7 @@ const Purchase = ({ url }) => {
                   onChange={(e) =>
                     handleChangeProd(index, "profitPercentage", e.target.value)
                   }
-                  required
+                  // required
                 />
               </div>
               <div className="col-md-1">
@@ -749,7 +800,7 @@ const Purchase = ({ url }) => {
                   onChange={(e) =>
                     handleChangeProd(index, "gstPercentage", e.target.value)
                   }
-                  required
+                  // required
                 >
                   {[0, 5, 12, 18, 28].map((gst) => (
                     <option key={gst} value={gst}>

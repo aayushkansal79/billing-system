@@ -238,13 +238,13 @@ const Products = ({ url }) => {
     }
   };
 
-  // if (!allProducts.length) {
-  //   return (
-  //     <div className="text-center mt-5">
-  //       <h3>No Products Available !</h3>
-  //     </div>
-  //   );
-  // }
+  if (!allProducts.length) {
+    return (
+      <div className="text-center mt-5">
+        <h3>No Products Found !</h3>
+      </div>
+    );
+  }
 
   return (
     <>

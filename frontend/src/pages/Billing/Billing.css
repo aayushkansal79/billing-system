@@ -26,9 +26,9 @@
   margin: 0;
 }
 
-.billing input[type="number"] {
+/* .billing input[type="number"] {
   -moz-appearance: textfield;
-}
+} */
 
 .billing .del-btn {
   border: none;

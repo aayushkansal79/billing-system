@@ -11,6 +11,8 @@ import BulkBarcode from "./pages/BulkBarcode/BulkBarcode";
 import PrintBarcode from "./pages/Barcode/Barcode";
 import Companies from "./pages/Companies/Companies";
 import Products from "./pages/Products/Products";
+import AssignProducts from "./pages/AssignProducts/AssignProducts";
+import Assignments from "./pages/Assignments/Assignments";
 import AddStore from "./pages/AddStore/AddStore";
 import AllStores from "./pages/AllStores/AllStores";
 import LoginAsStore from "./pages/LoginAsStore/LoginAsStore";
@@ -63,6 +65,8 @@ function App() {
               <Route path="/purchase-list/print-tag/:id" element={<PrivateRoute roles={["admin"]}> <PrintBarcode url={url} /> </PrivateRoute>} />
               <Route path="/vendors" element={<PrivateRoute roles={["admin"]}> <Companies url={url} /> </PrivateRoute>} />
               <Route path="/products" element={<PrivateRoute roles={["admin", "store"]}> <Products url={url} /> </PrivateRoute>} />
+              <Route path="/assign-products" element={<PrivateRoute roles={["admin"]}> <AssignProducts url={url} /> </PrivateRoute>} />
+              <Route path="/assignments" element={<PrivateRoute roles={["admin", "store"]}> <Assignments url={url} /> </PrivateRoute>} />
               <Route path="/add-store" element={<PrivateRoute roles={["admin"]}> <AddStore url={url} /> </PrivateRoute>} />
               <Route path="/all-stores" element={<PrivateRoute roles={["admin"]}> <AllStores url={url} /> </PrivateRoute>} />
               <Route path="/login-as-store" element={<PrivateRoute roles={["admin"]}> <LoginAsStore url={url} /> </PrivateRoute>} />

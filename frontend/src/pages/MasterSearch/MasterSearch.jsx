@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Loader from "../../components/Loader/Loader";
 import { AuthContext } from "../../context/AuthContext";
+import Swal from "sweetalert2";
 
 const MasterSearch = ({ url }) => {
   useEffect(() => {
@@ -76,7 +77,8 @@ const MasterSearch = ({ url }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      toast.success("Request sent successfully!");
+      // toast.success("Request sent successfully!");
+      Swal.fire("Success", "Request sent successfully!", "success");
       setShowRequest(false);
       setSelectedProduct(null);
       setRequestQty(1);

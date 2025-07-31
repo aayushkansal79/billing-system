@@ -27,6 +27,14 @@ const RequestsSent = ({ url }) => {
     fetchRequests();
   }, [url]);
 
+  if (!requests.length) {
+    return (
+      <div className="text-center mt-5">
+        <h3>No Requests Sent !</h3>
+      </div>
+    );
+  }
+
   return (
     <>
       <p className="bread">Requests Sent</p>

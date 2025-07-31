@@ -12,3 +12,16 @@ export const getNextInvoiceNumber = async () => {
 
     return `${prefix}-${paddedSeq}`;
 };
+
+export const getNextAssignmentNumber = async () => {
+    const counter = await Counter.findOneAndUpdate(
+        { name: "assignment" },
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+    );
+
+    const prefix = "AJJ-A";
+    const paddedSeq = counter.seq.toString().padStart(4, "0");
+
+    return `${prefix}-${paddedSeq}`;
+};

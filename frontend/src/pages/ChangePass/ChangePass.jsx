@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./ChangePass.css";
 import { toast } from "react-toastify";
 import axios from "axios"
+import Swal from "sweetalert2";
 
 const ChangePass = ({url}) => {
   useEffect(() => {
@@ -37,7 +38,8 @@ const ChangePass = ({url}) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      toast.success("Password changed successfully.");
+      // toast.success("Password changed successfully.");
+      Swal.fire("Success", "Password changed successfully!", "success");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");

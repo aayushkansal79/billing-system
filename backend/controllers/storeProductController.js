@@ -167,24 +167,27 @@ export const getStoreProductByBarcode = async (req, res) => {
 
 // Search store products by product name
 export const searchStoreProducts = async (req, res) => {
-    try {
-        const { name } = req.query;
+  try {
+    const { name } = req.query;
 
-        const storeProducts = await StoreProduct.find({
-            store: req.store._id
-        })
-            .populate({
-                path: "product",
-                match: { name: { $regex: name, $options: "i" }, status: true },
-            })
-            .where("quantity").gt(0);
+    const storeProducts = await StoreProduct.find({
+      store: req.store._id,
+      quantity: { $gt: 0 },
+    })
+      .populate({
+        path: "product",
+        match: {
+          name: { $regex: name, $options: "i" },
+          status: true,
+        },
+      })
+      .limit(5);
 
-        // Filter out entries where product did not match
-        const filtered = storeProducts.filter(sp => sp.product !== null);
+    const filtered = storeProducts.filter((sp) => sp.product !== null);
 
-        res.json(filtered);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Server Error" });
-    }
+    res.json(filtered);
+  } catch (err) {
+    console.error("searchStoreProducts error:", err);
+    res.status(500).json({ error: "Server Error" });
+  }
 };
