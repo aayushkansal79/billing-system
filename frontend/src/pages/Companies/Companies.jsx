@@ -74,6 +74,7 @@ const Companies = ({ url }) => {
         <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-danger">
             <tr>
+              <th>#</th>
               <th scope="col">Vendor Name</th>
               <th scope="col">Short Name</th>
               <th scope="col">Address</th>
@@ -86,6 +87,7 @@ const Companies = ({ url }) => {
           <tbody className="table-group-divider">
             {allCompanies.map((company, index) => (
               <tr key={company._id}>
+                <th>{index+1}.</th>
                 <th>
                   {editIndex === index ? (
                     <input

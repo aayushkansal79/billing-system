@@ -89,7 +89,7 @@ const CustomerTransactions = ({ url }) => {
               <tbody>
                 {transactions.map((t, idx) => (
                   <tr key={idx}>
-                    <td>{idx + 1}</td>
+                    <th>{idx + 1}.</th>
                     {t.invoiceNo && t.billAmount ? (
                       <>
                         <th>{t.invoiceNo}</th>

@@ -157,6 +157,7 @@ const Customer = ({ url }) => {
         <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-danger">
             <tr>
+              <th>#</th>
               <th scope="col">Customer Name</th>
               <th scope="col">Mobile No.</th>
               <th scope="col">State</th>
@@ -177,6 +178,7 @@ const Customer = ({ url }) => {
                 onClick={() => handleCustomerClick(customer._id)}
                 style={{ cursor: "pointer" }}
               >
+                <th>{index+1}.</th>
                 <th>{customer.name}</th>
                 <td>{customer.mobile}</td>
                 <td>{customer.state}</td>

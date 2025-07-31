@@ -268,6 +268,7 @@ const Order = ({ url }) => {
         <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-danger">
             <tr>
+              <th>#</th>
               <th>Purchase ID</th>
               <th>Amount</th>
               <th>Vendor Name</th>
@@ -280,8 +281,9 @@ const Order = ({ url }) => {
             </tr>
           </thead>
           <tbody className="table-group-divider">
-            {purchases.map((purchase) => (
+            {purchases.map((purchase,idx) => (
               <tr key={purchase._id}>
+                <th>{idx+1}.</th>
                 <td>
                   <b>Invoice No. -</b> {purchase.invoiceNumber || "N/A"} <br />
                   <b>Order No. -</b> {purchase.orderNumber || "N/A"}

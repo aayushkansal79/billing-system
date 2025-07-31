@@ -162,6 +162,7 @@ const AllStores = ({ url }) => {
         <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-danger">
             <tr>
+              <th>#</th>
               <th scope="col">Username</th>
               <th scope="col">Address</th>
               <th scope="col">City</th>
@@ -173,8 +174,9 @@ const AllStores = ({ url }) => {
             </tr>
           </thead>
           <tbody className="table-group-divider">
-            {stores.map((store) => (
+            {stores.map((store,idx) => (
               <tr key={store._id}>
+                <th>{idx+1}.</th>
                 <th>
                   {editingStoreId === store._id ? (
                     <input

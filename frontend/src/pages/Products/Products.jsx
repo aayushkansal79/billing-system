@@ -253,6 +253,7 @@ const Products = ({ url }) => {
         <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-info">
             <tr>
+              <th scope="col">#</th>
               <th scope="col">Product Name</th>
               <th scope="col">Barcode</th>
               <th scope="col">Quantity</th>
@@ -265,8 +266,9 @@ const Products = ({ url }) => {
           </thead>
           <tbody className="table-group-divider">
             {user.type === "admin"
-              ? allProducts.map((product) => (
+              ? allProducts.map((product,idx) => (
                   <tr key={product._id}>
+                    <th>{idx+1}.</th>
                     <th>
                       {editingProductId === product._id ? (
                         <input
@@ -441,8 +443,9 @@ const Products = ({ url }) => {
                     </td>
                   </tr>
                 ))
-              : storeProducts.map((sp) => (
+              : storeProducts.map((sp,i) => (
                   <tr key={sp._id}>
+                    <th>{i+1}.</th>
                     <th>{sp.product.name}</th>
                     <td>[ {sp.product.barcode} ]</td>
                     <th className="text-primary">{sp.quantity}</th>

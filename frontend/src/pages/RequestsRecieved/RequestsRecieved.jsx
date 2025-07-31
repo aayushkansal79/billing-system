@@ -93,6 +93,7 @@ const RequestsRecieved = ({ url }) => {
         <table className="table align-middle table-striped table-hover">
           <thead className="table-warning">
             <tr>
+              <th>#</th>
               <th scope="col">Requested By</th>
               <th scope="col">Product Name</th>
               <th scope="col">Requested Quantity</th>
@@ -101,8 +102,9 @@ const RequestsRecieved = ({ url }) => {
             </tr>
           </thead>
           <tbody className="table-group-divider">
-            {requests.map((req) => (
+            {requests.map((req,i) => (
               <tr key={req._id}>
+                <th>{i+1}.</th>
                 <td scope="row">
                   <h5>
                     <span className="badge rounded-pill text-bg-secondary">
