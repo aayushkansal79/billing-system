@@ -8,6 +8,8 @@ import Barcode from "react-barcode";
 import { assets } from "../../assets/assets";
 import { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
+import Swal from "sweetalert2";
+import Pagination from "../../components/Pagination/Pagination";
 
 const InvoiceContent = React.forwardRef(function InvoiceContent(
   { url, assignmentNo, store, products, date, dispatchDateTime },
@@ -153,20 +155,52 @@ const Assignments = ({ url }) => {
     sessionStorage.getItem("token") || localStorage.getItem("token");
   const { user } = useContext(AuthContext);
 
+  const [filters, setFilters] = useState({
+    assignmentNo: "",
+    storeUsername: "",
+    assignStatus: "",
+    createdStartDate: "",
+    createdEndDate: "",
+    dispatchStartDate: "",
+    dispatchEndDate: "",
+    page: 1,
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
-        const res = await axios.get(`${url}/api/assignments`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const params = new URLSearchParams();
+
+        // Only add non-empty filters
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== "") params.append(key, value);
         });
-        setAssignments(res.data);
+
+        const res = await axios.get(
+          `${url}/api/assignments?${params.toString()}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        setAssignments(res.data.assignments || []);
+        setTotalPages(res.data.totalPages || 1);
+        setCurrentPage(res.data.currentPage || 1);
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch purchases.");
+        toast.error("Failed to fetch assignments.");
       }
     };
+
     fetchAssignments();
-  }, [url]);
+  }, [url, token, filters]);
+
+  const handlePageChange = (page) => {
+    setFilters((prev) => ({ ...prev, page }));
+  };
 
   const formatDateTimeLocal = (dateString) => {
     if (!dateString) return "";
@@ -191,6 +225,11 @@ const Assignments = ({ url }) => {
       );
 
       toast.success("Dispatch time updated");
+      setAssignments((prev) =>
+        prev.map((a) =>
+          a._id === id ? { ...a, dispatchDateTime: datetimeValue } : a
+        )
+      );
     } catch (err) {
       console.error(err);
       toast.error("Failed to update dispatch time");
@@ -198,56 +237,66 @@ const Assignments = ({ url }) => {
   };
 
   const handleReceiveAssignment = async (id) => {
-  try {
-    const res = await axios.put(
-      `${url}/api/assignments/receive/${id}`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    toast.success("Assignment marked as Delivered");
+    try {
+      const confirm = await Swal.fire({
+        title: "Are you sure?",
+        text: "All assigned stock will be added!",
+        // icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Recieve!",
+      });
 
-    setAssignments((prev) =>
-      prev.map((a) =>
-        a._id === id ? { ...a, assignStatus: "Delivered" } : a
-      )
-    );
-  } catch (err) {
-    console.error("Marking as received failed:", err);
-    toast.error("Failed to update status.");
-  }
-};
+      if (confirm.isConfirmed) {
+        const res = await axios.put(
+          `${url}/api/assignments/receive/${id}`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success("Assignment marked as Delivered");
 
+        setAssignments((prev) =>
+          prev.map((a) =>
+            a._id === id ? { ...a, assignStatus: "Delivered" } : a
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Marking as received failed:", err);
+      toast.error("Failed to update status.");
+    }
+  };
 
   const handleCancelAssignment = async (id) => {
-  try {
-    const confirm = await Swal.fire({
-      title: "Are you sure?",
-      text: "This will reset all assigned stock!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, cancel it!",
-    });
+    try {
+      const confirm = await Swal.fire({
+        title: "Are you sure?",
+        text: "This will reset all assigned stock!",
+        // icon: "warning",
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        showCancelButton: true,
+        confirmButtonText: "Yes, cancel it!",
+      });
 
-    if (confirm.isConfirmed) {
-      const res = await axios.put(
-        `${url}/api/assignments/cancel/${id}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success("Assignment canceled and stock restored");
+      if (confirm.isConfirmed) {
+        const res = await axios.put(
+          `${url}/api/assignments/cancel/${id}`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success("Assignment canceled and stock restored");
 
-      setAssignments((prev) =>
-        prev.map((a) =>
-          a._id === id ? { ...a, assignStatus: "Canceled" } : a
-        )
-      );
+        setAssignments((prev) =>
+          prev.map((a) =>
+            a._id === id ? { ...a, assignStatus: "Canceled" } : a
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Cancellation failed:", err);
+      toast.error("Failed to cancel assignment.");
     }
-  } catch (err) {
-    console.error("Cancellation failed:", err);
-    toast.error("Failed to cancel assignment.");
-  }
-};
-
+  };
 
   const openModal = (assignment) => {
     setSelectedAssignment(assignment);
@@ -300,27 +349,112 @@ const Assignments = ({ url }) => {
     setSelectedAssignment(null);
   };
 
-  if (!assignments.length) {
-    return (
-      <div className="text-center mt-5">
-        <h3>No Assignments Found !</h3>
-      </div>
-    );
-  }
-
   return (
     <>
       <p className="bread">Assignments</p>
+
+      <div className="search row g-2 mb-4 px-2">
+        <div className="col-md-2">
+          <label className="form-label">Assignment Number:</label>
+          <input
+            className="form-control"
+            placeholder="Assignment Number"
+            value={filters.assignmentNo}
+            onChange={(e) =>
+              setFilters({ ...filters, assignmentNo: e.target.value })
+            }
+          />
+        </div>
+        {user?.type === "admin" && (
+          <div className="col-md-2">
+            <label className="form-label">Store Username:</label>
+            <input
+              className="form-control"
+              placeholder="Store Username"
+              value={filters.storeUsername}
+              onChange={(e) =>
+                setFilters({ ...filters, storeUsername: e.target.value })
+              }
+            />
+          </div>
+        )}
+        <div className="col-md-2">
+          <label className="form-label">Assignment Status:</label>
+          <select
+            className="form-select"
+            value={filters.assignStatus}
+            onChange={(e) =>
+              setFilters({ ...filters, assignStatus: e.target.value })
+            }
+          >
+            <option value="">Select Status</option>
+            <option value="Process">Process</option>
+            <option value="Dispatched">Dispatched</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Canceled">Canceled</option>
+          </select>
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Assign. Create Date (from):</label>
+          <input
+            className="form-control"
+            type="date"
+            value={filters.createdStartDate}
+            onChange={(e) =>
+              setFilters({ ...filters, createdStartDate: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Assign. Create Date (to):</label>
+          <input
+            className="form-control"
+            type="date"
+            value={filters.createdEndDate}
+            onChange={(e) =>
+              setFilters({ ...filters, createdEndDate: e.target.value })
+            }
+          />
+        </div>
+        {user?.type === "admin" && <div className="col-md-2"></div>}
+        <div className="col-md-2">
+          <label className="form-label">Dispatch Date (from):</label>
+          <input
+            className="form-control"
+            type="date"
+            value={filters.dispatchStartDate}
+            onChange={(e) =>
+              setFilters({ ...filters, dispatchStartDate: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Dispatch Date (to):</label>
+          <input
+            className="form-control"
+            type="date"
+            value={filters.dispatchEndDate}
+            onChange={(e) =>
+              setFilters({ ...filters, dispatchEndDate: e.target.value })
+            }
+          />
+        </div>
+      </div>
+
       <div className="orders rounded mb-3">
         <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-info">
             <tr>
               <th>#</th>
               <th>Assignment No.</th>
-              <th>Store</th>
-              <th>Store Address</th>
-              <th>Store Contact</th>
-              <th>Total Products</th>
+              {user.type === "admin" && (
+                <>
+                  <th>Store</th>
+                  <th>Store Address</th>
+                  <th>Store Contact</th>
+                </>
+              )}
+              <th>Total Quantity</th>
               <th>Dispatch Date & Time</th>
               <th>Status</th>
               <th>Assignment</th>
@@ -331,27 +465,33 @@ const Assignments = ({ url }) => {
           <tbody className="table-group-divider">
             {assignments.map((assignment, idx) => (
               <tr key={assignment._id}>
-                <th>{idx + 1}</th>
+                <th>{(filters.page - 1) * 10 + (idx + 1)}.</th>
                 <th>{assignment.assignmentNo}</th>
-                <td>
-                  <h5>
-                    <span className="badge rounded-pill text-bg-secondary">
-                      {assignment.store.username}
-                    </span>
-                  </h5>
-                </td>
-                <td>
-                  {assignment.store.address}, {assignment.store.city}, <br />{" "}
-                  {assignment.store.state} - {assignment.store.zipCode}
-                </td>
-                <td>{assignment.store.contactNumber}</td>
+                {user?.type === "admin" && (
+                  <>
+                    <td>
+                      <h5>
+                        <span className="badge rounded-pill text-bg-secondary">
+                          {assignment.store.username}
+                        </span>
+                      </h5>
+                    </td>
+                    <td>
+                      {assignment.store.address}, {assignment.store.city},{" "}
+                      <br /> {assignment.store.state} -{" "}
+                      {assignment.store.zipCode}
+                    </td>
+                    <td>{assignment.store.contactNumber}</td>
+                  </>
+                )}
                 <th className="text-danger">
                   {assignment.products.reduce(
                     (total, prod) => total + (prod.assignQuantity || 0),
                     0
                   )}
                 </th>
-                {user?.type === "admin" ? (
+                {user?.type === "admin" &&
+                assignment.assignStatus !== "Delivered" ? (
                   <td>
                     {editingDispatchId === assignment._id ? (
                       <>
@@ -427,7 +567,7 @@ const Assignments = ({ url }) => {
                     </span>
                   )}
                   {assignment.assignStatus === "Delivered" && (
-                    <span className="badge bg-success text-dark">
+                    <span className="badge bg-success">
                       {assignment.assignStatus}
                     </span>
                   )}
@@ -452,21 +592,56 @@ const Assignments = ({ url }) => {
                   {user?.type === "admin" ? (
                     assignment.assignStatus === "Process" ? (
                       <button
-                        className="btn btn-danger"
+                        className="del-btn"
+                        title="Cancel"
                         onClick={() => handleCancelAssignment(assignment._id)}
                       >
-                        Cancel
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          height="28px"
+                          viewBox="0 -960 960 960"
+                          width="28px"
+                          fill="red"
+                        >
+                          <path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
+                        </svg>
                       </button>
                     ) : (
                       "--"
                     )
                   ) : assignment.assignStatus === "Dispatched" ? (
-                    <button
-                      className="btn btn-success"
-                      onClick={() => handleReceiveAssignment(assignment._id)}
-                    >
-                      Received
-                    </button>
+                    <div className="d-flex">
+                      <button
+                        className="del-btn"
+                        title="Recieve"
+                        onClick={() => handleReceiveAssignment(assignment._id)}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          height="28px"
+                          viewBox="0 -960 960 960"
+                          width="28px"
+                          fill="green"
+                        >
+                          <path d="m480-320 160-160-56-56-64 62v-166h-80v166l-64-62-56 56 160 160ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h168q13-36 43.5-58t68.5-22q38 0 68.5 22t43.5 58h168q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm280-590q13 0 21.5-8.5T510-820q0-13-8.5-21.5T480-850q-13 0-21.5 8.5T450-820q0 13 8.5 21.5T480-790ZM200-200v-560 560Z" />
+                        </svg>
+                      </button>
+                      <button
+                        className="del-btn mx-2"
+                        title="Reject"
+                        onClick={() => handleCancelAssignment(assignment._id)}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          height="28px"
+                          viewBox="0 -960 960 960"
+                          width="28px"
+                          fill="red"
+                        >
+                          <path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
+                        </svg>
+                      </button>
+                    </div>
                   ) : (
                     "--"
                   )}
@@ -517,6 +692,12 @@ const Assignments = ({ url }) => {
           </div>
         )}
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
     </>
   );
 };

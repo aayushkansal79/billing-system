@@ -4,7 +4,7 @@ import "./Orders.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import Barcode from "react-barcode";
+import Pagination from "../../components/Pagination/Pagination";
 
 const InvoiceContent = React.forwardRef(function InvoiceContent(
   { url, company, products, date },
@@ -181,20 +181,53 @@ const Order = ({ url }) => {
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
 
+  const [filters, setFilters] = useState({
+    invoiceNumber: "",
+    orderNumber: "",
+    companyName: "",
+    contactPhone: "",
+    gstNumber: "",
+    city: "",
+    // address: "",
+    startDate: "",
+    endDate: "",
+    page: 1,
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   useEffect(() => {
     const fetchPurchases = async () => {
       try {
-        const res = await axios.get(`${url}/api/purchase`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const params = new URLSearchParams();
+
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value) params.append(key, value);
         });
-        setPurchases(res.data);
+
+        const res = await axios.get(
+          `${url}/api/purchase?${params.toString()}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        setPurchases(res.data.data);
+        setTotalPages(res.data.totalPages);
       } catch (err) {
         console.error(err);
         toast.error("Failed to fetch purchases.");
       }
     };
+
     fetchPurchases();
-  }, [url]);
+  }, [filters, url, token]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    setFilters((prev) => ({ ...prev, page }));
+  };
 
   const navigate = useNavigate();
 
@@ -253,17 +286,120 @@ const Order = ({ url }) => {
     setSelectedPurchase(null);
   };
 
-  if (!purchases.length) {
-    return (
-      <div className="text-center mt-5">
-        <h3>No Purchases Found !</h3>
-      </div>
-    );
-  }
+  // if (!purchases?.length) {
+  //   return (
+  //     <div className="text-center mt-5">
+  //       <h3>No Purchases Found !</h3>
+  //     </div>
+  //   );
+  // }
 
   return (
     <>
       <p className="bread">Purchases</p>
+
+      <div className="search row g-2 mb-4 px-2">
+        <div className="col-md-2">
+          <label className="form-label">Invoice No:</label>
+          <input
+            className="form-control"
+            placeholder="Invoice No"
+            value={filters.invoiceNumber}
+            onChange={(e) =>
+              setFilters({ ...filters, invoiceNumber: e.target.value })
+            }
+          />
+        </div>
+
+        <div className="col-md-2">
+          <label className="form-label">Order No:</label>
+          <input
+            className="form-control"
+            placeholder="Order No"
+            value={filters.orderNumber}
+            onChange={(e) =>
+              setFilters({ ...filters, orderNumber: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Vendor Name:</label>
+          <input
+            className="form-control"
+            placeholder="Vendor Name"
+            value={filters.companyName}
+            onChange={(e) =>
+              setFilters({ ...filters, companyName: e.target.value })
+            }
+          />
+        </div>
+        {/* <div className="col-md-2">
+          <label className="form-label">Address:</label>
+          <input
+            className="form-control"
+            placeholder="Vendor Address"
+            value={filters.address}
+            onChange={(e) =>
+              setFilters({ ...filters, address: e.target.value })
+            }
+          />
+        </div> */}
+        <div className="col-md-2">
+          <label className="form-label">City:</label>
+          <input
+            className="form-control"
+            placeholder="Vendor City"
+            value={filters.city}
+            onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Contact Number:</label>
+          <input
+            type="number"
+            className="form-control"
+            placeholder="Contact Number"
+            value={filters.contactNumber}
+            onChange={(e) =>
+              setFilters({ ...filters, contactNumber: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">GST No.:</label>
+          <input
+            className="form-control"
+            placeholder="Vendor GST"
+            value={filters.gstNumber}
+            onChange={(e) =>
+              setFilters({ ...filters, gstNumber: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Purchase Date (from):</label>
+          <input
+            className="form-control"
+            type="date"
+            value={filters.startDate}
+            onChange={(e) =>
+              setFilters({ ...filters, startDate: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Purchase Date (to):</label>
+          <input
+            className="form-control"
+            type="date"
+            value={filters.endDate}
+            onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+          />
+        </div>
+
+        {/* <button onClick={fetchFilteredData}>Search</button> */}
+      </div>
+
       <div className="orders rounded mb-3">
         <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-danger">
@@ -281,9 +417,9 @@ const Order = ({ url }) => {
             </tr>
           </thead>
           <tbody className="table-group-divider">
-            {purchases.map((purchase,idx) => (
+            {purchases.map((purchase, idx) => (
               <tr key={purchase._id}>
-                <th>{idx+1}.</th>
+                <th>{(filters.page - 1)*10 + (idx+1)}.</th>
                 <td>
                   <b>Invoice No. -</b> {purchase.invoiceNumber || "N/A"} <br />
                   <b>Order No. -</b> {purchase.orderNumber || "N/A"}
@@ -372,6 +508,12 @@ const Order = ({ url }) => {
           </div>
         )}
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
     </>
   );
 };

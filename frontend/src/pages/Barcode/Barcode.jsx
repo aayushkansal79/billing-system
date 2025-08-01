@@ -106,15 +106,17 @@ const PrintBarcode = () => {
           Print Tags for: <b className="text-primary">{product.name}</b>
         </h4>
 
-        <div className="form-group mb-3">
+        <div className="form-group mb-3 row">
           <label>Number of Tags:</label>
-          <input
-            type="number"
-            className="form-control"
-            value={count}
-            min="1"
-            onChange={(e) => setCount(parseInt(e.target.value) || 1)}
-          />
+          <div className="col-md-2">
+            <input
+              type="number"
+              className="form-control"
+              value={count}
+              min="1"
+              onChange={(e) => setCount(parseInt(e.target.value) || 1)}
+            />
+          </div>
         </div>
 
         <div

@@ -8,6 +8,7 @@ const ProductSchema = new mongoose.Schema({
     gstPercentage: { type: Number, default: 0 },
     price: { type: Number, default: 0 },
     printPrice: { type: Number, default: 0 },
+    lastPurchaseDate: { type: Date, required: true },
     status: { type: Boolean, default: true },
 }, { timestamps: true });
 

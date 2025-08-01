@@ -3,6 +3,7 @@ import Customer from "../models/Customer.js";
 import Transaction from "../models/Transaction.js";
 import StoreProduct from "../models/StoreProduct.js";
 import { getNextInvoiceNumber } from "../controllers/counterController.js";
+import Store from "../models/Store.js";
 
 //create bill
 export const createBill = async (req, res) => {
@@ -177,138 +178,206 @@ export const createBill = async (req, res) => {
 
 
 //All bills
-export const getAllBills = async (req, res) => {
-    try {
-        let bills;
-        if (req.store.type === "admin") {
-            // Admin sees all bills
-            bills = await Bill.find()
-                .populate("store")
-                .sort({ createdAt: -1 });
-        } else {
-            // Store sees only its bills
-            bills = await Bill.find({ store: req.store._id })
-                .populate("store")
-                .sort({ createdAt: -1 });
-        }
-
-        res.json(bills);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Server Error" });
-    }
-};
-
-// export const getDailyBillCounts = async (req, res) => {
+// export const getAllBills = async (req, res) => {
 //     try {
-//         const today = new Date();
-//         const sevenDaysAgo = new Date();
-//         sevenDaysAgo.setDate(today.getDate() - 6); // 6 to include today as day 7
+//         let bills;
+//         if (req.store.type === "admin") {
+//             // Admin sees all bills
+//             bills = await Bill.find()
+//                 .populate("store")
+//                 .sort({ createdAt: -1 });
+//         } else {
+//             // Store sees only its bills
+//             bills = await Bill.find({ store: req.store._id })
+//                 .populate("store")
+//                 .sort({ createdAt: -1 });
+//         }
 
-//         const pipeline = [
-//             {
-//                 $match: {
-//                     createdAt: { $gte: new Date(sevenDaysAgo.setHours(0,0,0,0)) }
-//                 }
-//             },
-//             {
-//                 $group: {
-//                     _id: {
-//                         year: { $year: "$createdAt" },
-//                         month: { $month: "$createdAt" },
-//                         day: { $dayOfMonth: "$createdAt" },
-//                     },
-//                     count: { $sum: 1 },
-//                 },
-//             },
-//             {
-//                 $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 }
-//             }
-//         ];
-
-//         const data = await Bill.aggregate(pipeline);
-
-//         const formatted = data.map(item => {
-//             const dateObj = new Date(item._id.year, item._id.month - 1, item._id.day);
-//             const options = { day: '2-digit', month: 'long', year: 'numeric' };
-//             const formattedDate = dateObj.toLocaleDateString('en-US', options);
-//             return {
-//                 date: formattedDate, // "14 July 2025"
-//                 count: item.count
-//             };
-//         });
-
-//         res.json(formatted);
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ message: "Error fetching daily bill counts." });
+//         res.json(bills);
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).json({ error: "Server Error" });
 //     }
 // };
 
-export const getDailyBillCounts = async (req, res) => {
-    try {
-        const days = parseInt(req.query.days) || 7; // dynamic filter
-        if (days <= 0 || days > 365) {
-            return res.status(400).json({ message: "Invalid days parameter." });
-        }
+export const getAllBills = async (req, res) => {
+  try {
+    const {
+      invoiceNumber,
+      customerName,
+      mobileNo,
+      storeUsername,
+      paymentStatus,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+    } = req.query;
 
-        const today = new Date();
-        today.setHours(23, 59, 59, 999); // include entire current day
+    const query = {};
 
-        const startDate = new Date();
-        startDate.setDate(today.getDate() - (days - 1));
-        startDate.setHours(0, 0, 0, 0);
-
-        const bills = await Bill.aggregate([
-            {
-                $match: {
-                    createdAt: { $gte: startDate, $lte: today },
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        year: { $year: "$createdAt" },
-                        month: { $month: "$createdAt" },
-                        day: { $dayOfMonth: "$createdAt" }
-                    },
-                    count: { $sum: 1 }
-                }
-            },
-            {
-                $sort: {
-                    "_id.year": 1,
-                    "_id.month": 1,
-                    "_id.day": 1
-                }
-            }
-        ]);
-
-        const billMap = {};
-        bills.forEach(item => {
-            const dateObj = new Date(item._id.year, item._id.month - 1, item._id.day);
-            const key = dateObj.toDateString();
-            billMap[key] = item.count;
+    // Access scope
+    if (req.store.type !== "admin") {
+      query.store = req.store._id;
+    } else if (storeUsername) {
+      const matchedStores = await Store.find({
+        username: { $regex: storeUsername, $options: "i" },
+      }).select("_id");
+      const storeIds = matchedStores.map((s) => s._id);
+      if (storeIds.length > 0) {
+        query.store = { $in: storeIds };
+      } else {
+        // No store matched — return empty
+        return res.json({
+          bills: [],
+          totalBills: 0,
+          currentPage: parseInt(page),
+          totalPages: 0,
         });
-
-        const result = [];
-        for (let i = 0; i < days; i++) {
-            const dateObj = new Date(startDate);
-            dateObj.setDate(startDate.getDate() + i);
-
-            const options = { day: "2-digit", month: "long", year: "numeric" };
-            const formattedDate = dateObj.toLocaleDateString("en-US", options); // "14 July 2025"
-
-            const key = dateObj.toDateString();
-            result.push({
-                date: formattedDate,
-                count: billMap[key] || 0
-            });
-        }
-
-        res.json(result);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error while fetching bill graph data." });
+      }
     }
+
+    // Text filters
+    if (invoiceNumber) {
+      query.invoiceNumber = { $regex: invoiceNumber, $options: "i" };
+    }
+    if (customerName) {
+      query.customerName = { $regex: customerName, $options: "i" };
+    }
+    if (mobileNo) {
+      query.mobileNo = { $regex: mobileNo, $options: "i" };
+    }
+    if (paymentStatus) {
+      query.paymentStatus = paymentStatus;
+    }
+
+    // Date filters (convert IST to UTC)
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) {
+        const [sy, sm, sd] = startDate.split("-");
+        const istStart = new Date(Date.UTC(sy, sm - 1, sd, -5, -30));
+        query.createdAt.$gte = istStart;
+      }
+      if (endDate) {
+        const [ey, em, ed] = endDate.split("-");
+        const istEnd = new Date(Date.UTC(ey, em - 1, ed, 18, 29, 59, 999));
+        query.createdAt.$lte = istEnd;
+      }
+    }
+
+    // Pagination logic
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const totalBills = await Bill.countDocuments(query);
+
+    const bills = await Bill.find(query)
+      .populate("store")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    res.json({
+      bills,
+      totalBills,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(totalBills / parseInt(limit)),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server Error" });
+  }
+};
+
+
+
+
+export const getDailyBillCounts = async (req, res) => {
+  try {
+    const days = parseInt(req.query.days) || 7;
+    if (days <= 0 || days > 365) {
+      return res.status(400).json({ message: "Invalid days parameter." });
+    }
+
+    const IST_OFFSET_MINUTES = 330;
+    const now = new Date();
+    const istNow = new Date(now.getTime() + IST_OFFSET_MINUTES * 60000);
+    const endIST = new Date(istNow);
+    endIST.setHours(23, 59, 59, 999);
+
+    const startIST = new Date(endIST);
+    startIST.setDate(endIST.getDate() - (days - 1));
+    startIST.setHours(0, 0, 0, 0);
+
+    const startUTC = new Date(startIST.getTime() - IST_OFFSET_MINUTES * 60000);
+    const endUTC = new Date(endIST.getTime() - IST_OFFSET_MINUTES * 60000);
+
+    const bills = await Bill.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startUTC, $lte: endUTC },
+        },
+      },
+      {
+        $addFields: {
+          createdAtIST: {
+            $add: ["$createdAt", IST_OFFSET_MINUTES * 60 * 1000],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAtIST" },
+            month: { $month: "$createdAtIST" },
+            day: { $dayOfMonth: "$createdAtIST" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: {
+          "_id.year": 1,
+          "_id.month": 1,
+          "_id.day": 1,
+        },
+      },
+    ]);
+
+    const billMap = {};
+    bills.forEach((item) => {
+      const dateObj = new Date(
+        item._id.year,
+        item._id.month - 1,
+        item._id.day
+      );
+      const key = dateObj.toDateString();
+      billMap[key] = item.count;
+    });
+
+    const result = [];
+    for (let i = 0; i < days; i++) {
+      const dateObj = new Date(startIST);
+      dateObj.setDate(startIST.getDate() + i);
+
+      const formattedDate = dateObj.toLocaleDateString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
+
+      const key = dateObj.toDateString();
+      result.push({
+        date: formattedDate,
+        count: billMap[key] || 0,
+      });
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "Server error while fetching bill graph data." });
+  }
 };

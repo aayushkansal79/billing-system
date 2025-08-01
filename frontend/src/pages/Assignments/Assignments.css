@@ -33,3 +33,8 @@
     display: none !important;
   }
 }
+
+.orders .del-btn {
+  border: none;
+  background-color: transparent;
+}

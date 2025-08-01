@@ -17,7 +17,7 @@ export const generateBarcode = async () => {
 
 export const createProduct = async (req, res) => {
   try {
-    const { name, unit, priceBeforeGst, price, gstPercentage, printPrice } = req.body;
+    const { name, unit, priceBeforeGst, price, gstPercentage, printPrice, lastPurchaseDate } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({ error: "Product name is required." });
@@ -54,6 +54,7 @@ export const createProduct = async (req, res) => {
       printPrice: printPrice || 0,
       gstPercentage: gstPercentage || 0,
       barcode,
+      lastPurchaseDate,
     });
 
     await product.save();
@@ -64,15 +65,80 @@ export const createProduct = async (req, res) => {
   }
 };
 
+// export const getAllProducts = async (req, res) => {
+//     try {
+//         const products = await Product.find().sort({ createdAt: -1 }); // optional alphabetical sort
+//         res.status(200).json(products);
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).json({ message: "Server error fetching products." });
+//     }
+// };
+
 export const getAllProducts = async (req, res) => {
-    try {
-        const products = await Product.find().sort({ createdAt: -1 }); // optional alphabetical sort
-        res.status(200).json(products);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error fetching products." });
+  try {
+    const {
+      name,
+      barcode,
+      unitCon,
+      unit,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const query = {};
+
+    // Text filters
+    if (name) query.name = { $regex: name, $options: "i" };
+    if (barcode) query.barcode = { $regex: barcode, $options: "i" };
+
+    // Number filters
+    if (unit && unitCon === "equal") {
+      query.unit = Number(unit);
     }
+
+    if (unit && unitCon === "less") {
+      query.unit = { $lte: Number(unit) };
+    }
+
+    if (unit && unitCon === "more") {
+      query.unit = { $gte: Number(unit) };
+    }
+    // Date filtering (convert IST to UTC)
+    if (startDate || endDate) {
+      const istStart = startDate
+        ? new Date(new Date(startDate).setHours(0, 0, 0, 0) - 5.5 * 60 * 60 * 1000)
+        : null;
+      const istEnd = endDate
+        ? new Date(new Date(endDate).setHours(23, 59, 59, 999) - 5.5 * 60 * 60 * 1000)
+        : null;
+
+      query.lastPurchaseDate = {};
+      if (istStart) query.lastPurchaseDate.$gte = istStart;
+      if (istEnd) query.lastPurchaseDate.$lte = istEnd;
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [products, total] = await Promise.all([
+      Product.find(query).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
+      Product.countDocuments(query),
+    ]);
+
+    res.status(200).json({
+      data: products,
+      total,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
+    });
+  } catch (err) {
+    console.error("Error fetching products:", err);
+    res.status(500).json({ message: "Server error fetching products." });
+  }
 };
+
 
 export const updateProduct = async (req, res) => {
     try {
@@ -112,23 +178,6 @@ export const assignProducts = async (req, res) => {
 
       product.unit -= assignQuantity;
       await product.save();
-
-      let storeProd = await StoreProduct.findOne({
-        store: storeId,
-        product: productId,
-      });
-
-      if (storeProd) {
-        storeProd.quantity += assignQuantity;
-        await storeProd.save();
-      } else {
-        storeProd = new StoreProduct({
-          store: storeId,
-          product: productId,
-          quantity: assignQuantity,
-        });
-        await storeProd.save();
-      }
 
       assignmentProducts.push({
         productId,

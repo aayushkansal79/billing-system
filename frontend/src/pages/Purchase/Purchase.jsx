@@ -413,6 +413,7 @@ const Purchase = ({ url }) => {
                 gstPercentage: p.gstPercentage || "0",
                 price: p.sellingPrice || "0",
                 printPrice: p.printPrice || "0",
+                lastPurchaseDate: selectedDate,
               },
               {
                 headers: { Authorization: `Bearer ${token}` },

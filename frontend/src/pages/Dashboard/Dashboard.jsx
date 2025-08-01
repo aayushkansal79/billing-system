@@ -227,7 +227,6 @@ const Dashboard = ({ url }) => {
             <option value={7}>Last 7 Days</option>
             <option value={15}>Last 15 Days</option>
             <option value={30}>Last 30 Days</option>
-            {/* <option value={90}>Last 90 Days</option> */}
           </select>
         </div>
 
@@ -239,7 +238,7 @@ const Dashboard = ({ url }) => {
           <ResponsiveContainer width="100%" height={300}>
             <LineChart
               data={data}
-              margin={{ top: 20, right: 20, bottom: 50, left: 0 }}
+              margin={{ top: 20, right: 20, bottom: 70, left: 0 }}
             >
               <CartesianGrid stroke="#ccc" strokeDasharray="10 10" />
               <XAxis

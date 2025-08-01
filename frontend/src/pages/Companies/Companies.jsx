@@ -3,6 +3,7 @@ import "./Companies.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Loader from "../../components/Loader/Loader";
+import Pagination from "../../components/Pagination/Pagination";
 
 const Companies = ({ url }) => {
   useEffect(() => {
@@ -12,24 +13,61 @@ const Companies = ({ url }) => {
   const [allCompanies, setAllCompanies] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
   const [editData, setEditData] = useState({});
-  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
   const [loading, setLoading] = useState(false);
+
+  const [filters, setFilters] = useState({
+    name: "",
+    shortName: "",
+    city: "",
+    contactPhone: "",
+    gstNumber: "",
+    address: "",
+    // startDate: "",
+    // endDate: "",
+    page: 1,
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const fetchAllCompanies = async () => {
     try {
-      const res = await axios.get(`${url}/api/company/all`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const params = new URLSearchParams();
+
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
       });
-      setAllCompanies(res.data);
+
+      // Always sync currentPage with filters.page
+      params.set("page", filters.page || currentPage);
+
+      const res = await axios.get(
+        `${url}/api/company/all?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setAllCompanies(res.data.data || []);
+      setCurrentPage(res.data.currentPage || 1);
+      setTotalPages(res.data.totalPages || 1);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch products.");
+      toast.error("Failed to fetch companies.");
     }
   };
 
+  // Fetch companies whenever filters or URL changes
   useEffect(() => {
     fetchAllCompanies();
-  }, [url]);
+  }, [filters, url]);
+
+  // Handle pagination change
+  const handlePageChange = (page) => {
+    setFilters((prev) => ({ ...prev, page }));
+  };
 
   const handleEditClick = (index) => {
     setEditIndex(index);
@@ -59,17 +97,108 @@ const Companies = ({ url }) => {
     }
   };
 
-  if (!allCompanies.length) {
-    return (
-      <div className="text-center mt-5">
-        <h3>No Vendors Found !</h3>
-      </div>
-    );
-  }
+  // if (!allCompanies.length) {
+  //   return (
+  //     <div className="text-center mt-5">
+  //       <h3>No Vendors Found !</h3>
+  //     </div>
+  //   );
+  // }
 
   return (
     <>
       <p className="bread">Vendors</p>
+
+      <div className="search row g-2 mb-4 px-2">
+        <div className="col-md-2">
+          <label className="form-label">Vendor Name:</label>
+          <input
+            className="form-control"
+            placeholder="Vendor Name"
+            value={filters.name}
+            onChange={(e) =>
+              setFilters({ ...filters, name: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Vendor Short Name:</label>
+          <input
+            className="form-control"
+            placeholder="Vendor Name"
+            value={filters.shortName}
+            onChange={(e) =>
+              setFilters({ ...filters, shortName: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Address:</label>
+          <input
+            className="form-control"
+            placeholder="Vendor Address"
+            value={filters.address}
+            onChange={(e) =>
+              setFilters({ ...filters, address: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">City:</label>
+          <input
+            className="form-control"
+            placeholder="Vendor City"
+            value={filters.city}
+            onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Contact Number:</label>
+          <input
+            type="number"
+            className="form-control"
+            placeholder="Contact Number"
+            value={filters.contactNumber}
+            onChange={(e) =>
+              setFilters({ ...filters, contactNumber: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">GST No.:</label>
+          <input
+            className="form-control"
+            placeholder="Vendor GST"
+            value={filters.gstNumber}
+            onChange={(e) =>
+              setFilters({ ...filters, gstNumber: e.target.value })
+            }
+          />
+        </div>
+        {/* <div className="col-md-2">
+          <label className="form-label">Start Date:</label>
+          <input
+            className="form-control"
+            type="date"
+            value={filters.startDate}
+            onChange={(e) =>
+              setFilters({ ...filters, startDate: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">End Date:</label>
+          <input
+            className="form-control"
+            type="date"
+            value={filters.endDate}
+            onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+          />
+        </div> */}
+
+        {/* <button onClick={fetchFilteredData}>Search</button> */}
+      </div>
+
       <div className="company row rounded mb-3">
         <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-danger">
@@ -87,7 +216,7 @@ const Companies = ({ url }) => {
           <tbody className="table-group-divider">
             {allCompanies.map((company, index) => (
               <tr key={company._id}>
-                <th>{index+1}.</th>
+                <th>{(filters.page - 1)*10 + (index+1)}.</th>
                 <th>
                   {editIndex === index ? (
                     <input
@@ -231,6 +360,13 @@ const Companies = ({ url }) => {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
+
       {loading && <Loader />}
     </>
   );

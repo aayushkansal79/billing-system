@@ -7,6 +7,6 @@ const router = express.Router();
 router.get("/", protect(), getAllAssignments);
 router.put("/dispatch/:id", protect("admin"), updateDispatch);
 router.put("/receive/:id", protect(), receiveAssignment);
-router.put("/cancel/:id", protect("admin"), cancelAssignment);
+router.put("/cancel/:id", protect(), cancelAssignment);
 
 export default router;

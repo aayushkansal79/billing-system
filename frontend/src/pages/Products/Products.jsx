@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../context/AuthContext";
 import Loader from "../../components/Loader/Loader";
+import Pagination from "../../components/Pagination/Pagination";
 
 const AssignProductModal = ({ url, product, onClose }) => {
   const [stores, setStores] = useState([]);
@@ -142,12 +143,35 @@ const Products = ({ url }) => {
   const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
 
+  const [filters, setFilters] = useState({
+    name: "",
+    barcode: "",
+    unitCon: "",
+    unit: "",
+    startDate: "",
+    endDate: "",
+    page: 1,
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   const fetchAllProducts = async () => {
     try {
-      const res = await axios.get(`${url}/api/product`, {
+      const params = new URLSearchParams();
+
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== "" && value !== null && value !== undefined) {
+          params.append(key, value);
+        }
+      });
+
+      const res = await axios.get(`${url}/api/product?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setAllProducts(res.data);
+
+      setAllProducts(res.data.data);
+      setTotalPages(res.data.totalPages || 1);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch products.");
@@ -157,7 +181,12 @@ const Products = ({ url }) => {
   useEffect(() => {
     fetchAllProducts();
     fetchStoreProducts();
-  }, []);
+  }, [filters]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    setFilters((prev) => ({ ...prev, page }));
+  };
 
   const handleEdit = (product) => {
     setEditingProductId(product._id);
@@ -238,17 +267,90 @@ const Products = ({ url }) => {
     }
   };
 
-  if (!allProducts.length) {
-    return (
-      <div className="text-center mt-5">
-        <h3>No Products Found !</h3>
-      </div>
-    );
-  }
+  // if (!allProducts.length) {
+  //   return (
+  //     <div className="text-center mt-5">
+  //       <h3>No Products Found !</h3>
+  //     </div>
+  //   );
+  // }
 
   return (
     <>
       <p className="bread">Products</p>
+
+      <div className="search row g-2 mb-4 px-2">
+        <div className="col-md-2">
+          <label className="form-label">Product Name:</label>
+          <input
+            className="form-control"
+            placeholder="Product Name"
+            value={filters.name}
+            onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Product Barcode:</label>
+          <input
+            className="form-control"
+            placeholder="Product Barcode"
+            value={filters.barcode}
+            onChange={(e) =>
+              setFilters({ ...filters, barcode: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Select Qty. Condition:</label>
+          <select
+            className="form-select"
+            name="unitCon"
+            value={filters.unitCon}
+            onChange={(e) =>
+              setFilters({ ...filters, unitCon: e.target.value })
+            }
+          >
+            <option value="">Select Condition</option>
+            <option value="less">Less than or equals to</option>
+            <option value="equal">Equals to</option>
+            <option value="more">More that or equals to</option>
+          </select>
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Product Quantity:</label>
+          <input
+            className="form-control"
+            placeholder="Product Quantity"
+            value={filters.unit}
+            onChange={(e) => setFilters({ ...filters, unit: e.target.value })}
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Product Date (from):</label>
+          <input
+            className="form-control"
+            type="date"
+            value={filters.startDate}
+            onChange={(e) =>
+              setFilters({ ...filters, startDate: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Product Date (to):</label>
+          <input
+            className="form-control"
+            type="date"
+            value={filters.endDate}
+            onChange={(e) =>
+              setFilters({ ...filters, endDate: e.target.value })
+            }
+          />
+        </div>
+
+        {/* <button onClick={fetchFilteredData}>Search</button> */}
+      </div>
+
       <div className="products rounded mb-3">
         <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-info">
@@ -260,15 +362,24 @@ const Products = ({ url }) => {
               <th scope="col">Price Before GST</th>
               <th scope="col">GST %</th>
               <th scope="col">Selling Price</th>
-              {user?.type === "admin" ? <th scope="col">Date & Time</th> : ""}
+              {user?.type === "admin" ? (
+                <th scope="col">First Purchase Date</th>
+              ) : (
+                ""
+              )}
+              {user?.type === "admin" ? (
+                <th scope="col">Last Purchase Date</th>
+              ) : (
+                ""
+              )}
               {user?.type === "admin" ? <th scope="col">Actions</th> : ""}
             </tr>
           </thead>
           <tbody className="table-group-divider">
             {user.type === "admin"
-              ? allProducts.map((product,idx) => (
+              ? allProducts.map((product, idx) => (
                   <tr key={product._id}>
-                    <th>{idx+1}.</th>
+                    <th>{(filters.page - 1)*10 + (idx+1)}.</th>
                     <th>
                       {editingProductId === product._id ? (
                         <input
@@ -362,7 +473,10 @@ const Products = ({ url }) => {
                         })}`
                       )}
                     </th>
-                    <td>{new Date(product.createdAt).toLocaleString()}</td>
+                    <td>{new Date(product.createdAt).toLocaleDateString()}</td>
+                    <td>
+                      {new Date(product.lastPurchaseDate).toLocaleDateString()}
+                    </td>
                     <td>
                       {/* {new Date(product.updatedAt).toLocaleString()}
                       <hr /> */}
@@ -443,9 +557,9 @@ const Products = ({ url }) => {
                     </td>
                   </tr>
                 ))
-              : storeProducts.map((sp,i) => (
+              : storeProducts.map((sp, i) => (
                   <tr key={sp._id}>
-                    <th>{i+1}.</th>
+                    <th>{i + 1}.</th>
                     <th>{sp.product.name}</th>
                     <td>[ {sp.product.barcode} ]</td>
                     <th className="text-primary">{sp.quantity}</th>
@@ -480,6 +594,12 @@ const Products = ({ url }) => {
           onClose={handleCloseAssign}
         />
       )}
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
 
       {loading && <Loader />}
     </>
