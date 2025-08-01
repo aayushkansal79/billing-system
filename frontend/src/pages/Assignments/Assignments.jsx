@@ -90,7 +90,10 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
           <br />
           Assignment Created at: {new Date(date).toLocaleString()}
           <br />
-          Assignment Dispatch at: {dispatchDateTime? `${new Date(dispatchDateTime).toLocaleString()}` : "N/A"}
+          Assignment Dispatch at:{" "}
+          {dispatchDateTime
+            ? `${new Date(dispatchDateTime).toLocaleString()}`
+            : "N/A"}
         </div>
       </div>
 
@@ -142,11 +145,13 @@ const Assignments = ({ url }) => {
 
   const [assignments, setAssignments] = useState([]);
   const [selctedAssignment, setSelectedAssignment] = useState(null);
+  const [editingDispatchId, setEditingDispatchId] = useState(null);
+  const [updatedDispatchTimes, setUpdatedDispatchTimes] = useState({});
   const componentRef = useRef();
 
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
-    const { user } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchAssignments = async () => {
@@ -163,27 +168,86 @@ const Assignments = ({ url }) => {
     fetchAssignments();
   }, [url]);
 
-  const updateDispatchDate = async (id, date) => {
-    try {
+  const formatDateTimeLocal = (dateString) => {
+    if (!dateString) return "";
+    const localDate = new Date(dateString);
+    const offset = localDate.getTimezoneOffset();
+    const localISOTime = new Date(localDate.getTime() - offset * 60000)
+      .toISOString()
+      .slice(0, 16);
+    return localISOTime;
+  };
 
+  const handleUpdateDispatch = async (id, datetimeValue) => {
+    try {
       const res = await axios.put(
         `${url}/api/assignments/dispatch/${id}`,
-        { dispatchDateTime: date },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          dispatchDateTime: datetimeValue,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
-      toast.success("Dispatch Date Updated");
-      setAssignments((prev) =>
-        prev.map((a) =>
-          a._id === id
-            ? { ...a, dispatchDateTime: res.data.dispatchDateTime }
-            : a
-        )
-      );
+
+      toast.success("Dispatch time updated");
     } catch (err) {
-      console.error("Dispatch update failed:", err);
-      toast.error("Failed to update dispatch date.");
+      console.error(err);
+      toast.error("Failed to update dispatch time");
     }
   };
+
+  const handleReceiveAssignment = async (id) => {
+  try {
+    const res = await axios.put(
+      `${url}/api/assignments/receive/${id}`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    toast.success("Assignment marked as Delivered");
+
+    setAssignments((prev) =>
+      prev.map((a) =>
+        a._id === id ? { ...a, assignStatus: "Delivered" } : a
+      )
+    );
+  } catch (err) {
+    console.error("Marking as received failed:", err);
+    toast.error("Failed to update status.");
+  }
+};
+
+
+  const handleCancelAssignment = async (id) => {
+  try {
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "This will reset all assigned stock!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, cancel it!",
+    });
+
+    if (confirm.isConfirmed) {
+      const res = await axios.put(
+        `${url}/api/assignments/cancel/${id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Assignment canceled and stock restored");
+
+      setAssignments((prev) =>
+        prev.map((a) =>
+          a._id === id ? { ...a, assignStatus: "Canceled" } : a
+        )
+      );
+    }
+  } catch (err) {
+    console.error("Cancellation failed:", err);
+    toast.error("Failed to cancel assignment.");
+  }
+};
+
 
   const openModal = (assignment) => {
     setSelectedAssignment(assignment);
@@ -258,8 +322,10 @@ const Assignments = ({ url }) => {
               <th>Store Contact</th>
               <th>Total Products</th>
               <th>Dispatch Date & Time</th>
+              <th>Status</th>
               <th>Assignment</th>
               <th>Date & Time</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody className="table-group-divider">
@@ -279,56 +345,98 @@ const Assignments = ({ url }) => {
                   {assignment.store.state} - {assignment.store.zipCode}
                 </td>
                 <td>{assignment.store.contactNumber}</td>
-                <th className="text-primary">
+                <th className="text-danger">
                   {assignment.products.reduce(
                     (total, prod) => total + (prod.assignQuantity || 0),
                     0
                   )}
                 </th>
                 {user?.type === "admin" ? (
-                  assignment.dispatchDateTime ? (
-                    <td>
-                      {new Date(assignment.dispatchDateTime).toLocaleString()}
-                    </td>
-                  ) : (
-                    <td>
-                      <input
-                        type="datetime-local"
-                        className="form-control"
-                        style={{ width: "200px" }}
-                        value={assignment.updatedDispatch || ""}
-                        onChange={(e) =>
-                          setAssignments((prev) =>
-                            prev.map((a) =>
-                              a._id === assignment._id
-                                ? { ...a, updatedDispatch: e.target.value }
-                                : a
-                            )
-                          )
-                        }
-                      />
-                      <button
-                        className="btn btn-success my-2"
-                        onClick={() =>
-                          updateDispatchDate(
-                            assignment._id,
-                            assignment.updatedDispatch
-                          )
-                        }
-                      >
-                        Save
-                      </button>
-                    </td>
-                  )
+                  <td>
+                    {editingDispatchId === assignment._id ? (
+                      <>
+                        <input
+                          type="datetime-local"
+                          className="form-control"
+                          style={{ width: "200px" }}
+                          value={
+                            updatedDispatchTimes[assignment._id] ??
+                            formatDateTimeLocal(assignment.dispatchDateTime)
+                          }
+                          onChange={(e) =>
+                            setUpdatedDispatchTimes((prev) => ({
+                              ...prev,
+                              [assignment._id]: e.target.value,
+                            }))
+                          }
+                        />
+                        <button
+                          className="btn btn-sm btn-success mt-2 me-2"
+                          onClick={() => {
+                            handleUpdateDispatch(
+                              assignment._id,
+                              updatedDispatchTimes[assignment._id]
+                            );
+                            setEditingDispatchId(null);
+                          }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="btn btn-sm btn-secondary mt-2"
+                          onClick={() => setEditingDispatchId(null)}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span>
+                          {assignment.dispatchDateTime
+                            ? new Date(
+                                assignment.dispatchDateTime
+                              ).toLocaleString()
+                            : "Not set"}
+                        </span>
+                        <br />
+                        <button
+                          className="btn btn-sm btn-outline-primary mt-2"
+                          onClick={() => setEditingDispatchId(assignment._id)}
+                        >
+                          Edit
+                        </button>
+                      </>
+                    )}
+                  </td>
+                ) : assignment.dispatchDateTime ? (
+                  <td>
+                    {new Date(assignment.dispatchDateTime).toLocaleString()}
+                  </td>
                 ) : (
-                  assignment.dispatchDateTime ? (
-                    <td>
-                      {new Date(assignment.dispatchDateTime).toLocaleString()}
-                    </td>
-                  ) : (
-                    <td>N/A</td>
-                  )
+                  <td>N/A</td>
                 )}
+                <th>
+                  {assignment.assignStatus === "Process" && (
+                    <span className="badge bg-danger">
+                      {assignment.assignStatus}
+                    </span>
+                  )}
+                  {assignment.assignStatus === "Dispatched" && (
+                    <span className="badge bg-warning text-dark">
+                      {assignment.assignStatus}
+                    </span>
+                  )}
+                  {assignment.assignStatus === "Delivered" && (
+                    <span className="badge bg-success text-dark">
+                      {assignment.assignStatus}
+                    </span>
+                  )}
+                  {assignment.assignStatus === "Canceled" && (
+                    <span className="badge bg-danger">
+                      {assignment.assignStatus}
+                    </span>
+                  )}
+                </th>
                 <td>
                   <button
                     type="button"
@@ -340,6 +448,29 @@ const Assignments = ({ url }) => {
                   </button>
                 </td>
                 <td>{new Date(assignment.createdAt).toLocaleString()}</td>
+                <th>
+                  {user?.type === "admin" ? (
+                    assignment.assignStatus === "Process" ? (
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => handleCancelAssignment(assignment._id)}
+                      >
+                        Cancel
+                      </button>
+                    ) : (
+                      "--"
+                    )
+                  ) : assignment.assignStatus === "Dispatched" ? (
+                    <button
+                      className="btn btn-success"
+                      onClick={() => handleReceiveAssignment(assignment._id)}
+                    >
+                      Received
+                    </button>
+                  ) : (
+                    "--"
+                  )}
+                </th>
               </tr>
             ))}
           </tbody>

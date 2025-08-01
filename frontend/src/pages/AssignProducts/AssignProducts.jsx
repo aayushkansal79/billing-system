@@ -25,6 +25,7 @@ const AssignProducts = ({ url }) => {
   ]);
   const [dispatchDateTime, setDispatchDateTime] = useState("");
   const [productDropdowns, setProductDropdowns] = useState({});
+  const [assignStatus, setAssignStatus] = useState("");
   const productRefs = useRef({});
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
@@ -167,6 +168,8 @@ const AssignProducts = ({ url }) => {
       return;
     }
 
+    const status = dispatchDateTime ? "Dispatched" : "Process";
+
     try {
       await axios.post(
         `${url}/api/product/assign-products`,
@@ -174,6 +177,7 @@ const AssignProducts = ({ url }) => {
           storeId: selectedStore.value,
           products: validEntries,
           dispatchDateTime,
+          assignStatus: status,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -183,6 +187,7 @@ const AssignProducts = ({ url }) => {
       Swal.fire("Success", "Products assigned successfully!", "success");
       setSelectedStore(null);
       setDispatchDateTime("");
+      setAssignStatus("");
       setProductEntries([
         {
           name: "",

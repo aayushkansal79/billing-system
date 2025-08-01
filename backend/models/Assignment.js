@@ -13,6 +13,7 @@ const AssignmentSchema = new mongoose.Schema({
         }
     ],
     dispatchDateTime: { type: Date, default: null },
+    assignStatus: { type: String, required: true },
     status: { type: Boolean, default: true },
 }, { timestamps: true });
 

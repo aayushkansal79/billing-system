@@ -87,7 +87,7 @@ export const updateProduct = async (req, res) => {
 };
 
 export const assignProducts = async (req, res) => {
-  const { storeId, products, dispatchDateTime } = req.body;
+  const { storeId, products, dispatchDateTime, assignStatus } = req.body;
 
   if (!storeId || !Array.isArray(products) || products.length === 0) {
     return res.status(400).json({ error: "Invalid data" });
@@ -156,6 +156,7 @@ export const assignProducts = async (req, res) => {
         store: storeId,
         products: assignmentProducts,
         dispatchDateTime: parsedDate || null,
+        assignStatus,
       });
       await assignment.save();
     }

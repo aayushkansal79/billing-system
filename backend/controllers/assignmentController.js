@@ -1,4 +1,6 @@
 import Assignment from "../models/Assignment.js";
+import Product from "../models/Product.js";
+import StoreProduct from "../models/StoreProduct.js";
 
 export const getAllAssignments = async (req, res) => {
   try {
@@ -26,15 +28,88 @@ export const getAllAssignments = async (req, res) => {
 
 export const updateDispatch = async (req, res) => {
   try {
+    const { id } = req.params;
     const { dispatchDateTime } = req.body;
+
+    const parsedDate = new Date(dispatchDateTime);
+    if (!dispatchDateTime || isNaN(parsedDate.getTime())) {
+      return res.status(400).json({ message: "Invalid dispatchDateTime" });
+    }
+
     const updated = await Assignment.findByIdAndUpdate(
-      req.params.id,
-      { dispatchDateTime },
+      id,
+      { dispatchDateTime: parsedDate, assignStatus: "Dispatched" },
       { new: true }
     );
+
+    if (!updated) {
+      return res.status(404).json({ message: "Assignment not found" });
+    }
+
     res.status(200).json(updated);
   } catch (err) {
     console.error("Error updating dispatch time:", err);
-    res.status(500).json({ error: "Failed to update dispatch date/time" });
+    res.status(500).json({ message: "Server error" });
   }
 };
+
+export const receiveAssignment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const assignment = await Assignment.findById(id);
+    if (!assignment || assignment.assignStatus !== "Dispatched") {
+      return res.status(400).json({ message: "Invalid or already received" });
+    }
+
+    assignment.assignStatus = "Delivered";
+    await assignment.save();
+
+    res.status(200).json({ message: "Assignment marked as delivered" });
+  } catch (err) {
+    console.error("Receive error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const cancelAssignment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const assignment = await Assignment.findById(id);
+    if (!assignment || assignment.assignStatus !== "Process") {
+      return res.status(400).json({ error: "Assignment not found or already processed" });
+    }
+
+    // Rollback assigned quantities
+    for (const item of assignment.products) {
+      const { productId, assignQuantity } = item;
+
+      const product = await Product.findById(productId);
+      if (product) {
+        product.unit += assignQuantity;
+        await product.save();
+      }
+
+      const storeProd = await StoreProduct.findOne({
+        store: assignment.store,
+        product: productId,
+      });
+
+      if (storeProd) {
+        storeProd.quantity -= assignQuantity;
+        if (storeProd.quantity < 0) storeProd.quantity = 0;
+        await storeProd.save();
+      }
+    }
+
+    assignment.assignStatus = "Canceled";
+    await assignment.save();
+
+    res.status(200).json({ message: "Assignment canceled and stock restored." });
+  } catch (err) {
+    console.error("Cancel Assignment Error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
