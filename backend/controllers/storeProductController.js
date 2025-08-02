@@ -116,27 +116,102 @@ export const getProductAssignments = async (req, res) => {
 
 
 //store products
+// export const getStoreProducts = async (req, res) => {
+//     try {
+//         const storeId = req.store.id; // populated by protect middleware
+
+//         const storeProducts = await StoreProduct.find({ store: storeId })
+//             .populate({
+//                 path: "product",
+//                 match: { status: true }, // only products with status true
+//             })
+//             .sort({createdAt : -1})
+//             .exec();
+
+//         // Remove storeProducts where product is null (because of match filter)
+//         const filteredStoreProducts = storeProducts.filter(sp => sp.product !== null);
+
+//         res.json(filteredStoreProducts);
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ message: "Server error while fetching store products." });
+//     }
+// };
+
 export const getStoreProducts = async (req, res) => {
-    try {
-        const storeId = req.store.id; // populated by protect middleware
+  try {
+    const storeId = req.store.id;
+    const {
+      page = 1,
+      limit = 10,
+      productName,
+      barcode,
+      quantity,
+      quantityCondition,
+    } = req.query;
 
-        const storeProducts = await StoreProduct.find({ store: storeId })
-            .populate({
-                path: "product",
-                match: { status: true }, // only products with status true
-            })
-            .sort({createdAt : -1})
-            .exec();
+    const skip = (parseInt(page) - 1) * parseInt(limit);
 
-        // Remove storeProducts where product is null (because of match filter)
-        const filteredStoreProducts = storeProducts.filter(sp => sp.product !== null);
+    // Prepare quantity condition in main query
+    const query = { store: storeId };
 
-        res.json(filteredStoreProducts);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error while fetching store products." });
+    if (quantity && quantityCondition) {
+      const q = Number(quantity);
+      if (quantityCondition === "less") query.quantity = { $lte: q };
+      else if (quantityCondition === "more") query.quantity = { $gte: q };
+      else if (quantityCondition === "equal") query.quantity = q;
     }
+
+    const storeProducts = await StoreProduct.find(query)
+      .populate({
+        path: "product",
+        match: {
+          status: true,
+          ...(productName && {
+            name: { $regex: productName, $options: "i" },
+          }),
+          ...(barcode && {
+            barcode: { $regex: barcode, $options: "i" },
+          }),
+        },
+      })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const filteredStoreProducts = storeProducts.filter((sp) => sp.product !== null);
+
+    // Get total count
+    const allStoreProducts = await StoreProduct.find(query)
+      .populate({
+        path: "product",
+        match: {
+          status: true,
+          ...(productName && {
+            name: { $regex: productName, $options: "i" },
+          }),
+          ...(barcode && {
+            barcode: { $regex: barcode, $options: "i" },
+          }),
+        },
+      });
+
+    const total = allStoreProducts.filter((sp) => sp.product !== null).length;
+
+    res.json({
+      storeProducts: filteredStoreProducts,
+      total,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Server error while fetching store products.",
+    });
+  }
 };
+
 
 //Get store product by barcode
 export const getStoreProductByBarcode = async (req, res) => {

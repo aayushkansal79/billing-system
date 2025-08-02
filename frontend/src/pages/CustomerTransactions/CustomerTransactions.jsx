@@ -64,7 +64,6 @@ const CustomerTransactions = ({ url }) => {
     setFilters((prev) => ({ ...prev, page }));
   };
 
-
   return (
     <>
       <p className="bread">Transactions</p>
@@ -147,7 +146,7 @@ const CustomerTransactions = ({ url }) => {
               <tbody>
                 {transactions.map((t, idx) => (
                   <tr key={idx}>
-                    <th>{idx + 1}.</th>
+                    <th>{(filters.page - 1) * 10 + (idx + 1)}.</th>
                     {t.invoiceNo && t.billAmount ? (
                       <>
                         <th>{t.invoiceNo}</th>

@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../context/AuthContext";
 import Loader from "../../components/Loader/Loader";
+import Pagination from "../../components/Pagination/Pagination";
 
 const RequestsRecieved = ({ url }) => {
   useEffect(() => {
@@ -12,20 +13,53 @@ const RequestsRecieved = ({ url }) => {
 
   const [requests, setRequests] = useState([]);
   const [acceptedQty, setAcceptedQty] = useState({});
-  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
   const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
 
+  const [filters, setFilters] = useState({
+    startDate: "",
+    endDate: "",
+    page: 1,
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   const fetchRequests = async () => {
     try {
-      const res = await axios.get(`${url}/api/product-requests/recieved`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const params = new URLSearchParams();
+
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
       });
-      setRequests(res.data);
+
+      // Always sync currentPage with filters.page
+      params.set("page", filters.page || currentPage);
+
+      const res = await axios.get(
+        `${url}/api/product-requests/recieved?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setRequests(res.data.requests || []);
+      setCurrentPage(res.data.currentPage || 1);
+      setTotalPages(res.data.totalPages || 1);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch product requests.");
     }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, [url, filters]);
+
+  // Handle pagination change
+  const handlePageChange = (page) => {
+    setFilters((prev) => ({ ...prev, page }));
   };
 
   const handleAccept = async (requestId) => {
@@ -51,7 +85,7 @@ const RequestsRecieved = ({ url }) => {
     } catch (err) {
       console.error(err);
       toast.error("Failed to accept request.");
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -74,21 +108,35 @@ const RequestsRecieved = ({ url }) => {
     }
   };
 
-  useEffect(() => {
-    fetchRequests();
-  }, [url]);
-
-  if (!requests.length) {
-    return (
-      <div className="text-center mt-5">
-        <h3>No Requests Recieved !</h3>
-      </div>
-    );
-  }
-
   return (
     <>
       <p className="bread">Requests Recieved</p>
+
+      <div className="search row g-2 mb-4 px-2">
+        <div className="col-md-2">
+          <label className="form-label">Request Date (from):</label>
+          <input
+            className="form-control"
+            type="date"
+            value={filters.startDate}
+            onChange={(e) =>
+              setFilters({ ...filters, startDate: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Request Date (to):</label>
+          <input
+            className="form-control"
+            type="date"
+            value={filters.endDate}
+            onChange={(e) =>
+              setFilters({ ...filters, endDate: e.target.value })
+            }
+          />
+        </div>
+      </div>
+
       <div className="requestsRecieved rounded mb-3">
         <table className="table align-middle table-striped table-hover">
           <thead className="table-warning">
@@ -102,9 +150,9 @@ const RequestsRecieved = ({ url }) => {
             </tr>
           </thead>
           <tbody className="table-group-divider">
-            {requests.map((req,i) => (
+            {requests.map((req, i) => (
               <tr key={req._id}>
-                <th>{i+1}.</th>
+                <th>{(filters.page - 1) * 10 + (i + 1)}.</th>
                 <td scope="row">
                   <h5>
                     <span className="badge rounded-pill text-bg-secondary">
@@ -186,6 +234,12 @@ const RequestsRecieved = ({ url }) => {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
 
       {loading && <Loader />}
     </>

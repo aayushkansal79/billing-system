@@ -255,7 +255,7 @@ const Customer = ({ url }) => {
                 onClick={() => handleCustomerClick(customer._id)}
                 style={{ cursor: "pointer" }}
               >
-                <th>{index + 1}.</th>
+                <th>{(filters.page - 1) * 10 + (index + 1)}.</th>
                 <th>{customer.name}</th>
                 <td>{customer.mobile}</td>
                 <td>{customer.state}</td>

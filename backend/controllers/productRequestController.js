@@ -25,49 +25,149 @@ export const createProductRequest = async (req, res) => {
     }
 };
 
-export const getProductRequests = async (req, res) => {
-    try {
-        const storeId = req.store.id;
-        const isAdmin = req.store.type === "admin";
+// export const getProductRequests = async (req, res) => {
+//     try {
+//         const storeId = req.store.id;
+//         const isAdmin = req.store.type === "admin";
 
-        const filter = isAdmin ? {} : {
-            $or: [
-                { requestingStore: storeId },
-                { supplyingStore: storeId }
-            ]
+//         const filter = isAdmin ? {} : {
+//             $or: [
+//                 { requestingStore: storeId },
+//                 { supplyingStore: storeId }
+//             ]
+//         };
+
+//         const requests = await ProductRequest.find(filter)
+//             .populate("requestingStore", "username address city state zipCode")
+//             .populate("supplyingStore", "username address city state zipCode")
+//             .populate("product", "name")
+//             .sort({ createdAt: -1 });
+
+//         res.json(requests);
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).json({ message: "Server error while fetching product requests" });
+//     }
+// };
+
+export const getProductRequests = async (req, res) => {
+  try {
+    const storeId = req.store.id;
+    const isAdmin = req.store.type === "admin";
+
+    const {
+      page = 1,
+      limit = 10,
+      startDate,
+      endDate,
+    } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const baseFilter = isAdmin
+      ? {}
+      : {
+          $or: [
+            { requestingStore: storeId },
+            { supplyingStore: storeId }
+          ]
         };
 
-        const requests = await ProductRequest.find(filter)
-            .populate("requestingStore", "username address city state zipCode")
-            .populate("supplyingStore", "username address city state zipCode")
-            .populate("product", "name")
-            .sort({ createdAt: -1 });
+    const filter = { ...baseFilter };
 
-        res.json(requests);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error while fetching product requests" });
+    // IST time zone filtering on requestedAt
+    if (startDate || endDate) {
+      const istOffset = 5.5 * 60 * 60000;
+
+      filter.requestedAt = {};
+      if (startDate) {
+        const istStart = new Date(new Date(startDate).getTime() - istOffset);
+        filter.requestedAt.$gte = istStart;
+      }
+      if (endDate) {
+        const istEnd = new Date(new Date(endDate).getTime() - istOffset + 24 * 60 * 60 * 1000 - 1);
+        filter.requestedAt.$lte = istEnd;
+      }
     }
+
+    const total = await ProductRequest.countDocuments(filter);
+
+    const requests = await ProductRequest.find(filter)
+      .populate("requestingStore", "username address city state zipCode")
+      .populate("supplyingStore", "username address city state zipCode")
+      .populate("product", "name")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    res.status(200).json({
+      requests,
+      totalRequests: total,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error while fetching product requests" });
+  }
 };
+
 
 export const getProductRequestsSent = async (req, res) => {
     try {
         const storeId = req.store.id;
         const isAdmin = req.store.type === "admin";
 
-        const filter = isAdmin ? {} : {
+        const {
+        page = 1,
+        limit = 10,
+        startDate,
+        endDate,
+        } = req.query;
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const baseFilter = isAdmin
+        ? {}
+        : {
             $or: [
                 { requestingStore: storeId }
             ]
-        };
+            };
+
+        const filter = { ...baseFilter };
+
+        // IST time zone filtering on requestedAt
+        if (startDate || endDate) {
+        const istOffset = 5.5 * 60 * 60000;
+
+        filter.requestedAt = {};
+        if (startDate) {
+            const istStart = new Date(new Date(startDate).getTime() - istOffset);
+            filter.requestedAt.$gte = istStart;
+        }
+        if (endDate) {
+            const istEnd = new Date(new Date(endDate).getTime() - istOffset + 24 * 60 * 60 * 1000 - 1);
+            filter.requestedAt.$lte = istEnd;
+        }
+        }
+
+        const total = await ProductRequest.countDocuments(filter);
 
         const requests = await ProductRequest.find(filter)
-            .populate("requestingStore", "username address city state zipCode")
-            .populate("supplyingStore", "username address city state zipCode")
-            .populate("product", "name")
-            .sort({ createdAt: -1 });
+        .populate("requestingStore", "username address city state zipCode")
+        .populate("supplyingStore", "username address city state zipCode")
+        .populate("product", "name")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit));
 
-        res.json(requests);
+        res.status(200).json({
+        requests,
+        totalRequests: total,
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / parseInt(limit)),
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error while fetching product requests" });
@@ -79,19 +179,56 @@ export const getProductRequestsRecieved = async (req, res) => {
         const storeId = req.store.id;
         const isAdmin = req.store.type === "admin";
 
-        const filter = isAdmin ? {} : {
+        const {
+        page = 1,
+        limit = 10,
+        startDate,
+        endDate,
+        } = req.query;
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const baseFilter = isAdmin
+        ? {}
+        : {
             $or: [
                 { supplyingStore: storeId }
             ]
-        };
+            };
+
+        const filter = { ...baseFilter };
+
+        // IST time zone filtering on requestedAt
+        if (startDate || endDate) {
+        const istOffset = 5.5 * 60 * 60000;
+
+        filter.requestedAt = {};
+        if (startDate) {
+            const istStart = new Date(new Date(startDate).getTime() - istOffset);
+            filter.requestedAt.$gte = istStart;
+        }
+        if (endDate) {
+            const istEnd = new Date(new Date(endDate).getTime() - istOffset + 24 * 60 * 60 * 1000 - 1);
+            filter.requestedAt.$lte = istEnd;
+        }
+        }
+
+        const total = await ProductRequest.countDocuments(filter);
 
         const requests = await ProductRequest.find(filter)
-            .populate("requestingStore", "username address city state zipCode")
-            .populate("supplyingStore", "username address city state zipCode")
-            .populate("product", "name")
-            .sort({ createdAt: -1 });
-            
-        res.json(requests);
+        .populate("requestingStore", "username address city state zipCode")
+        .populate("supplyingStore", "username address city state zipCode")
+        .populate("product", "name")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit));
+
+        res.status(200).json({
+        requests,
+        totalRequests: total,
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / parseInt(limit)),
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error while fetching product requests" });

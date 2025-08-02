@@ -236,7 +236,7 @@ const AllBill = ({ url }) => {
             <tbody>
               {bills.map((bill, idx) => (
                 <tr key={bill._id}>
-                  <th>{idx + 1}.</th>
+                  <th>{(filters.page - 1) * 10 + (idx + 1)}.</th>
                   <th>{bill.invoiceNumber}</th>
                   <td>{bill.customerName || "N/A"}</td>
                   <td>{bill.mobileNo || "N/A"}</td>

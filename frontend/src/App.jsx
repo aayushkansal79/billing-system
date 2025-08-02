@@ -11,6 +11,7 @@ import BulkBarcode from "./pages/BulkBarcode/BulkBarcode";
 import PrintBarcode from "./pages/Barcode/Barcode";
 import Companies from "./pages/Companies/Companies";
 import Products from "./pages/Products/Products";
+import StoreProducts from "./pages/StoreProducts/StoreProducts";
 import AssignProducts from "./pages/AssignProducts/AssignProducts";
 import Assignments from "./pages/Assignments/Assignments";
 import AddStore from "./pages/AddStore/AddStore";
@@ -63,13 +64,14 @@ function App() {
               <Route path="/purchase-list/print-tags/:purchaseId" element={<PrivateRoute roles={["admin"]}> <BulkBarcode url={url} /> </PrivateRoute>} />
               <Route path="/purchase-list/print-tag/:id" element={<PrivateRoute roles={["admin"]}> <PrintBarcode url={url} /> </PrivateRoute>} />
               <Route path="/vendors" element={<PrivateRoute roles={["admin"]}> <Companies url={url} /> </PrivateRoute>} />
-              <Route path="/products" element={<PrivateRoute roles={["admin", "store"]}> <Products url={url} /> </PrivateRoute>} />
+              <Route path="/products" element={<PrivateRoute roles={["admin"]}> <Products url={url} /> </PrivateRoute>} />
+              <Route path="/store-products" element={<PrivateRoute roles={["store"]}> <StoreProducts url={url} /> </PrivateRoute>} />
               <Route path="/assign-products" element={<PrivateRoute roles={["admin"]}> <AssignProducts url={url} /> </PrivateRoute>} />
               <Route path="/assignments" element={<PrivateRoute roles={["admin", "store"]}> <Assignments url={url} /> </PrivateRoute>} />
               <Route path="/add-store" element={<PrivateRoute roles={["admin"]}> <AddStore url={url} /> </PrivateRoute>} />
               <Route path="/all-stores" element={<PrivateRoute roles={["admin"]}> <AllStores url={url} /> </PrivateRoute>} />
               <Route path="/login-as-store" element={<PrivateRoute roles={["admin"]}> <LoginAsStore url={url} /> </PrivateRoute>} />
-              <Route path="/billing" element={<PrivateRoute roles={["admin", "store"]}> <Billing url={url} setSidebarOpen={setSidebarOpen} /> </PrivateRoute>} />
+              <Route path="/billing" element={<PrivateRoute roles={["store"]}> <Billing url={url} setSidebarOpen={setSidebarOpen} /> </PrivateRoute>} />
               <Route path="/all-bill" element={<PrivateRoute roles={["admin", "store"]}> <AllBill url={url} /> </PrivateRoute>} />
               <Route path="/all-customer" element={<PrivateRoute roles={["admin", "store"]}> <Customer url={url} /> </PrivateRoute>} />
               <Route path="/all-customer/:customerId/transactions" element={<PrivateRoute roles={["admin", "store"]}> <CustomerTransactions url={url} /> </PrivateRoute>} />
@@ -77,7 +79,7 @@ function App() {
               <Route path="/requests" element={<PrivateRoute roles={["admin"]}> <Requests url={url} /> </PrivateRoute>} />
               <Route path="/requests-sent" element={<PrivateRoute roles={["store"]}> <RequestsSent url={url} /> </PrivateRoute>} />
               <Route path="/requests-recieved" element={<PrivateRoute roles={["store"]}> <RequestsRecieved url={url} /> </PrivateRoute>} />
-              <Route path="/profile" element={<PrivateRoute roles={["admin", "store"]}> <Profile url={url} /> </PrivateRoute>} />
+              <Route path="/profile" element={<PrivateRoute roles={["admin"]}> <Profile url={url} /> </PrivateRoute>} />
               <Route path="/change-password" element={<PrivateRoute roles={["admin", "store"]}> <ChangePass url={url} /> </PrivateRoute>} />
             </Routes>
           </main>
