@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import Loader from "../../components/Loader/Loader";
 import Swal from "sweetalert2";
+import Pagination from "../../components/Pagination/Pagination";
 
 const Customer = ({ url }) => {
   useEffect(() => {
@@ -24,12 +25,36 @@ const Customer = ({ url }) => {
     { method: "", amount: "" },
   ]);
 
+  const [filters, setFilters] = useState({
+    name: "",
+    mobile: "",
+    gst: "",
+    state: "",
+    pendingCondition: "",
+    page: 1,
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   const fetchCustomers = async () => {
     try {
-      const res = await axios.get(`${url}/api/customer`, {
+      const params = new URLSearchParams();
+
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
+
+      // Always sync currentPage with filters.page
+      params.set("page", filters.page || currentPage);
+
+      const res = await axios.get(`${url}/api/customer?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCustomerList(res.data);
+
+      setCustomerList(res.data.customers);
+      setCurrentPage(res.data.currentPage || 1);
+      setTotalPages(res.data.totalPages || 1);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch customers.");
@@ -38,7 +63,12 @@ const Customer = ({ url }) => {
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [filters]);
+
+  // Handle pagination change
+  const handlePageChange = (page) => {
+    setFilters((prev) => ({ ...prev, page }));
+  };
 
   const navigate = useNavigate();
 
@@ -101,8 +131,8 @@ const Customer = ({ url }) => {
         setLoading(false);
         return;
       }
-      
-      if(paidAmount <= 0){
+
+      if (paidAmount <= 0) {
         toast.error("Enter Paid Amount");
         setLoading(false);
         return;
@@ -142,17 +172,64 @@ const Customer = ({ url }) => {
     navigate(`/all-customer/${customerId}/transactions`);
   };
 
-  if (!customerList.length) {
-    return (
-      <div className="text-center mt-5">
-        <h3>No Customers Found !</h3>
-      </div>
-    );
-  }
-
   return (
     <>
       <p className="bread">Customers</p>
+
+      <div className="search row g-2 mb-4 px-2">
+        <div className="col-md-2">
+          <label className="form-label">Customer Name:</label>
+          <input
+            className="form-control"
+            placeholder="Customer Name"
+            value={filters.name}
+            onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Mobile Number:</label>
+          <input
+            className="form-control"
+            placeholder="Mobile Number"
+            value={filters.mobile}
+            onChange={(e) => setFilters({ ...filters, mobile: e.target.value })}
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">State:</label>
+          <input
+            className="form-control"
+            placeholder="State"
+            value={filters.state}
+            onChange={(e) => setFilters({ ...filters, state: e.target.value })}
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">GST:</label>
+          <input
+            className="form-control"
+            placeholder="GST"
+            value={filters.gst}
+            onChange={(e) => setFilters({ ...filters, gst: e.target.value })}
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Pending Amount:</label>
+          <select
+            className="form-select"
+            value={filters.pendingCondition}
+            onChange={(e) =>
+              setFilters({ ...filters, pendingCondition: e.target.value })
+            }
+          >
+            <option value="">Select Condition</option>
+            <option value="less">Wallet Amount &lt; 0</option>
+            <option value="equal">Wallet Amount = 0</option>
+            <option value="more">Wallet Amount &gt; 0</option>
+          </select>
+        </div>
+      </div>
+
       <div className="customer row rounded mb-3">
         <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-danger">
@@ -178,7 +255,7 @@ const Customer = ({ url }) => {
                 onClick={() => handleCustomerClick(customer._id)}
                 style={{ cursor: "pointer" }}
               >
-                <th>{index+1}.</th>
+                <th>{index + 1}.</th>
                 <th>{customer.name}</th>
                 <td>{customer.mobile}</td>
                 <td>{customer.state}</td>
@@ -407,6 +484,13 @@ const Customer = ({ url }) => {
           </div>
         </div>
       )}
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
+
       {loading && <Loader />}
     </>
   );

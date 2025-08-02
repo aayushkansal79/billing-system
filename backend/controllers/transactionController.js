@@ -2,23 +2,83 @@ import Transaction from "../models/Transaction.js";
 import Customer from "../models/Customer.js";
 import Bill from "../models/Bill.js"
 
+// export const getCustomerTransactions = async (req, res) => {
+//     try {
+//         const customerId = req.params.customerId;
+//         const customer = await Customer.findById(customerId);
+//         if (!customer) {
+//             return res.status(404).json({ message: "Customer not found" });
+//         }
+
+//         const transactions = await Transaction.find({ customerId })
+//             .sort({ createdAt: -1 }); // recent first
+
+//         res.status(200).json({ customer, transactions });
+//     } catch (error) {
+//         console.error("Error fetching customer transactions:", error);
+//         res.status(500).json({ message: "Server error while fetching transactions" });
+//     }
+// };
+
 export const getCustomerTransactions = async (req, res) => {
-    try {
-        const customerId = req.params.customerId;
-        const customer = await Customer.findById(customerId);
-        if (!customer) {
-            return res.status(404).json({ message: "Customer not found" });
-        }
+  try {
+    const customerId = req.params.customerId;
+    const {
+      page = 1,
+      limit = 10,
+      invoiceNo,
+      startDate,
+      endDate,
+    } = req.query;
 
-        const transactions = await Transaction.find({ customerId })
-            .sort({ createdAt: -1 }); // recent first
-
-        res.status(200).json({ customer, transactions });
-    } catch (error) {
-        console.error("Error fetching customer transactions:", error);
-        res.status(500).json({ message: "Server error while fetching transactions" });
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
     }
+
+    const query = { customerId };
+
+    if (invoiceNo) {
+      query.invoiceNo = { $regex: invoiceNo, $options: "i" };
+    }
+
+    if (startDate || endDate) {
+      const istOffset = 5.5 * 60 * 60000;
+
+      query.createdAt = {};
+
+      if (startDate) {
+        const istStart = new Date(new Date(startDate).getTime() - istOffset);
+        query.createdAt.$gte = istStart;
+      }
+
+      if (endDate) {
+        const istEnd = new Date(new Date(endDate).getTime() - istOffset + 24 * 60 * 60 * 1000 - 1);
+        query.createdAt.$lte = istEnd;
+      }
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const total = await Transaction.countDocuments(query);
+
+    const transactions = await Transaction.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    res.status(200).json({
+      customer,
+      transactions,
+      totalTransactions: total,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
+    });
+  } catch (error) {
+    console.error("Error fetching customer transactions:", error);
+    res.status(500).json({ message: "Server error while fetching transactions" });
+  }
 };
+
 
 export const getCustomerTransactionsUnpaid = async (req, res) => {
     try {

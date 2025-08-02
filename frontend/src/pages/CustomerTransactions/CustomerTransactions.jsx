@@ -3,6 +3,7 @@ import "./CustomerTransactions.css";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import Pagination from "../../components/Pagination/Pagination";
 
 const CustomerTransactions = ({ url }) => {
   useEffect(() => {
@@ -17,36 +18,93 @@ const CustomerTransactions = ({ url }) => {
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
 
+  const [filters, setFilters] = useState({
+    invoiceNo: "",
+    startDate: "",
+    endDate: "",
+    page: 1,
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const params = new URLSearchParams();
+
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value) params.append(key, value);
+        });
+
+        // Always sync currentPage with filters.page
+        params.set("page", filters.page || currentPage);
+
         const res = await axios.get(
-          `${url}/api/transactions/customer/${customerId}`,
+          `${url}/api/transactions/customer/${customerId}?${params.toString()}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        setCustomer(res.data.customer);
-        setTransactions(res.data.transactions);
+
+        setCustomer(res.data.customer || {});
+        setTransactions(res.data.transactions || []);
+        setCurrentPage(res.data.currentPage || 1);
+        setTotalPages(res.data.totalPages || 1);
       } catch (err) {
         console.error(err);
         toast.error("Failed to fetch transactions.");
       }
     };
     fetchData();
-  }, [customerId]);
+  }, [customerId, filters]);
 
-  if (!transactions.length) {
-    return (
-      <div className="text-center mt-5">
-        <h3>No Transactions Found !</h3>
-      </div>
-    );
-  }
+  // Handle pagination change
+  const handlePageChange = (page) => {
+    setFilters((prev) => ({ ...prev, page }));
+  };
+
 
   return (
     <>
       <p className="bread">Transactions</p>
+
+      <div className="search row g-2 mb-4 px-2">
+        <div className="col-md-2">
+          <label className="form-label">Invoice Number:</label>
+          <input
+            className="form-control"
+            placeholder="Invoice Number"
+            value={filters.invoiceNo}
+            onChange={(e) =>
+              setFilters({ ...filters, invoiceNo: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Date (from):</label>
+          <input
+            className="form-control"
+            type="date"
+            value={filters.startDate}
+            onChange={(e) =>
+              setFilters({ ...filters, startDate: e.target.value })
+            }
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">Date (to):</label>
+          <input
+            className="form-control"
+            type="date"
+            value={filters.endDate}
+            onChange={(e) =>
+              setFilters({ ...filters, endDate: e.target.value })
+            }
+          />
+        </div>
+      </div>
+
       <div className="transac mt-3 mb-3 rounded">
         <button className="btn btn-secondary mb-3" onClick={() => navigate(-1)}>
           ← Back
@@ -83,7 +141,7 @@ const CustomerTransactions = ({ url }) => {
                   <th>Wallet</th>
                   <th>Payment Type</th>
                   <th>Generated Coins</th>
-                  <th>Date</th>
+                  <th>Date & Time</th>
                 </tr>
               </thead>
               <tbody>
@@ -171,6 +229,12 @@ const CustomerTransactions = ({ url }) => {
           </div>
         )}
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
     </>
   );
 };

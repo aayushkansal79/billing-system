@@ -104,7 +104,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
           <tr>
             <th>#</th>
             <th>Product</th>
-            <th>Assigned Quantity</th>
+            <th>Quantity</th>
             <th>MRP</th>
           </tr>
         </thead>

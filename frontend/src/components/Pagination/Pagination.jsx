@@ -27,14 +27,14 @@ return (
     <div className="pagination">
       <button
         onClick={() => onPageChange(1)}
-        disabled={currentPage === 1}
+        disabled={currentPage === 1 || totalPages === 0}
         >
         First
       </button>
 
       <button
         onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
+        disabled={currentPage === 1 || totalPages === 0}
         >
         Prev
       </button>
@@ -51,14 +51,14 @@ return (
 
       <button
         onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
+        disabled={currentPage === totalPages || totalPages === 0}
       >
         Next
       </button>
 
       <button
         onClick={() => onPageChange(totalPages)}
-        disabled={currentPage === totalPages}
+        disabled={currentPage === totalPages || totalPages === 0}
         >
         Last
       </button>

@@ -24,7 +24,6 @@ import MasterSearch from "./pages/MasterSearch/MasterSearch";
 import Requests from "./pages/Requests/Requests";
 import Profile from "./pages/Profile/Profile";
 import ChangePass from "./pages/ChangePass/ChangePass";
-import Invoice from "./pages/Invoice/Invoice";
 import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./context/PrivateRoute";
 import RequestsSent from "./pages/RequestsSent/RequestsSent";
@@ -80,7 +79,6 @@ function App() {
               <Route path="/requests-recieved" element={<PrivateRoute roles={["store"]}> <RequestsRecieved url={url} /> </PrivateRoute>} />
               <Route path="/profile" element={<PrivateRoute roles={["admin", "store"]}> <Profile url={url} /> </PrivateRoute>} />
               <Route path="/change-password" element={<PrivateRoute roles={["admin", "store"]}> <ChangePass url={url} /> </PrivateRoute>} />
-              {/* <Route path="/invoice" element={<Invoice url={url} />} /> */}
             </Routes>
           </main>
         </div>
