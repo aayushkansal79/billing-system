@@ -227,7 +227,7 @@ const Assignments = ({ url }) => {
       toast.success("Dispatch time updated");
       setAssignments((prev) =>
         prev.map((a) =>
-          a._id === id ? { ...a, dispatchDateTime: datetimeValue } : a
+          a._id === id ? { ...a, dispatchDateTime: datetimeValue, assignStatus: "Dispatched" } : a
         )
       );
     } catch (err) {
@@ -491,7 +491,7 @@ const Assignments = ({ url }) => {
                   )}
                 </th>
                 {user?.type === "admin" &&
-                assignment.assignStatus !== "Delivered" ? (
+                assignment.assignStatus === "Process" ? (
                   <td>
                     {editingDispatchId === assignment._id ? (
                       <>
