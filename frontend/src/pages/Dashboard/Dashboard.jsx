@@ -48,6 +48,33 @@ const Dashboard = ({ url }) => {
     fetchCounts();
   }, []);
 
+  const [storeData, setStoreData] = useState([]);
+  const [filters, setFilters] = useState({
+    startDate: "",
+    endDate: "",
+  });
+
+  const fetchData = async () => {
+    try {
+      const params = {};
+      if (filters.startDate) params.fromDate = filters.startDate;
+      if (filters.endDate) params.toDate = filters.endDate;
+
+      const res = await axios.get(`${url}/api/bill/store-wise-total`, {
+        params,
+      });
+      setStoreData(res.data.data);
+    } catch (error) {
+      console.error("Failed to fetch store-wise bills:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [filters]);
+
+  const month = new Date().toLocaleString("default", { month: "long" });
+
   const [data, setData] = useState([]);
   const [days, setDays] = useState(7);
   const [loading, setLoading] = useState(false);
@@ -213,7 +240,56 @@ const Dashboard = ({ url }) => {
         </Link>
       </div>
 
-      <div className="card p-4 mt-4 mb-3">
+      <div className="store-data py-3">
+        <div className="row g-4">
+          <div className="d-flex flex-wrap gap-2">
+            <div className="card-con me-2">
+              <label className="form-label">Bill Data From:</label>
+              <input
+                className="form-control"
+                type="date"
+                value={filters.startDate}
+                onChange={(e) =>
+                  setFilters({ ...filters, startDate: e.target.value })
+                }
+              />
+            </div>
+            <div className="card-con">
+              <label className="form-label">Bill Data To:</label>
+              <input
+                className="form-control"
+                type="date"
+                value={filters.endDate}
+                onChange={(e) =>
+                  setFilters({ ...filters, endDate: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          {storeData.map((store) => (
+            <div className="col-4" key={store.storeId}>
+              <div className="card h-100" style={{ width: "270px" }}>
+                <div className="card-header text-center">
+                  <h2 className="my-0 mx-4">{store.storeName}</h2>
+                  {!(filters.startDate || filters.endDate) && <p className="m-0">{month}</p>}
+                </div>
+                <div className="card-body row text-center">
+                  <div className="col-12 col-md-6 p-3 bill-amt">
+                    <h3>₹ {store.totalAmount.toLocaleString()}</h3>
+                    <p>Total Bill Amt</p>
+                  </div>
+                  <div className="col-12 col-md-6 p-3">
+                    <h3>{store.billCount}</h3>
+                    <p>No. of Bills</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bill-graph card p-4 mt-4 mb-3">
         <h4 className="mb-3">Bill Generation Trend (Last {days} Days)</h4>
 
         <div className="mb-3">

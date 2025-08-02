@@ -360,7 +360,7 @@ const Products = ({ url }) => {
                     product.name
                   )}
                 </th>
-                <td>[ {product.barcode} ]</td>
+                <td style={{whiteSpace: "nowrap"}}>[ {product.barcode} ]</td>
                 <th className="text-primary">{product.unit}</th>
                 <td>
                   {editingProductId === product._id ? (

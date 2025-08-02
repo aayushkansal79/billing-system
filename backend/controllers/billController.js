@@ -381,3 +381,86 @@ export const getDailyBillCounts = async (req, res) => {
       .json({ message: "Server error while fetching bill graph data." });
   }
 };
+
+//for dashboard
+export const getStoreWiseBillStats = async (req, res) => {
+  try {
+    const { fromDate, toDate } = req.query;
+
+    const matchStage = {};
+
+    // Handle date filtering in IST
+    const IST_OFFSET = 5.5 * 60 * 60 * 1000;
+
+    if (fromDate || toDate) {
+      // If custom dates are provided
+      if (fromDate) {
+        const from = new Date(new Date(fromDate).getTime() + IST_OFFSET);
+        matchStage.date = { ...matchStage.date, $gte: from };
+      }
+
+      if (toDate) {
+        const to = new Date(new Date(toDate).getTime() + IST_OFFSET);
+        to.setHours(23, 59, 59, 999);
+        matchStage.date = { ...matchStage.date, $lte: to };
+      }
+    } else {
+      // Default: current month in IST
+      const nowUTC = new Date();
+      const nowIST = new Date(nowUTC.getTime() + IST_OFFSET);
+
+      const firstDayIST = new Date(
+        nowIST.getFullYear(),
+        nowIST.getMonth(),
+        1,
+        0, 0, 0, 0
+      );
+
+      const todayIST = new Date(
+        nowIST.getFullYear(),
+        nowIST.getMonth(),
+        nowIST.getDate(),
+        23, 59, 59, 999
+      );
+
+      matchStage.date = { $gte: firstDayIST, $lte: todayIST };
+    }
+
+    const result = await Bill.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: "$store",
+          totalAmount: { $sum: "$totalAmount" },
+          billCount: { $sum: 1 },
+        },
+      },
+      {
+        $lookup: {
+          from: "stores",
+          localField: "_id",
+          foreignField: "_id",
+          as: "storeDetails",
+        },
+      },
+      {
+        $unwind: "$storeDetails",
+      },
+      {
+        $project: {
+          _id: 0,
+          storeId: "$storeDetails._id",
+          storeName: "$storeDetails.username",
+          totalAmount: 1,
+          billCount: 1,
+        },
+      },
+      { $sort: { totalAmount: -1 } }
+    ]);
+
+    res.json({ success: true, data: result });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};

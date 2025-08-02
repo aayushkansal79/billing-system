@@ -129,7 +129,7 @@ const StoreProducts = ({ url }) => {
               <tr key={sp._id}>
                 <th>{(filters.page - 1) * 10 + (i + 1)}.</th>
                 <th>{sp.product.name}</th>
-                <td>[ {sp.product.barcode} ]</td>
+                <td style={{whiteSpace: "nowrap"}}>[ {sp.product.barcode} ]</td>
                 <th className="text-primary">{sp.quantity}</th>
                 <td>
                   ₹
