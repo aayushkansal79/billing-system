@@ -29,7 +29,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         onClick={() => onPageChange(1)}
         disabled={currentPage === 1 || totalPages === 0}
       >
-        First
+        {/* First */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           height="20px"
@@ -45,7 +45,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1 || totalPages === 0}
       >
-        Prev
+        {/* Prev */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           height="20px"
@@ -80,7 +80,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         >
           <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
         </svg>
-        Next
+        {/* Next */}
       </button>
 
       <button
@@ -96,7 +96,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         >
           <path d="M383-480 200-664l56-56 240 240-240 240-56-56 183-184Zm264 0L464-664l56-56 240 240-240 240-56-56 183-184Z" />
         </svg>
-        Last
+        {/* Last */}
       </button>
     </div>
   );
