@@ -512,6 +512,7 @@ const Assignments = ({ url }) => {
                         />
                         <button
                           className="btn btn-sm btn-success mt-2 me-2"
+                          title="Save"
                           onClick={() => {
                             handleUpdateDispatch(
                               assignment._id,
@@ -524,6 +525,7 @@ const Assignments = ({ url }) => {
                         </button>
                         <button
                           className="btn btn-sm btn-secondary mt-2"
+                          title="Cancel"
                           onClick={() => setEditingDispatchId(null)}
                         >
                           Cancel
@@ -541,6 +543,7 @@ const Assignments = ({ url }) => {
                         <br />
                         <button
                           className="btn btn-sm btn-outline-primary mt-2"
+                          title="Edit"
                           onClick={() => setEditingDispatchId(assignment._id)}
                         >
                           Edit

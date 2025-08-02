@@ -439,6 +439,7 @@ const Products = ({ url }) => {
                     <div className="form-check form-switch">
                       <input
                         className="form-check-input"
+                        title="Change Status"
                         type="checkbox"
                         role="switch"
                         id="switchCheckChecked"
@@ -451,6 +452,7 @@ const Products = ({ url }) => {
                       <>
                         <button
                           className="prod-btn"
+                          title="Save"
                           onClick={() => handleSave(product._id)}
                         >
                           <svg
@@ -463,7 +465,7 @@ const Products = ({ url }) => {
                             <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q8 0 15 1.5t14 4.5l-74 74H200v560h560v-266l80-80v346q0 33-23.5 56.5T760-120H200Zm261-160L235-506l56-56 170 170 367-367 57 55-424 424Z" />
                           </svg>
                         </button>
-                        <button className="prod-btn" onClick={handleCancelEdit}>
+                        <button className="prod-btn" title="Cancel" onClick={handleCancelEdit}>
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             height="24px"
@@ -479,6 +481,7 @@ const Products = ({ url }) => {
                       <>
                         <button
                           className="prod-btn"
+                          title="Edit"
                           onClick={() => handleEdit(product)}
                         >
                           <svg
@@ -493,6 +496,7 @@ const Products = ({ url }) => {
                         </button>
                         <button
                           className="btn btn-secondary"
+                          title="Assign"
                           onClick={() => handleOpenAssign(product)}
                         >
                           Assign

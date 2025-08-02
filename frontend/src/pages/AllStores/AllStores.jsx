@@ -107,8 +107,8 @@ const AllStores = ({ url }) => {
       return;
     }
 
-    if(passwordData.password.length < 8){
-      toast.warning("New password must be at least 8 characters long.")
+    if (passwordData.password.length < 8) {
+      toast.warning("New password must be at least 8 characters long.");
     }
 
     try {
@@ -174,9 +174,9 @@ const AllStores = ({ url }) => {
             </tr>
           </thead>
           <tbody className="table-group-divider">
-            {stores.map((store,idx) => (
+            {stores.map((store, idx) => (
               <tr key={store._id}>
-                <th>{idx+1}.</th>
+                <th>{idx + 1}.</th>
                 <th>
                   {editingStoreId === store._id ? (
                     <input
@@ -289,6 +289,7 @@ const AllStores = ({ url }) => {
                         className="form-check-input"
                         type="checkbox"
                         role="switch"
+                        title="Change Status"
                         checked={store.status}
                         onChange={() => handleToggleStatus(store)}
                         style={{ cursor: "pointer" }}
@@ -298,6 +299,7 @@ const AllStores = ({ url }) => {
                       <>
                         <button
                           className="str-btn"
+                          title="Save"
                           onClick={() => handleSaveEdit(store._id)}
                         >
                           <svg
@@ -310,7 +312,11 @@ const AllStores = ({ url }) => {
                             <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q8 0 15 1.5t14 4.5l-74 74H200v560h560v-266l80-80v346q0 33-23.5 56.5T760-120H200Zm261-160L235-506l56-56 170 170 367-367 57 55-424 424Z" />
                           </svg>
                         </button>
-                        <button className="str-btn" onClick={handleCancelEdit}>
+                        <button
+                          className="str-btn"
+                          title="Cancel"
+                          onClick={handleCancelEdit}
+                        >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             height="24px"

@@ -311,6 +311,7 @@ const Companies = ({ url }) => {
                     <>
                       <button
                         className="cpy-btn"
+                        title="Save"
                         onClick={() => handleSave(company._id)}
                       >
                         <svg
@@ -325,6 +326,7 @@ const Companies = ({ url }) => {
                       </button>
                       <button
                         className="cpy-btn mx-2"
+                        title="Cancel"
                         onClick={() => setEditIndex(null)}
                       >
                         <svg
@@ -341,6 +343,7 @@ const Companies = ({ url }) => {
                   ) : (
                     <button
                       className="cpy-btn"
+                      title="Edit"
                       onClick={() => handleEditClick(index)}
                     >
                       <svg
