@@ -405,7 +405,7 @@ export const getStoreWiseBillStats = async (req, res) => {
         matchStage.date = { ...matchStage.date, $lte: to };
       }
     } else {
-      // Default: current month in IST
+      // Default: current month in IST time
       const nowUTC = new Date();
       const nowIST = new Date(nowUTC.getTime() + IST_OFFSET);
 
