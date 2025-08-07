@@ -282,6 +282,7 @@ const AllStores = ({ url }) => {
                       display: "flex",
                       gap: "10px",
                       alignItems: "center",
+                      justifyContent: "center"
                     }}
                   >
                     <div className="form-check form-switch">

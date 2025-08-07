@@ -136,16 +136,16 @@ const Requests = ({ url }) => {
                 </td>
                 <th>{req.product?.name}</th>
                 <th>{req.requestedQuantity}</th>
-                <th>{req.acceptedQuantity || "-"}</th>
+                <th>{req.status !== 3 && req.acceptedQuantity ? req.acceptedQuantity : "-"}</th>
                 <td>
                   <small>
                     Req At: {new Date(req.requestedAt).toLocaleString()}
                     <br />
-                    {req.acceptedAt &&
-                      `Acc At: ${new Date(req.acceptedAt).toLocaleString()}`}
-                    {req.rejectedAt &&
-                      `Rej At: ${new Date(req.rejectedAt).toLocaleString()}`}
-                    {/* <hr /> */}
+                    {/* {req.acceptedAt &&
+                      `Acc At: ${new Date(req.acceptedAt).toLocaleString()}`} */}
+                    {req.rejectedAt
+                      ? `Rej At: ${new Date(req.rejectedAt).toLocaleString()}`
+                      : `Acc At: ${new Date(req.acceptedAt).toLocaleString()}`}
                     <br />
                     {req.status === 0 && (
                       <span className="badge bg-warning text-dark">
@@ -153,9 +153,23 @@ const Requests = ({ url }) => {
                       </span>
                     )}
                     {req.status === 1 && (
-                      <span className="badge bg-success">Accepted</span>
+                      <>
+                        <span className="badge bg-success">Accepted</span>
+                        <span className="badge bg-warning text-dark">
+                          Dispatched
+                        </span>
+                      </>
                     )}
                     {req.status === 2 && (
+                      <>
+                        <span className="badge bg-success">Accepted</span>
+                        <span className="badge bg-info">Received</span>
+                      </>
+                    )}
+                    {req.status === 3 && (
+                      <span className="badge bg-danger">Canceled</span>
+                    )}
+                    {req.status === 4 && (
                       <span className="badge bg-danger">Rejected</span>
                     )}
                   </small>

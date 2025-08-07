@@ -5,6 +5,14 @@
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
 
+.customer th{
+  text-align: center;
+}
+
+.customer td{
+  text-align: center;
+}
+
 .customer .cpy-btn{
     border: none;
     background-color: transparent;

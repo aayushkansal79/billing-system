@@ -9,7 +9,8 @@ const ProfileSchema = new mongoose.Schema({
     CompanyZip: { type: String},
     CompanyContact: { type: String},
     CompanyGST: { type: String},
-    Extra: { type: String},
+    Thankyou: { type: String},
+    RefundNote: { type: String},
 });
 
 export default mongoose.model("Profile", ProfileSchema);

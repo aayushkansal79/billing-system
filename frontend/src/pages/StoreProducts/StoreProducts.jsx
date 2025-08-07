@@ -119,9 +119,9 @@ const StoreProducts = ({ url }) => {
               <th scope="col">Product Name</th>
               <th scope="col">Barcode</th>
               <th scope="col">Quantity</th>
-              <th scope="col">Price Before GST</th>
+              <th scope="col" className="text-end">Price Before GST</th>
               <th scope="col">GST %</th>
-              <th scope="col">Selling Price</th>
+              <th scope="col" className="text-end">Selling Price</th>
             </tr>
           </thead>
           <tbody className="table-group-divider">
@@ -131,9 +131,8 @@ const StoreProducts = ({ url }) => {
                 <th>{sp.product.name}</th>
                 <td style={{whiteSpace: "nowrap"}}>[ {sp.product.barcode} ]</td>
                 <th className="text-primary">{sp.quantity}</th>
-                <td>
-                  ₹
-                  {Number(
+                <td className="text-end">
+                  ₹ {Number(
                     sp.product.printPrice /
                       (1 + 0.01 * sp.product.gstPercentage)
                   ).toLocaleString("en-IN", {
@@ -142,9 +141,8 @@ const StoreProducts = ({ url }) => {
                   })}
                 </td>
                 <td>{sp.product.gstPercentage}%</td>
-                <th className="text-danger">
-                  ₹
-                  {Number(sp.product.printPrice).toLocaleString("en-IN", {
+                <th className="text-danger text-end">
+                  ₹ {Number(sp.product.printPrice).toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}

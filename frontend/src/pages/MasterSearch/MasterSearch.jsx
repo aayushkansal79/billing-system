@@ -14,17 +14,41 @@ const MasterSearch = ({ url }) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [loadingm, setLoadingm] = useState(false);
+  const [warn, setWarn] = useState(false);
 
   const [showRequest, setShowRequest] = useState(false);
   const [requestQty, setRequestQty] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
   const { user } = useContext(AuthContext);
+
+  const [form, setForm] = useState({
+    CompanyAddress: "",
+    CompanyState: "",
+    CompanyZip: "",
+    CompanyContact: "",
+  });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get(`${url}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data) setForm(res.data);
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleSearch = async (e) => {
     e.preventDefault();
+    setWarn(false);
     if (!query.trim()) {
       toast.error("Please enter a product name.");
       return;
@@ -35,7 +59,15 @@ const MasterSearch = ({ url }) => {
         params: { name: query.trim() },
         headers: { Authorization: `Bearer ${token}` },
       });
+      
+      if(res.data.length === 0){
+        setWarn(true);
+      }else{
+        setWarn(false);
+      }
+
       setResults(res.data);
+
     } catch (err) {
       console.error(err);
       toast.error("Error fetching search results.");
@@ -63,7 +95,6 @@ const MasterSearch = ({ url }) => {
       return;
     }
     try {
-      setLoadingm(true);
       const res = await axios.post(
         `${url}/api/product-requests/create`,
         {
@@ -85,8 +116,6 @@ const MasterSearch = ({ url }) => {
     } catch (err) {
       console.error(err);
       toast.error("Failed to send request.");
-    } finally {
-      setLoadingm(false);
     }
   };
 
@@ -125,54 +154,111 @@ const MasterSearch = ({ url }) => {
 
         <hr />
 
+        {warn && <p>No Data Found</p>}
+
         <div
           className="master-store"
           style={{ display: "flex", flexWrap: "wrap", gap: "2rem" }}
-          >
-          {results.map((item) => (
-            <div
-              className="card text-bg-light mb-2"
-              key={item.storeId + item.product.productId}
-            >
-              <div className="card-body p-2">
-                <p className="text-center fw-bold fs-6 p-0 m-0 text-secondary">
-                  {item.product.name}
-                </p>
-              </div>
-              <div className="card-header">
-                <div className="d-flex justify-content-between align-items-center">
-                  <p className="card-text">
-                    Avail Qty. - <b>{item.product.quantity}</b>
+        >
+          {results.map((item) =>
+            item.storeName === "Warehouse" ? (
+              <div
+                className="card text-bg-light mb-2"
+                style={{border: "1px solid green"}}
+                key={item.storeId + item.product.productId}
+              >
+                <div className="card-body p-2">
+                  <p className="text-center fw-bold fs-6 p-0 m-0 text-secondary">
+                    {item.product.name}
                   </p>
                 </div>
-                <hr />
-                <h5>
-                  <span className="badge rounded-pill text-bg-warning">
-                    {item.storeName}
-                  </span>
-                </h5>
-                {item.address}
-                <br />
-                <b>City -</b> {item.city}
-                <br />
-                <b>State -</b> {item.state}
-                <br />
-                <b>Zip -</b> {item.zipCode}
-                <hr />
-                <b>Contact -</b> {item.contact}
-              </div>
-              {user?.type === "store" && (
-                <div className="card-body">
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => openRequestModal(item)}
-                  >
-                    Request
-                  </button>
+
+                <div className="card-header" style={{background: "lightgreen"}}>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <p className="card-text">
+                      Avail Qty. - <b>{item.product.quantity}</b>
+                    </p>
+                  </div>
+                  <hr />
+                  <h5>
+                    <span className="badge rounded-pill text-bg-success">
+                      {item.storeName}
+                    </span>
+                  </h5>
+                  {form.CompanyAddress}
+                  <br />
+                  <b>State -</b> {form.CompanyState}
+                  <br />
+                  <b>Zip -</b> {form.CompanyZip}
+                  <br />
+                  <br />
+                  <hr />
+                  <b>Contact -</b> {form.CompanyContact}
                 </div>
-              )}
-            </div>
-          ))}
+
+                {user?.type === "store" && (
+                  <div className="card-body">
+                    <button
+                      className="btn-dis btn btn-primary"
+                    >
+                      Request
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                className="card text-bg-light mb-2"
+                style={user?.username === item.storeName ? {border: "1px solid red"} : {border: "1px solid orange"}}
+                key={item.storeId + item.product.productId}
+              >
+                <div className="card-body p-2">
+                  <p className="text-center fw-bold fs-6 p-0 m-0 text-secondary">
+                    {item.product.name}
+                  </p>
+                </div>
+
+                <div className="card-header" style={user?.username === item.storeName ? { background: "#ff00005e" } : { background: "#ffc1077d" }}>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <p className="card-text">
+                      Avail Qty. - <b>{item.product.quantity}</b>
+                    </p>
+                  </div>
+                  <hr />
+                  <h5>
+                    <span className={user?.username === item.storeName ? "badge rounded-pill text-bg-danger" : "badge rounded-pill text-bg-warning"}>
+                      {item.storeName}
+                    </span>
+                  </h5>
+                  {item.address}
+                  <br />
+                  <b>City -</b> {item.city}
+                  <br />
+                  <b>State -</b> {item.state}
+                  <br />
+                  <b>Zip -</b> {item.zipCode}
+                  <hr />
+                  <b>Contact -</b> {item.contact}
+                </div>
+
+                {user?.type === "store" && (
+                  <div className="card-body">
+                    <button
+                      className={
+                        user?.username === item.storeName
+                          ? "btn-dis btn btn-primary"
+                          : "btn btn-warning fw-bold"
+                      }
+                      onClick={() => openRequestModal(item)}
+                      disabled={user?.username === item.storeName}
+                    >
+                      Request
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
+          )}
         </div>
       </div>
 
@@ -223,8 +309,6 @@ const MasterSearch = ({ url }) => {
           </div>
         </div>
       )}
-
-      {loadingm && <Loader />}
     </>
   );
 };

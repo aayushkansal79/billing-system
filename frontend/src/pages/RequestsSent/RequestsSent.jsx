@@ -3,6 +3,8 @@ import "./RequestsSent.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Pagination from "../../components/Pagination/Pagination";
+import Loader from "../../components/Loader/Loader";
+import Swal from "sweetalert2";
 
 const RequestsSent = ({ url }) => {
   useEffect(() => {
@@ -12,6 +14,7 @@ const RequestsSent = ({ url }) => {
   const [requests, setRequests] = useState([]);
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
+  const [loading, setLoading] = useState(false);
 
   const [filters, setFilters] = useState({
     startDate: "",
@@ -55,6 +58,33 @@ const RequestsSent = ({ url }) => {
   // Handle pagination change
   const handlePageChange = (page) => {
     setFilters((prev) => ({ ...prev, page }));
+  };
+
+  const handleRecieve = async (requestId) => {
+    // setLoading(true);
+    try {
+      const confirm = await Swal.fire({
+        title: "Are you sure?",
+        text: "Requested stock will be added!",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Recieve!",
+      });
+
+      if (confirm.isConfirmed) {
+        await axios.post(
+          `${url}/api/product-requests/recieve`,
+          { requestId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success("Stock Recieved.");
+        fetchRequests();
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to recieve stock.");
+    } finally {
+      // setLoading(false);
+    }
   };
 
   return (
@@ -119,17 +149,34 @@ const RequestsSent = ({ url }) => {
                 <th>{req.product?.name}</th>
                 <th>{req.requestedQuantity}</th>
                 <th>
-                  <span className="mx-4">{req.acceptedQuantity || "-"}</span>
+                  <span className="mx-4">{req.status !== 3 && req.acceptedQuantity ? req.acceptedQuantity : "-"}</span>
+                  {req.status === 1 && (
+                    <button
+                      className="btn del-btn btn-sm"
+                      onClick={() => handleRecieve(req._id)}
+                      title="Receive"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        height="28px"
+                        viewBox="0 -960 960 960"
+                        width="28px"
+                        fill="green"
+                      >
+                        <path d="m480-320 160-160-56-56-64 62v-166h-80v166l-64-62-56 56 160 160ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h168q13-36 43.5-58t68.5-22q38 0 68.5 22t43.5 58h168q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm280-590q13 0 21.5-8.5T510-820q0-13-8.5-21.5T480-850q-13 0-21.5 8.5T450-820q0 13 8.5 21.5T480-790ZM200-200v-560 560Z" />
+                      </svg>
+                    </button>
+                  )}
                 </th>
                 <td>
                   <small>
                     Req At: {new Date(req.requestedAt).toLocaleString()}
                     <br />
-                    {req.acceptedAt &&
-                      `Acc At: ${new Date(req.acceptedAt).toLocaleString()}`}
-                    {req.rejectedAt &&
-                      `Rej At: ${new Date(req.rejectedAt).toLocaleString()}`}
-                    {/* <hr /> */}
+                    {/* {req.acceptedAt &&
+                      `Acc At: ${new Date(req.acceptedAt).toLocaleString()}`} */}
+                    {req.rejectedAt
+                      ? `Rej At: ${new Date(req.rejectedAt).toLocaleString()}`
+                      : `Acc At: ${new Date(req.acceptedAt).toLocaleString()}`}
                     <br />
                     {req.status === 0 && (
                       <span className="badge bg-warning text-dark">
@@ -137,9 +184,23 @@ const RequestsSent = ({ url }) => {
                       </span>
                     )}
                     {req.status === 1 && (
-                      <span className="badge bg-success">Accepted</span>
+                      <>
+                        <span className="badge bg-success">Accepted</span>
+                        <span className="badge bg-warning text-dark">
+                          Dispatched
+                        </span>
+                      </>
                     )}
                     {req.status === 2 && (
+                      <>
+                        <span className="badge bg-success">Accepted</span>
+                        <span className="badge bg-info">Received</span>
+                      </>
+                    )}
+                    {req.status === 3 && (
+                      <span className="badge bg-danger">Canceled</span>
+                    )}
+                    {req.status === 4 && (
                       <span className="badge bg-danger">Rejected</span>
                     )}
                   </small>
@@ -155,6 +216,8 @@ const RequestsSent = ({ url }) => {
         totalPages={totalPages}
         onPageChange={handlePageChange}
       />
+
+      {loading && <Loader />}
     </>
   );
 };

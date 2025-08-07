@@ -14,6 +14,14 @@
     /* background-color: transparent; */
 }
 
+.orders th{
+  text-align: center;
+}
+
+.orders td{
+  text-align: center;
+}
+
 @media (max-width:991px) {
     .invoice-logo{
         width: 90px;

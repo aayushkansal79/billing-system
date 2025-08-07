@@ -10,6 +10,14 @@
     background-color: transparent;
 }
 
+.transac th{
+  text-align: center;
+}
+
+.transac td{
+  text-align: center;
+}
+
 @media (max-width: 680px) {
   .transac{
     width: calc(100vw - 2rem);

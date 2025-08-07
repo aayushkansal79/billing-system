@@ -38,3 +38,11 @@
   border: none;
   background-color: transparent;
 }
+
+.orders small{
+  font-size: 12px !important;
+  >span{
+    font-size: 12px !important;
+
+  }
+}

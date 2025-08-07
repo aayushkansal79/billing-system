@@ -8,3 +8,8 @@
 .modal-m{
         --bs-modal-width: 350px;
 }
+
+.master .btn-dis{
+    opacity: 0;
+    animation: fadein 0s;
+}

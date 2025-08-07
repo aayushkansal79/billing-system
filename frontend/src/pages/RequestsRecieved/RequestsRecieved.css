@@ -18,3 +18,16 @@
 
   }
 }
+
+.requestsRecieved th{
+  text-align: center;
+}
+
+.requestsRecieved td{
+  text-align: center;
+}
+
+.requestsRecieved .del-btn {
+  border: none;
+  background-color: transparent;
+}

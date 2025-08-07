@@ -32,8 +32,8 @@ import RequestsRecieved from "./pages/RequestsRecieved/RequestsRecieved";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const url = "http://localhost:4000";
-  // const url = "https://ajjawam-backend.onrender.com";
+  // const url = "http://localhost:4000";
+  const url = "https://ajjawam-backend.onrender.com";
 
   const location = useLocation();
   const hideLayout = location.pathname === "/login";
@@ -78,7 +78,7 @@ function App() {
               <Route path="/mastersearch" element={<PrivateRoute roles={["admin", "store"]}> <MasterSearch url={url} /> </PrivateRoute>} />
               <Route path="/requests" element={<PrivateRoute roles={["admin"]}> <Requests url={url} /> </PrivateRoute>} />
               <Route path="/requests-sent" element={<PrivateRoute roles={["store"]}> <RequestsSent url={url} /> </PrivateRoute>} />
-              <Route path="/requests-recieved" element={<PrivateRoute roles={["store"]}> <RequestsRecieved url={url} /> </PrivateRoute>} />
+              <Route path="/requests-received" element={<PrivateRoute roles={["store"]}> <RequestsRecieved url={url} /> </PrivateRoute>} />
               <Route path="/profile" element={<PrivateRoute roles={["admin"]}> <Profile url={url} /> </PrivateRoute>} />
               <Route path="/change-password" element={<PrivateRoute roles={["admin", "store"]}> <ChangePass url={url} /> </PrivateRoute>} />
             </Routes>

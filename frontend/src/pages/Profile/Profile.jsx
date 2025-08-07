@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./Profile.css";
 import { toast } from "react-toastify";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 
 const Profile = ({ url }) => {
   const [logo, setLogo] = useState(null);
@@ -22,7 +24,8 @@ const Profile = ({ url }) => {
     CompanyZip: "",
     CompanyContact: "",
     CompanyGST: "",
-    Extra: "",
+    Thankyou: "",
+    RefundNote: "",
   });
 
   useEffect(() => {
@@ -49,9 +52,9 @@ const Profile = ({ url }) => {
       await axios.post(`${url}/api/profile`, form, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Profile Updated!")
+      toast.success("Profile Updated!");
     } catch (err) {
-      toast.error("Failed to save profile")
+      toast.error("Failed to save profile");
     }
   };
 
@@ -70,6 +73,20 @@ const Profile = ({ url }) => {
     setImage(null);
     setPreviewUrl(null);
   };
+
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: form.RefundNote || "",
+    onUpdate: ({ editor }) => {
+      setForm((prev) => ({ ...prev, RefundNote: editor.getHTML() }));
+    },
+  });
+
+  useEffect(() => {
+    if (editor && form.RefundNote) {
+      editor.commands.setContent(form.RefundNote);
+    }
+  }, [form.RefundNote, editor]);
 
   return (
     <>
@@ -237,14 +254,28 @@ const Profile = ({ url }) => {
           />
         </div>
         <div className="col-md-3">
-          <label className="form-label">Extra Field</label>
+          <label className="form-label">Bill Thankyou Note</label>
           <input
             type="text"
             className="form-control"
-            placeholder="Enter Extra Data"
-            name="Extra"
-            value={form.Extra}
+            placeholder="Enter Thankyou Note"
+            name="Thankyou"
+            value={form.Thankyou}
             onChange={handleChange}
+          />
+        </div>
+
+        <div>
+          <label className="form-label">Bill Refund Note</label>
+          <EditorContent
+            editor={editor}
+            style={{
+              border: "1px solid #ccc",
+              borderRadius: "8px",
+              background: "white",
+              padding: "10px",
+              minHeight: "150px",
+            }}
           />
         </div>
 

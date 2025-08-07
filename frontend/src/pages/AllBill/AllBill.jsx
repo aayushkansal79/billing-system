@@ -219,7 +219,7 @@ const AllBill = ({ url }) => {
 
       <div className="allbill rounded  mb-3">
         <div className="">
-          <table className="table align-middle table-striped table-hover my-0">
+          <table className="table bill-table align-middle table-striped table-hover my-0">
             <thead className="table-info">
               <tr>
                 <th>#</th>
@@ -227,7 +227,7 @@ const AllBill = ({ url }) => {
                 <th>Name</th>
                 <th>Mobile No.</th>
                 {user?.type === "admin" && <th>Store</th>}
-                <th>Total Amount (₹)</th>
+                <th className="text-end">Total Amount (₹)</th>
                 <th>Payment Status</th>
                 <th>Invoice</th>
                 <th>Date & Time</th>
@@ -249,7 +249,7 @@ const AllBill = ({ url }) => {
                       </h5>
                     </td>
                   )}
-                  <th className="text-danger">
+                  <th className="text-danger text-end">
                     ₹{" "}
                     {Number(bill.totalAmount).toLocaleString("en-IN", {
                       minimumFractionDigits: 2,

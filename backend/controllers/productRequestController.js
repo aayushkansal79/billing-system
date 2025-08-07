@@ -235,79 +235,147 @@ export const getProductRequestsRecieved = async (req, res) => {
     }
 };
 
+// Accept a request and deduct stock from supplying store
 export const acceptProductRequest = async (req, res) => {
-    try {
-        const { requestId, acceptedQuantity } = req.body;
-        const storeId = req.store.id;
+  try {
+    const { requestId, acceptedQuantity } = req.body;
+    const storeId = req.store.id;
 
-        const request = await ProductRequest.findById(requestId);
-        if (!request) return res.status(404).json({ message: "Request not found" });
+    const request = await ProductRequest.findById(requestId);
+    if (!request) return res.status(404).json({ message: "Request not found" });
 
-        if (request.supplyingStore.toString() !== storeId) {
-            return res.status(403).json({ message: "Not authorized to accept this request" });
-        }
-        
-        if (acceptedQuantity > request.requestedQuantity) {
-            return res.status(403).json({ message: "Cannot assign more than requested" });
-        }
-
-        request.acceptedQuantity = acceptedQuantity;
-        request.acceptedAt = new Date();
-        request.status = 1;
-        await request.save();
-
-        // Deduct quantity from supplying store's stock
-        const storeProduct = await StoreProduct.findOne({
-            store: storeId,
-            product: request.product,
-        });
-
-        // Add quantity from to request store's stock
-        const storeProductReq = await StoreProduct.findOne({
-            store: request.requestingStore,
-            product: request.product,
-        })
-
-        if (!storeProduct || storeProduct.quantity < acceptedQuantity) {
-            return res.status(400).json({ message: "Insufficient stock in supplying store" });
-        }
-
-        storeProduct.quantity -= acceptedQuantity;
-        await storeProduct.save();
-
-        storeProductReq.quantity += acceptedQuantity;
-        await storeProductReq.save();
-
-        res.json({ message: "Request accepted and stock updated", request });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error while accepting request" });
+    if (request.supplyingStore.toString() !== storeId) {
+      return res.status(403).json({ message: "Not authorized to accept this request" });
     }
+
+    if (acceptedQuantity > request.requestedQuantity) {
+      return res.status(400).json({ message: "Cannot assign more than requested" });
+    }
+
+    const storeProduct = await StoreProduct.findOne({
+      store: storeId,
+      product: request.product,
+    });
+
+    if (!storeProduct || storeProduct.quantity < acceptedQuantity) {
+      return res.status(400).json({ message: "Insufficient stock in supplying store" });
+    }
+
+    request.acceptedQuantity = acceptedQuantity;
+    request.acceptedAt = new Date();
+    request.status = 1;
+    await request.save();
+
+    storeProduct.quantity -= acceptedQuantity;
+    await storeProduct.save();
+
+    res.json({ message: "Request accepted and stock updated", request });
+  } catch (err) {
+    console.error("acceptProductRequest error:", err);
+    res.status(500).json({ message: "Server error while accepting request" });
+  }
+};
+
+// Receive request and add stock to requesting store
+export const recieveProductRequest = async (req, res) => {
+  try {
+    const { requestId } = req.body;
+    const storeId = req.store.id;
+
+    const request = await ProductRequest.findById(requestId);
+    if (!request) return res.status(404).json({ message: "Request not found" });
+
+    if (request.requestingStore.toString() !== storeId) {
+      return res.status(403).json({ message: "Not authorized to receive this request" });
+    }
+
+    request.status = 2;
+    await request.save();
+
+    let storeProduct = await StoreProduct.findOne({
+      store: request.requestingStore,
+      product: request.product,
+    });
+
+    if (!storeProduct) {
+      // Create if it doesn't exist
+      storeProduct = new StoreProduct({
+        store: request.requestingStore,
+        product: request.product,
+        quantity: request.acceptedQuantity,
+      });
+    } else {
+      storeProduct.quantity += request.acceptedQuantity;
+    }
+
+    await storeProduct.save();
+
+    res.json({ message: "Request received and stock updated", request });
+  } catch (err) {
+    console.error("recieveProductRequest error:", err);
+    res.status(500).json({ message: "Server error while receiving request" });
+  }
+};
+
+// Cancel a request and return stock back to supplying store
+export const cancelProductRequest = async (req, res) => {
+  try {
+    const { requestId } = req.body;
+    const storeId = req.store.id;
+
+    const request = await ProductRequest.findById(requestId);
+    if (!request) return res.status(404).json({ message: "Request not found" });
+
+    if (request.supplyingStore.toString() !== storeId) {
+      return res.status(403).json({ message: "Not authorized to cancel this request" });
+    }
+
+    const storeProduct = await StoreProduct.findOne({
+      store: storeId,
+      product: request.product,
+    });
+
+    if (!storeProduct) {
+      return res.status(400).json({ message: "Supplying store product not found" });
+    }
+
+    storeProduct.quantity += request.acceptedQuantity;
+    await storeProduct.save();
+
+    request.rejectedAt = new Date();
+    request.status = 3;
+    await request.save();
+
+    res.json({ message: "Request canceled and stock restored", request });
+  } catch (err) {
+    console.error("cancelProductRequest error:", err);
+    res.status(500).json({ message: "Server error while canceling request" });
+  }
 };
 
 // Reject a product request
 export const rejectProductRequest = async (req, res) => {
   try {
     const { requestId } = req.body;
+    const storeId = req.store.id;
+
     if (!requestId) return res.status(400).json({ message: "Request ID is required." });
 
     const request = await ProductRequest.findById(requestId);
     if (!request) return res.status(404).json({ message: "Request not found." });
 
-    // Authorization: Only the supplying store or admin can reject
-    if (
-      request.supplyingStore.toString() !== req.store._id.toString()
-    ) {
-      return res.status(403).json({ message: "You are not authorized to reject this request." });
+    if (request.supplyingStore.toString() !== storeId) {
+      return res.status(403).json({ message: "Not authorized to reject this request." });
     }
 
     request.rejectedAt = new Date();
-    request.status = 2;
+    request.status = 4;
     await request.save();
 
     res.json({ message: "Request rejected successfully." });
   } catch (err) {
-    console.error(err);
+    console.error("rejectProductRequest error:", err);
     res.status(500).json({ message: "Server error rejecting request." });
   }
 };
+

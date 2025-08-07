@@ -60,13 +60,15 @@ Hide button when printing
   margin-bottom: 20px;
 } */
 
-.refund-note{
+.refund-note p{
   font-size: 12px !important;
+  margin: 0;
 }
 
 /* .bill-foot td{
   width: 25%;
 } */
+
 
 @media print {
   .no-print {

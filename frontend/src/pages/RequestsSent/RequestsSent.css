@@ -17,3 +17,16 @@
     font-size: 12px !important;
   }
 }
+
+.requestsSent th{
+  text-align: center;
+}
+
+.requestsSent td{
+  text-align: center;
+}
+
+.requestsSent .del-btn {
+  border: none;
+  background-color: transparent;
+}

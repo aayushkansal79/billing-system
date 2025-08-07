@@ -406,11 +406,11 @@ const Order = ({ url }) => {
             <tr>
               <th>#</th>
               <th>Purchase ID</th>
-              <th>Amount</th>
               <th>Vendor Name</th>
               <th>City</th>
               <th>Contact</th>
               <th>GST No.</th>
+              <th className="text-end">Amount</th>
               <th>Invoice</th>
               <th>Tags</th>
               <th>Date & Time</th>
@@ -424,17 +424,17 @@ const Order = ({ url }) => {
                   <b>Invoice No. -</b> {purchase.invoiceNumber || "N/A"} <br />
                   <b>Order No. -</b> {purchase.orderNumber || "N/A"}
                 </td>
-                <th className="text-danger">
+                <td>{purchase.company?.name}</td>
+                <td>{purchase.company?.city}</td>
+                <td>{purchase.company?.contactPhone}</td>
+                <td>{purchase.company?.gstNumber}</td>
+                <th className="text-danger text-end">
                   {/* ₹ {purchase.totalPriceAfterDiscount || 0} */}₹{" "}
                   {Number(purchase.totalPriceAfterDiscount).toLocaleString(
                     "en-IN",
                     { minimumFractionDigits: 2, maximumFractionDigits: 2 }
                   )}
                 </th>
-                <td>{purchase.company?.name}</td>
-                <td>{purchase.company?.city}</td>
-                <td>{purchase.company?.contactPhone}</td>
-                <td>{purchase.company?.gstNumber}</td>
                 <td>
                   <button
                     type="button"

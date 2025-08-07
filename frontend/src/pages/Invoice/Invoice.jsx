@@ -38,7 +38,8 @@ const Invoice = (
     CompanyZip: "",
     CompanyContact: "",
     CompanyGST: "",
-    Extra: "",
+    Thankyou: "",
+    RefundNote: "",
   });
 
   const [data, setData] = useState();
@@ -548,7 +549,7 @@ const Invoice = (
 
       {/* <hr /> */}
       <div className="d-flex justify-content-between align-items-center">
-        <p>Thank you for shopping at Ajjawam! </p>
+        <p>{form.Thankyou}</p>
         <div className="text-end">
           <Barcode
             value={invoiceNumber}
@@ -562,14 +563,7 @@ const Invoice = (
       </div>
       <div>
         <b>Refund Note: </b>
-        <div className="refund-note">
-          Returns/Exchanges within 7 days of purchase only. <br />
-          Color differences due to lighting are not valid for return. <br />
-          Saree must be unused, unwashed, and with original tags. No returns on
-          stitched, altered, or discounted sarees. <br />
-          Invoice is required for all returns/exchanges. Refunds will be made
-          via original payment method or store credit. <br />
-        </div>
+        <div className="refund-note" dangerouslySetInnerHTML={{ __html: form.RefundNote }} />
       </div>
     </div>
   );

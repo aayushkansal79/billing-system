@@ -133,13 +133,13 @@ const CustomerTransactions = ({ url }) => {
                 <tr>
                   <th>#</th>
                   <th>Invoice No</th>
-                  <th>Bill Amount</th>
-                  <th>Paid Amount</th>
+                  <th className="text-end">Bill Amount</th>
+                  <th className="text-end">Paid Amount</th>
                   <th>Used Coins</th>
-                  <th>Total Paid</th>
-                  <th>Wallet</th>
+                  <th className="text-end">Total Paid</th>
+                  <th className="text-end">Wallet</th>
                   <th>Payment Type</th>
-                  <th>Generated Coins</th>
+                  <th>New Coins</th>
                   <th>Date & Time</th>
                 </tr>
               </thead>
@@ -150,7 +150,7 @@ const CustomerTransactions = ({ url }) => {
                     {t.invoiceNo && t.billAmount ? (
                       <>
                         <th>{t.invoiceNo}</th>
-                        <th>
+                        <th className="text-end">
                           ₹{" "}
                           {Number(t.billAmount).toLocaleString("en-IN", {
                             minimumFractionDigits: 2,
@@ -161,11 +161,11 @@ const CustomerTransactions = ({ url }) => {
                     ) : (
                       <>
                         <th>--</th>
-                        <th>--</th>
+                        <th className="text-end">--</th>
                       </>
                     )}
 
-                    <th className="text-primary">
+                    <th className="text-primary text-end">
                       {t.paymentMethods.length
                         ? t.paymentMethods
                             .map(
@@ -179,7 +179,7 @@ const CustomerTransactions = ({ url }) => {
                         : "0.00"}
                     </th>
                     <td>
-                      <div className="d-flex align-items-center p-2 rounded">
+                      <div className="d-flex align-items-center p-2 rounded justify-content-end">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           height="20px"
@@ -193,20 +193,20 @@ const CustomerTransactions = ({ url }) => {
                         <b className="m-0">{t.usedCoins || 0}</b>
                       </div>
                     </td>
-                    <th className="text-success">
+                    <th className="text-success text-end">
                       ₹{" "}
                       {Number(t.paidAmount + (t.usedCoins || 0)).toLocaleString(
                         "en-IN",
                         { minimumFractionDigits: 2, maximumFractionDigits: 2 }
                       )}
                     </th>
-                    <th className="text-danger">₹ {t.wallet?.toFixed(2)}</th>
+                    <th className="text-danger text-end">₹ {t.wallet?.toFixed(2)}</th>
                     <td>
                       {t.paymentMethods.map((m) => m.method).join(" + ") ||
                         "Unpaid"}
                     </td>
                     <td>
-                      <div className="d-flex align-items-center p-2 rounded">
+                      <div className="d-flex align-items-center p-2 rounded justify-content-end">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           height="20px"

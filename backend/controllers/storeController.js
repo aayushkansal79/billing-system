@@ -18,8 +18,16 @@ export const registerStore = async (req, res) => {
             return res.status(400).send({ message: "All required fields must be filled." });
         }
 
-        if (contactNumber.length !== 10) {
+        if (password.length < 8) {
+            return res.status(400).json({ message: "Passward length must be greater than 8" });
+        }
+
+        if (!/^\d{10}$/.test(contactNumber)) {
             return res.status(400).json({ message: "Invalid contact number" });
+        }
+        
+        if (!/^\d{6}$/.test(zipCode)) {
+            return res.status(400).json({ message: "Invalid zip code" });
         }
 
         const storeExists = await Store.findOne({ username });

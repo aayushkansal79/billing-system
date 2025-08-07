@@ -10,6 +10,14 @@
     background-color: transparent;
 }
 
+.company th{
+  text-align: center;
+}
+
+.company td{
+  text-align: center;
+}
+
 @media (max-width: 680px) {
   .company{
     width: calc(100vw - 2rem);

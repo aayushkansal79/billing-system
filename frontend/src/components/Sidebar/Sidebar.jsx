@@ -200,7 +200,7 @@ const Sidebar = ({ sidebarOpen }) => {
                 <p>Products List</p>
               </NavLink>
             )}
-            
+
             {user?.type === "store" && (
               <NavLink
                 to="/store-products"
@@ -442,34 +442,14 @@ const Sidebar = ({ sidebarOpen }) => {
           </NavLink>
         )}
 
-        {user?.type === "store" && (
+        {user?.type === "store" ? (
           <>
-            <NavLink
-              to="/requests-sent"
+            <div
+              onClick={() => toggleMenu("request")}
               className={
                 sidebarOpen ? "side-item" : "side-item side-item-active"
               }
-              title="Requests Sent"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                height="20px"
-                viewBox="0 -960 960 960"
-                width="24px"
-                fill="#000000"
-              >
-                <path d="M440-400v-166l-64 64-56-58 160-160 160 160-56 58-64-64v166h-80ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-120H640q-30 38-71.5 59T480-240q-47 0-88.5-21T320-320H200v120Zm280-120q38 0 69-22t43-58h168v-360H200v360h168q12 36 43 58t69 22ZM200-200h560-560Z" />
-              </svg>
-              {/* <div class="vr"></div> */}
-              <p>Requests Sent</p>
-            </NavLink>
-
-            <NavLink
-              to="/requests-recieved"
-              className={
-                sidebarOpen ? "side-item" : "side-item side-item-active"
-              }
-              title="Requests Recieved"
+              title="Requests"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -481,9 +461,60 @@ const Sidebar = ({ sidebarOpen }) => {
                 <path d="M80-560q0-100 44.5-183.5T244-882l47 64q-60 44-95.5 111T160-560H80Zm720 0q0-80-35.5-147T669-818l47-64q75 55 119.5 138.5T880-560h-80ZM160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z" />
               </svg>
               {/* <div class="vr"></div> */}
-              <p>Requests Recieved</p>
-            </NavLink>
+              <p>Requests</p>
+              <span className={sidebarOpen ? "arrow" : "arrow arrow-active"}>
+                {openMenu === "request" ? "▾" : "▸"}
+              </span>
+            </div>
+
+            {openMenu === "request" && (
+              <>
+                <NavLink
+                  to="/requests-sent"
+                  className={`side-item menu-item ${
+                    sidebarOpen ? "" : "side-item-active menu-item-active"
+                  }`}
+                  style={{ paddingLeft: "30px" }}
+                  title="Requests Sent"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="20px"
+                    viewBox="0 -960 960 960"
+                    width="24px"
+                    fill="#000000"
+                  >
+                    <path d="M440-400v-166l-64 64-56-58 160-160 160 160-56 58-64-64v166h-80ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-120H640q-30 38-71.5 59T480-240q-47 0-88.5-21T320-320H200v120Zm280-120q38 0 69-22t43-58h168v-360H200v360h168q12 36 43 58t69 22ZM200-200h560-560Z" />
+                  </svg>
+                  {/* <div class="vr"></div> */}
+                  <p>Sent</p>
+                </NavLink>
+
+                <NavLink
+                  to="/requests-received"
+                  className={`side-item menu-item ${
+                    sidebarOpen ? "" : "side-item-active menu-item-active"
+                  }`}
+                  style={{ paddingLeft: "30px" }}
+                  title="Requests Received"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="20px"
+                    viewBox="0 -960 960 960"
+                    width="24px"
+                    fill="#1f1f1f"
+                  >
+                    <path d="M80-560q0-100 44.5-183.5T244-882l47 64q-60 44-95.5 111T160-560H80Zm720 0q0-80-35.5-147T669-818l47-64q75 55 119.5 138.5T880-560h-80ZM160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z" />
+                  </svg>
+                  {/* <div class="vr"></div> */}
+                  <p>Received</p>
+                </NavLink>
+              </>
+            )}
           </>
+        ) : (
+          ""
         )}
       </nav>
     </aside>

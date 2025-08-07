@@ -239,11 +239,11 @@ const Customer = ({ url }) => {
               <th scope="col">Mobile No.</th>
               <th scope="col">State</th>
               <th scope="col">GST</th>
-              <th scope="col">Total Amt</th>
-              <th scope="col">Paid Amt</th>
-              <th scope="col">Pending Amt</th>
-              <th scope="col">Unused Coins</th>
-              <th scope="col">Used Coins</th>
+              <th scope="col" className="text-end">Total Amt</th>
+              <th scope="col" className="text-end">Paid Amt</th>
+              <th scope="col" className="text-end">Pending Amt</th>
+              <th scope="col" className="text-end">Unused Coins</th>
+              <th scope="col" className="text-end">Used Coins</th>
               <th scope="col">Date & Time</th>
               <th scope="col">Actions</th>
             </tr>
@@ -260,21 +260,21 @@ const Customer = ({ url }) => {
                 <td>{customer.mobile}</td>
                 <td>{customer.state}</td>
                 <td>{customer.gst || "N/A"}</td>
-                <th className="text-primary">
+                <th className="text-primary text-end">
                   ₹{" "}
                   {Number(customer.totalAmount).toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
                 </th>
-                <th className="text-success">
+                <th className="text-success text-end">
                   ₹{" "}
                   {Number(customer.paidAmount).toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
                 </th>
-                <th className="text-danger">
+                <th className="text-danger text-end">
                   ₹{" "}
                   {Number(customer.pendingAmount).toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
@@ -282,7 +282,7 @@ const Customer = ({ url }) => {
                   })}
                 </th>
                 <td>
-                  <div className="d-flex align-items-center p-2 rounded">
+                  <div className="d-flex align-items-center p-2 rounded justify-content-end">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       height="20px"
@@ -297,7 +297,7 @@ const Customer = ({ url }) => {
                   </div>
                 </td>
                 <td>
-                  <div className="d-flex align-items-center p-2 rounded">
+                  <div className="d-flex align-items-center p-2 rounded justify-content-end">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       height="20px"
@@ -321,7 +321,7 @@ const Customer = ({ url }) => {
                     }}
                     title="Pending Payments"
                   >
-                    Pending Bills
+                    Pay Pending Bills
                   </button>
                 </td>
               </tr>

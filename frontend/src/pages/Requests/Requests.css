@@ -11,6 +11,14 @@
   }
 }
 
+.requests th{
+  text-align: center;
+}
+
+.requests td{
+  text-align: center;
+}
+
 .requests small{
   font-size: 12px !important;
   >span{

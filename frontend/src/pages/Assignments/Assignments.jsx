@@ -227,7 +227,13 @@ const Assignments = ({ url }) => {
       toast.success("Dispatch time updated");
       setAssignments((prev) =>
         prev.map((a) =>
-          a._id === id ? { ...a, dispatchDateTime: datetimeValue, assignStatus: "Dispatched" } : a
+          a._id === id
+            ? {
+                ...a,
+                dispatchDateTime: datetimeValue,
+                assignStatus: "Dispatched",
+              }
+            : a
         )
       );
     } catch (err) {
@@ -455,7 +461,7 @@ const Assignments = ({ url }) => {
                 </>
               )}
               <th>Total Quantity</th>
-              <th>Dispatch Date & Time</th>
+              <th>Dispatch/Cancel Date & Time</th>
               <th>Status</th>
               <th>Assignment</th>
               <th>Date & Time</th>
@@ -491,7 +497,8 @@ const Assignments = ({ url }) => {
                   )}
                 </th>
                 {user?.type === "admin" &&
-                assignment.assignStatus === "Process" ? (
+                (assignment.assignStatus === "Process" ||
+                  assignment.assignStatus === "Dispatched") ? (
                   <td>
                     {editingDispatchId === assignment._id ? (
                       <>
@@ -559,26 +566,28 @@ const Assignments = ({ url }) => {
                   <td>N/A</td>
                 )}
                 <th>
-                  {assignment.assignStatus === "Process" && (
-                    <span className="badge bg-danger">
-                      {assignment.assignStatus}
-                    </span>
-                  )}
-                  {assignment.assignStatus === "Dispatched" && (
-                    <span className="badge bg-warning text-dark">
-                      {assignment.assignStatus}
-                    </span>
-                  )}
-                  {assignment.assignStatus === "Delivered" && (
-                    <span className="badge bg-success">
-                      {assignment.assignStatus}
-                    </span>
-                  )}
-                  {assignment.assignStatus === "Canceled" && (
-                    <span className="badge bg-danger">
-                      {assignment.assignStatus}
-                    </span>
-                  )}
+                  <small>
+                    {assignment.assignStatus === "Process" && (
+                      <span className="badge bg-info">
+                        {assignment.assignStatus}
+                      </span>
+                    )}
+                    {assignment.assignStatus === "Dispatched" && (
+                      <span className="badge bg-warning text-dark">
+                        {assignment.assignStatus}
+                      </span>
+                    )}
+                    {assignment.assignStatus === "Delivered" && (
+                      <span className="badge bg-success">
+                        {assignment.assignStatus}
+                      </span>
+                    )}
+                    {assignment.assignStatus === "Canceled" && (
+                      <span className="badge bg-danger">
+                        {assignment.assignStatus}
+                      </span>
+                    )}
+                  </small>
                 </th>
                 <td>
                   <button
@@ -613,7 +622,7 @@ const Assignments = ({ url }) => {
                       "--"
                     )
                   ) : assignment.assignStatus === "Dispatched" ? (
-                    <div className="d-flex">
+                    <div className="d-flex justify-content-center">
                       <button
                         className="del-btn"
                         title="Recieve"

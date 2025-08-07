@@ -267,8 +267,8 @@ const Dashboard = ({ url }) => {
             </div>
           </div>
           {storeData.map((store) => (
-            <div className="col-4" key={store.storeId}>
-              <div className="card h-100" style={{ width: "270px" }}>
+            <div className="col-12 col-sm-6 col-md-4" key={store.storeId}>
+              <div className="card h-100 w-100">
                 <div className="card-header text-center">
                   <h2 className="my-0 mx-4">{store.storeName}</h2>
                   {!(filters.startDate || filters.endDate) && <p className="m-0">{month}</p>}

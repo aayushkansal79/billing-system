@@ -16,6 +16,14 @@
   }
 }
 
+.all-stores th{
+  text-align: center;
+}
+
+.all-stores td{
+  text-align: center;
+}
+
 .all-stores .modal-overlay {
   position: fixed;
   top: 0;

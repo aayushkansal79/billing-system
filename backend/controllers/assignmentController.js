@@ -191,10 +191,11 @@ export const cancelAssignment = async (req, res) => {
     const { id } = req.params;
 
     const assignment = await Assignment.findById(id);
-    if (!assignment || assignment.assignStatus !== "Process") {
+
+    if (!assignment) {
       return res.status(400).json({ error: "Assignment not found or already processed" });
     }
-
+   
     // Rollback assigned quantities
     for (const item of assignment.products) {
       const { productId, assignQuantity } = item;
@@ -208,6 +209,7 @@ export const cancelAssignment = async (req, res) => {
 
     assignment.canceledBy = req.store._id;
     assignment.assignStatus = "Canceled";
+    assignment.dispatchDateTime = new Date();
     await assignment.save();
 
     res.status(200).json({ message: "Assignment canceled and stock restored." });
