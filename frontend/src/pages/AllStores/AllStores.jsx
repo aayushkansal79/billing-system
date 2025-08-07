@@ -160,7 +160,7 @@ const AllStores = ({ url }) => {
       <p className="bread">All Stores</p>
       <div className="all-stores rounded mb-3">
         <table className="table align-middle table-striped table-hover my-0">
-          <thead className="table-danger">
+          <thead className="table-primary">
             <tr>
               <th>#</th>
               <th scope="col">Username</th>

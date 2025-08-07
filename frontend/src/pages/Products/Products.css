@@ -34,10 +34,12 @@
 
 .products th{
   text-align: center;
+  white-space: nowrap;
 }
 
 .products td{
   text-align: center;
+  white-space: nowrap;
 }
 
 @media (max-width: 680px) {

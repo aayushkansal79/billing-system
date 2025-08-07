@@ -1,27 +1,27 @@
-.company{
+.out{
     padding: 1rem;
-    margin: 1rem 0.1rem;
     background-color: #f8f9fa;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    /* overflow-x: auto; */
 }
 
-.company .cpy-btn{
+.out .prod-btn{
     border: none;
     background-color: transparent;
 }
 
-.company th{
+.out th{
   text-align: center;
   white-space: nowrap;
 }
 
-.company td{
+.out td{
   text-align: center;
   white-space: nowrap;
 }
 
 @media (max-width: 680px) {
-  .company{
+  .out{
     width: calc(100vw - 2rem);
     overflow-x: auto;
   }

@@ -77,15 +77,20 @@ export const getProductRequests = async (req, res) => {
 
     // IST time zone filtering on requestedAt
     if (startDate || endDate) {
-      const istOffset = 5.5 * 60 * 60000;
 
       filter.requestedAt = {};
+
       if (startDate) {
-        const istStart = new Date(new Date(startDate).getTime() - istOffset);
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0); // Set to midnight IST
+        const istStart = new Date(start.getTime());
         filter.requestedAt.$gte = istStart;
       }
+
       if (endDate) {
-        const istEnd = new Date(new Date(endDate).getTime() - istOffset + 24 * 60 * 60 * 1000 - 1);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999); // End of day IST
+        const istEnd = new Date(end.getTime());
         filter.requestedAt.$lte = istEnd;
       }
     }
@@ -139,19 +144,23 @@ export const getProductRequestsSent = async (req, res) => {
 
         // IST time zone filtering on requestedAt
         if (startDate || endDate) {
-        const istOffset = 5.5 * 60 * 60000;
 
-        filter.requestedAt = {};
-        if (startDate) {
-            const istStart = new Date(new Date(startDate).getTime() - istOffset);
+          filter.requestedAt = {};
+
+          if (startDate) {
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0); // Set to midnight IST
+            const istStart = new Date(start.getTime());
             filter.requestedAt.$gte = istStart;
-        }
-        if (endDate) {
-            const istEnd = new Date(new Date(endDate).getTime() - istOffset + 24 * 60 * 60 * 1000 - 1);
-            filter.requestedAt.$lte = istEnd;
-        }
-        }
+          }
 
+          if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999); // End of day IST
+            const istEnd = new Date(end.getTime());
+            filter.requestedAt.$lte = istEnd;
+          }
+        }
         const total = await ProductRequest.countDocuments(filter);
 
         const requests = await ProductRequest.find(filter)
@@ -200,17 +209,22 @@ export const getProductRequestsRecieved = async (req, res) => {
 
         // IST time zone filtering on requestedAt
         if (startDate || endDate) {
-        const istOffset = 5.5 * 60 * 60000;
 
-        filter.requestedAt = {};
-        if (startDate) {
-            const istStart = new Date(new Date(startDate).getTime() - istOffset);
+          filter.requestedAt = {};
+
+          if (startDate) {
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0); // Set to midnight IST
+            const istStart = new Date(start.getTime());
             filter.requestedAt.$gte = istStart;
-        }
-        if (endDate) {
-            const istEnd = new Date(new Date(endDate).getTime() - istOffset + 24 * 60 * 60 * 1000 - 1);
+          }
+
+          if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999); // End of day IST
+            const istEnd = new Date(end.getTime());
             filter.requestedAt.$lte = istEnd;
-        }
+          }
         }
 
         const total = await ProductRequest.countDocuments(filter);

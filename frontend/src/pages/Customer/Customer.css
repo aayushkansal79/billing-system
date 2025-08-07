@@ -7,10 +7,12 @@
 
 .customer th{
   text-align: center;
+  white-space: nowrap;
 }
 
 .customer td{
   text-align: center;
+  white-space: nowrap;
 }
 
 .customer .cpy-btn{

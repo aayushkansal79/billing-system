@@ -12,10 +12,12 @@
 
 .transac th{
   text-align: center;
+  white-space: nowrap;
 }
 
 .transac td{
   text-align: center;
+  white-space: nowrap;
 }
 
 @media (max-width: 680px) {

@@ -19,10 +19,12 @@
 
 .bill-invoice td{
   align-content: center;
+  white-space: nowrap;
 }
 
 .bill-invoice th{
   align-content: center;
+  white-space: nowrap;
 }
 
 .bill-title{

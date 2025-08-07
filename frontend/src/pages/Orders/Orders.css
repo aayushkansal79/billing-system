@@ -1,36 +1,38 @@
-.orders{
-    padding: 1rem;
-    background-color: #f8f9fa;
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+.orders {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
 
-.invoice-logo{
-    width: 120px;
-    height: 120px;
+.invoice-logo {
+  width: 120px;
+  height: 120px;
 }
 
-.orders button{
-    border: 0;
-    /* background-color: transparent; */
+.orders button {
+  border: 0;
+  /* background-color: transparent; */
 }
 
-.orders th{
+.orders th {
   text-align: center;
+  white-space: nowrap;
 }
 
-.orders td{
+.orders td {
   text-align: center;
+  white-space: nowrap;
 }
 
-@media (max-width:991px) {
-    .invoice-logo{
-        width: 90px;
-        height: 90px;
-    }
+@media (max-width: 991px) {
+  .invoice-logo {
+    width: 90px;
+    height: 90px;
+  }
 }
 
 @media (max-width: 680px) {
-  .orders{
+  .orders {
     width: calc(100vw - 2rem);
     overflow-x: auto;
   }
@@ -42,6 +44,6 @@
   }
 }
 
-.search label{
+.search label {
   font-weight: 700;
 }

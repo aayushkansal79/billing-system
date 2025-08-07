@@ -21,7 +21,7 @@ const Sidebar = ({ sidebarOpen }) => {
   return (
     <aside className={sidebarOpen ? "sidebar" : "sidebar sidebar-active"}>
       <Link
-        to={user?.type === "admin" ? "/dashboard" : "/products"}
+        to={user?.type === "admin" ? "/dashboard" : "/store-products"}
         className="top"
       >
         {/* <img className="img1" src={assets.main_logo_long} alt="" /> */}
@@ -267,6 +267,27 @@ const Sidebar = ({ sidebarOpen }) => {
               </svg>
               {/* <div class="vr"></div> */}
               <p>Assignments</p>
+            </NavLink>
+
+            <NavLink
+              to="/out-of-stock"
+              className={`side-item menu-item ${
+                sidebarOpen ? "" : "side-item-active menu-item-active"
+              }`}
+              style={{ paddingLeft: "30px" }}
+              title="Out Of Stock"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="20px"
+                viewBox="0 -960 960 960"
+                width="24px"
+                fill="#000000"
+              >
+                <path d="M480-580q-17 0-28.5-11.5T440-620q0-17 11.5-28.5T480-660q17 0 28.5 11.5T520-620q0 17-11.5 28.5T480-580Zm-40-140v-200h80v200h-80ZM280-80q-33 0-56.5-23.5T200-160q0-33 23.5-56.5T280-240q33 0 56.5 23.5T360-160q0 33-23.5 56.5T280-80Zm400 0q-33 0-56.5-23.5T600-160q0-33 23.5-56.5T680-240q33 0 56.5 23.5T760-160q0 33-23.5 56.5T680-80ZM40-800v-80h131l170 360h280l156-280h91L692-482q-11 20-29.5 31T622-440H324l-44 80h480v80H280q-45 0-68.5-39t-1.5-79l54-98-144-304H40Z" />
+              </svg>
+              {/* <div class="vr"></div> */}
+              <p>Out Of Stock</p>
             </NavLink>
           </>
         )}

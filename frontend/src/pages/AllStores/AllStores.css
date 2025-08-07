@@ -18,10 +18,12 @@
 
 .all-stores th{
   text-align: center;
+  white-space: nowrap;
 }
 
 .all-stores td{
   text-align: center;
+  white-space: nowrap;
 }
 
 .all-stores .modal-overlay {

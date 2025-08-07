@@ -86,12 +86,12 @@ const Companies = ({ url }) => {
         { ...editData },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success("Company updated successfully.");
+      toast.success("Vendor updated successfully.");
       setEditIndex(null);
       fetchAllCompanies();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update company.");
+      toast.error("Failed to update vendor.");
     } finally {
       setLoading(false);
     }

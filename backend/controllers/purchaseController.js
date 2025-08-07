@@ -143,10 +143,10 @@ export const getAllPurchases = async (req, res) => {
 
     // Date filtering (convert IST to UTC)
     const start = startDate
-      ? new Date(new Date(startDate).setHours(0, 0, 0, 0) - 5.5 * 60 * 60 * 1000)
+      ? new Date(new Date(startDate).setHours(0, 0, 0, 0))
       : null;
     const end = endDate
-      ? new Date(new Date(endDate).setHours(23, 59, 59, 999) - 5.5 * 60 * 60 * 1000)
+      ? new Date(new Date(endDate).setHours(23, 59, 59, 999))
       : null;
 
     if (start && end) {

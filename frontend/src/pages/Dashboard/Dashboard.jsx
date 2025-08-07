@@ -13,6 +13,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Link } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const Dashboard = ({ url }) => {
   useEffect(() => {
@@ -244,25 +246,32 @@ const Dashboard = ({ url }) => {
         <div className="row g-4">
           <div className="d-flex flex-wrap gap-2">
             <div className="card-con me-2">
-              <label className="form-label">Bill Data From:</label>
-              <input
+              <label className="form-label">Bill Data from:</label>
+              <DatePicker
                 className="form-control"
-                type="date"
-                value={filters.startDate}
-                onChange={(e) =>
-                  setFilters({ ...filters, startDate: e.target.value })
-                }
+                selectsStart
+                startDate={filters.startDate}
+                endDate={filters.endDate}
+                selected={filters.startDate}
+                onChange={(date) => setFilters({ ...filters, startDate: date })}
+                maxDate={filters.endDate}
+                placeholderText="Start Date"
+                dateFormat="dd/MM/yyyy"
               />
             </div>
+
             <div className="card-con">
-              <label className="form-label">Bill Data To:</label>
-              <input
+              <label className="form-label">Bill Data to:</label>
+              <DatePicker
                 className="form-control"
-                type="date"
-                value={filters.endDate}
-                onChange={(e) =>
-                  setFilters({ ...filters, endDate: e.target.value })
-                }
+                selectsEnd
+                startDate={filters.startDate}
+                endDate={filters.endDate}
+                selected={filters.endDate}
+                onChange={(date) => setFilters({ ...filters, endDate: date })}
+                minDate={filters.startDate}
+                placeholderText="End Date"
+                dateFormat="dd/MM/yyyy"
               />
             </div>
           </div>
@@ -271,7 +280,9 @@ const Dashboard = ({ url }) => {
               <div className="card h-100 w-100">
                 <div className="card-header text-center">
                   <h2 className="my-0 mx-4">{store.storeName}</h2>
-                  {!(filters.startDate || filters.endDate) && <p className="m-0">{month}</p>}
+                  {!(filters.startDate || filters.endDate) && (
+                    <p className="m-0">{month}</p>
+                  )}
                 </div>
                 <div className="card-body row text-center">
                   <div className="col-12 col-md-6 p-3 bill-amt">

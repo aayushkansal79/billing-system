@@ -43,17 +43,21 @@ export const getCustomerTransactions = async (req, res) => {
     }
 
     if (startDate || endDate) {
-      const istOffset = 5.5 * 60 * 60000;
-
       query.createdAt = {};
 
       if (startDate) {
-        const istStart = new Date(new Date(startDate).getTime() - istOffset);
+        // Convert IST midnight to UTC
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const istStart = new Date(start.getTime());
         query.createdAt.$gte = istStart;
       }
 
       if (endDate) {
-        const istEnd = new Date(new Date(endDate).getTime() - istOffset + 24 * 60 * 60 * 1000 - 1);
+        // Convert IST end of day to UTC
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        const istEnd = new Date(end.getTime());
         query.createdAt.$lte = istEnd;
       }
     }

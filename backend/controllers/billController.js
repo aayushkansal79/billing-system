@@ -200,6 +200,19 @@ export const createBill = async (req, res) => {
 //     }
 // };
 
+// Convert IST string to UTC Date
+const convertISTToUTC = (dateStr, endOfDay = false) => {
+  const istDate = new Date(dateStr);
+  if (endOfDay) {
+    istDate.setHours(23, 59, 59, 999);
+  } else {
+    istDate.setHours(0, 0, 0, 0);
+  }
+  // Subtract 5.5 hours to convert IST → UTC
+  return new Date(istDate.getTime());
+};
+
+
 export const getAllBills = async (req, res) => {
   try {
     const {
@@ -254,17 +267,25 @@ export const getAllBills = async (req, res) => {
     // Date filters (convert IST to UTC)
     if (startDate || endDate) {
       query.createdAt = {};
+
       if (startDate) {
-        const [sy, sm, sd] = startDate.split("-");
-        const istStart = new Date(Date.UTC(sy, sm - 1, sd, -5, -30));
+        // Convert IST midnight to UTC
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const istStart = new Date(start.getTime());
         query.createdAt.$gte = istStart;
       }
+
       if (endDate) {
-        const [ey, em, ed] = endDate.split("-");
-        const istEnd = new Date(Date.UTC(ey, em - 1, ed, 18, 29, 59, 999));
+        // Convert IST end of day to UTC
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        const istEnd = new Date(end.getTime());
         query.createdAt.$lte = istEnd;
       }
     }
+
+    
 
     // Pagination logic
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -395,12 +416,12 @@ export const getStoreWiseBillStats = async (req, res) => {
     if (fromDate || toDate) {
       // If custom dates are provided
       if (fromDate) {
-        const from = new Date(new Date(fromDate).getTime() + IST_OFFSET);
-        matchStage.date = { ...matchStage.date, $gte: from };
+        const from = new Date(new Date(fromDate).getTime());
+        matchStage.date = { ...matchStage.date, $gte: from }; 
       }
 
       if (toDate) {
-        const to = new Date(new Date(toDate).getTime() + IST_OFFSET);
+        const to = new Date(new Date(toDate).getTime());
         to.setHours(23, 59, 59, 999);
         matchStage.date = { ...matchStage.date, $lte: to };
       }

@@ -73,17 +73,26 @@ export const getAllAssignments = async (req, res) => {
       } else {
         istDate.setHours(0, 0, 0, 0);
       }
-      return new Date(istDate.getTime() - 5.5 * 60 * 60 * 1000);
+      return new Date(istDate.getTime());
     };
 
     // createdAt filter (IST)
     if (createdStartDate || createdEndDate) {
       query.createdAt = {};
       if (createdStartDate) {
-        query.createdAt.$gte = convertISTToUTC(createdStartDate);
+        // Convert IST midnight to UTC
+        const start = new Date(createdStartDate);
+        start.setHours(0, 0, 0, 0);
+        const istStart = new Date(start.getTime());
+        query.createdAt.$gte = istStart;
       }
+
       if (createdEndDate) {
-        query.createdAt.$lte = convertISTToUTC(createdEndDate, true);
+        // Convert IST end of day to UTC
+        const end = new Date(createdEndDate);
+        end.setHours(23, 59, 59, 999);
+        const istEnd = new Date(end.getTime());
+        query.createdAt.$lte = istEnd;
       }
     }
 
@@ -91,10 +100,19 @@ export const getAllAssignments = async (req, res) => {
     if (dispatchStartDate || dispatchEndDate) {
       query.dispatchDateTime = {};
       if (dispatchStartDate) {
-        query.dispatchDateTime.$gte = convertISTToUTC(dispatchStartDate);
+        // Convert IST midnight to UTC
+        const start = new Date(dispatchStartDate);
+        start.setHours(0, 0, 0, 0);
+        const istStart = new Date(start.getTime());
+        query.dispatchDateTime.$gte = istStart;
       }
+
       if (dispatchEndDate) {
-        query.dispatchDateTime.$lte = convertISTToUTC(dispatchEndDate, true);
+        // Convert IST end of day to UTC
+        const end = new Date(dispatchEndDate);
+        end.setHours(23, 59, 59, 999);
+        const istEnd = new Date(end.getTime());
+        query.dispatchDateTime.$lte = istEnd;
       }
     }
 

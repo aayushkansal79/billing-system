@@ -10,6 +10,8 @@ import { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import Swal from "sweetalert2";
 import Pagination from "../../components/Pagination/Pagination";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const InvoiceContent = React.forwardRef(function InvoiceContent(
   { url, assignmentNo, store, products, date, dispatchDateTime },
@@ -176,7 +178,12 @@ const Assignments = ({ url }) => {
 
         // Only add non-empty filters
         Object.entries(filters).forEach(([key, value]) => {
-          if (value !== "") params.append(key, value);
+          if (value instanceof Date) {
+            // Convert Date to ISO string
+            params.append(key, value.toISOString());
+          } else if (value) {
+            params.append(key, value);
+          }
         });
 
         const res = await axios.get(
@@ -402,52 +409,75 @@ const Assignments = ({ url }) => {
         </div>
         <div className="col-md-2">
           <label className="form-label">Assign. Create Date (from):</label>
-          <input
+          <DatePicker
             className="form-control"
-            type="date"
-            value={filters.createdStartDate}
-            onChange={(e) =>
-              setFilters({ ...filters, createdStartDate: e.target.value })
+            selectsStart
+            startDate={filters.createdStartDate}
+            endDate={filters.createdEndDate}
+            selected={filters.createdStartDate}
+            onChange={(date) =>
+              setFilters({ ...filters, createdStartDate: date })
             }
+            maxDate={filters.createdEndDate}
+            placeholderText="Assign. Start Date"
+            dateFormat="dd/MM/yyyy"
           />
         </div>
+
         <div className="col-md-2">
           <label className="form-label">Assign. Create Date (to):</label>
-          <input
+          <DatePicker
             className="form-control"
-            type="date"
-            value={filters.createdEndDate}
-            onChange={(e) =>
-              setFilters({ ...filters, createdEndDate: e.target.value })
+            selectsEnd
+            startDate={filters.createdStartDate}
+            endDate={filters.createdEndDate}
+            selected={filters.createdEndDate}
+            onChange={(date) =>
+              setFilters({ ...filters, createdEndDate: date })
             }
+            minDate={filters.createdStartDate}
+            placeholderText="Assign. End Date"
+            dateFormat="dd/MM/yyyy"
           />
         </div>
         {user?.type === "admin" && <div className="col-md-2"></div>}
+
         <div className="col-md-2">
           <label className="form-label">Dispatch Date (from):</label>
-          <input
+          <DatePicker
             className="form-control"
-            type="date"
-            value={filters.dispatchStartDate}
-            onChange={(e) =>
-              setFilters({ ...filters, dispatchStartDate: e.target.value })
+            selectsStart
+            startDate={filters.dispatchStartDate}
+            endDate={filters.dispatchEndDate}
+            selected={filters.dispatchStartDate}
+            onChange={(date) =>
+              setFilters({ ...filters, dispatchStartDate: date })
             }
+            maxDate={filters.dispatchEndDate}
+            placeholderText="Dispatch Start Date"
+            dateFormat="dd/MM/yyyy"
           />
         </div>
+
         <div className="col-md-2">
           <label className="form-label">Dispatch Date (to):</label>
-          <input
+          <DatePicker
             className="form-control"
-            type="date"
-            value={filters.dispatchEndDate}
-            onChange={(e) =>
-              setFilters({ ...filters, dispatchEndDate: e.target.value })
+            selectsEnd
+            startDate={filters.dispatchStartDate}
+            endDate={filters.dispatchEndDate}
+            selected={filters.dispatchEndDate}
+            onChange={(date) =>
+              setFilters({ ...filters, dispatchEndDate: date })
             }
+            minDate={filters.dispatchStartDate}
+            placeholderText="Dispatch End Date"
+            dateFormat="dd/MM/yyyy"
           />
         </div>
       </div>
 
-      <div className="orders rounded mb-3">
+      <div className="assignment rounded mb-3">
         <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-info">
             <tr>
@@ -460,8 +490,8 @@ const Assignments = ({ url }) => {
                   <th>Store Contact</th>
                 </>
               )}
-              <th>Total Quantity</th>
-              <th>Dispatch/Cancel Date & Time</th>
+              <th>Total Qty.</th>
+              <th>Dispatch/Cancel On</th>
               <th>Status</th>
               <th>Assignment</th>
               <th>Date & Time</th>

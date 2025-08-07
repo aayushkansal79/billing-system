@@ -1,6 +1,7 @@
 import Product from "../models/Product.js";
 import StoreProduct from "../models/StoreProduct.js";
 import Assignment from "../models/Assignment.js";
+import Store from "../models/Store.js"
 import { getNextAssignmentNumber } from "./counterController.js";
 
 export const searchProductByName = async (req, res) => {
@@ -65,15 +66,6 @@ export const createProduct = async (req, res) => {
   }
 };
 
-// export const getAllProducts = async (req, res) => {
-//     try {
-//         const products = await Product.find().sort({ createdAt: -1 }); // optional alphabetical sort
-//         res.status(200).json(products);
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).json({ message: "Server error fetching products." });
-//     }
-// };
 
 export const getAllProducts = async (req, res) => {
   try {
@@ -109,10 +101,10 @@ export const getAllProducts = async (req, res) => {
     // Date filtering (convert IST to UTC)
     if (startDate || endDate) {
       const istStart = startDate
-        ? new Date(new Date(startDate).setHours(0, 0, 0, 0) - 5.5 * 60 * 60 * 1000)
+        ? new Date(new Date(startDate).setHours(0, 0, 0, 0))
         : null;
       const istEnd = endDate
-        ? new Date(new Date(endDate).setHours(23, 59, 59, 999) - 5.5 * 60 * 60 * 1000)
+        ? new Date(new Date(endDate).setHours(23, 59, 59, 999))
         : null;
 
       query.lastPurchaseDate = {};
@@ -123,7 +115,7 @@ export const getAllProducts = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const [products, total] = await Promise.all([
-      Product.find(query).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
+      Product.find(query).sort({ lastPurchaseDate: -1 }).skip(skip).limit(parseInt(limit)),
       Product.countDocuments(query),
     ]);
 
@@ -136,6 +128,123 @@ export const getAllProducts = async (req, res) => {
   } catch (err) {
     console.error("Error fetching products:", err);
     res.status(500).json({ message: "Server error fetching products." });
+  }
+};
+
+//fetch out-of-stock products with store-wise and warehouse quantities
+export const getOutOfStockProducts = async (req, res) => {
+  try {
+    const user = req.store; // Logged-in user
+    const isWarehouse = user.type === "admin";
+
+    // Search & pagination params
+    const search = req.query.search || "";
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Fetch all stores (admins will be treated as 'warehouse')
+    const allStores = await Store.find();
+    const nonAdminStores = allStores.filter(s => s.type !== "admin");
+
+    // Sort stores so that logged-in user appears first if not admin
+    let sortedStores = [...nonAdminStores];
+    if (!isWarehouse) {
+      sortedStores.sort((a, b) => {
+        if (a._id.toString() === user._id.toString()) return -1;
+        if (b._id.toString() === user._id.toString()) return 1;
+        return 0;
+      });
+    }
+
+    // Set columns and store order
+    let columns = [];
+    let storeOrder = [];
+
+    if (isWarehouse) {
+      columns = ["Warehouse", ...sortedStores.map(s => s.username)];
+      storeOrder = ["warehouse", ...sortedStores.map(s => s._id.toString())];
+    } else {
+      columns = [...sortedStores.map(s => s.username), "Warehouse"];
+      storeOrder = [...sortedStores.map(s => s._id.toString()), "warehouse"];
+    }
+
+    // Fetch all products that match search term
+    const productFilter = {
+      name: { $regex: search, $options: "i" },
+    };
+    const allMatchingProducts = await Product.find(productFilter);
+
+    // Apply pagination on matched products
+    const paginatedProducts = allMatchingProducts.slice(skip, skip + limit);
+    const totalMatching = allMatchingProducts.length;
+
+    const outOfStockProducts = [];
+
+    for (const product of paginatedProducts) {
+      const storeProducts = await StoreProduct.find({ product: product._id });
+
+      // Group store entries by storeId
+      const storeEntries = {};
+      storeProducts.forEach(sp => {
+        storeEntries[sp.store.toString()] = {
+          quantity: sp.quantity,
+          minQuantity: sp.minQuantity || 0,
+        };
+      });
+
+      // Determine if current user is out of stock
+      let isOutOfStock = false;
+      if (isWarehouse) {
+        if (product.unit <= (product.minUnit || 0)) {
+          isOutOfStock = true;
+        }
+      } else {
+        const entry = storeEntries[user._id.toString()];
+        if (entry && entry.quantity <= entry.minQuantity) {
+          isOutOfStock = true;
+        }
+      }
+
+      if (isOutOfStock) {
+        const row = {
+          productId: product._id,
+          name: product.name,
+          barcode: product.barcode,
+          entries: {},
+        };
+
+        for (const store of sortedStores) {
+          const entry = storeEntries[store._id.toString()];
+          row.entries[store._id.toString()] = {
+            quantity: entry ? entry.quantity : 0,
+            minQuantity: entry ? entry.minQuantity : 0,
+          };
+        }
+
+        row.entries["warehouse"] = {
+          quantity: product.unit,
+          minQuantity: product.minUnit || 0,
+        };
+
+        outOfStockProducts.push(row);
+      }
+    }
+
+    return res.json({
+      columns,
+      data: outOfStockProducts,
+      storeOrder,
+      pagination: {
+        total: totalMatching,
+        currentPage: page,
+        limit,
+        totalPages: Math.ceil(totalMatching / limit),
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching out-of-stock products:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 

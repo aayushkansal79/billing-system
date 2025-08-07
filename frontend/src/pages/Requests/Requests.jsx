@@ -4,6 +4,8 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../context/AuthContext";
 import Pagination from "../../components/Pagination/Pagination";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const Requests = ({ url }) => {
   useEffect(() => {
@@ -30,7 +32,12 @@ const Requests = ({ url }) => {
       const params = new URLSearchParams();
 
       Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.append(key, value);
+        if (value instanceof Date) {
+          // Convert Date to ISO string
+          params.append(key, value.toISOString());
+        } else if (value) {
+          params.append(key, value);
+        }
       });
 
       // Always sync currentPage with filters.page
@@ -67,24 +74,31 @@ const Requests = ({ url }) => {
       <div className="search row g-2 mb-4 px-2">
         <div className="col-md-2">
           <label className="form-label">Request Date (from):</label>
-          <input
+          <DatePicker
             className="form-control"
-            type="date"
-            value={filters.startDate}
-            onChange={(e) =>
-              setFilters({ ...filters, startDate: e.target.value })
-            }
+            selectsStart
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            selected={filters.startDate}
+            onChange={(date) => setFilters({ ...filters, startDate: date })}
+            maxDate={filters.endDate}
+            placeholderText="Start Date"
+            dateFormat="dd/MM/yyyy"
           />
         </div>
+
         <div className="col-md-2">
           <label className="form-label">Request Date (to):</label>
-          <input
+          <DatePicker
             className="form-control"
-            type="date"
-            value={filters.endDate}
-            onChange={(e) =>
-              setFilters({ ...filters, endDate: e.target.value })
-            }
+            selectsEnd
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            selected={filters.endDate}
+            onChange={(date) => setFilters({ ...filters, endDate: date })}
+            minDate={filters.startDate}
+            placeholderText="End Date"
+            dateFormat="dd/MM/yyyy"
           />
         </div>
       </div>
@@ -136,7 +150,11 @@ const Requests = ({ url }) => {
                 </td>
                 <th>{req.product?.name}</th>
                 <th>{req.requestedQuantity}</th>
-                <th>{req.status !== 3 && req.acceptedQuantity ? req.acceptedQuantity : "-"}</th>
+                <th>
+                  {req.status !== 3 && req.acceptedQuantity
+                    ? req.acceptedQuantity
+                    : "-"}
+                </th>
                 <td>
                   <small>
                     Req At: {new Date(req.requestedAt).toLocaleString()}

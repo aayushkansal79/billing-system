@@ -232,7 +232,7 @@ const Customer = ({ url }) => {
 
       <div className="customer row rounded mb-3">
         <table className="table align-middle table-striped table-hover my-0">
-          <thead className="table-danger">
+          <thead className="table-success">
             <tr>
               <th>#</th>
               <th scope="col">Customer Name</th>

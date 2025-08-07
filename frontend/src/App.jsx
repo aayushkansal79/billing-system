@@ -14,6 +14,7 @@ import Products from "./pages/Products/Products";
 import StoreProducts from "./pages/StoreProducts/StoreProducts";
 import AssignProducts from "./pages/AssignProducts/AssignProducts";
 import Assignments from "./pages/Assignments/Assignments";
+import OutOfStock from "./pages/OutOfStock/OutOfStock";
 import AddStore from "./pages/AddStore/AddStore";
 import AllStores from "./pages/AllStores/AllStores";
 import LoginAsStore from "./pages/LoginAsStore/LoginAsStore";
@@ -68,6 +69,7 @@ function App() {
               <Route path="/store-products" element={<PrivateRoute roles={["store"]}> <StoreProducts url={url} /> </PrivateRoute>} />
               <Route path="/assign-products" element={<PrivateRoute roles={["admin"]}> <AssignProducts url={url} /> </PrivateRoute>} />
               <Route path="/assignments" element={<PrivateRoute roles={["admin", "store"]}> <Assignments url={url} /> </PrivateRoute>} />
+              <Route path="/out-of-stock" element={<PrivateRoute roles={["admin", "store"]}> <OutOfStock url={url} /> </PrivateRoute>} />
               <Route path="/add-store" element={<PrivateRoute roles={["admin"]}> <AddStore url={url} /> </PrivateRoute>} />
               <Route path="/all-stores" element={<PrivateRoute roles={["admin"]}> <AllStores url={url} /> </PrivateRoute>} />
               <Route path="/login-as-store" element={<PrivateRoute roles={["admin"]}> <LoginAsStore url={url} /> </PrivateRoute>} />

@@ -6,6 +6,8 @@ import { toast } from "react-toastify";
 import { AuthContext } from "../../context/AuthContext";
 import Loader from "../../components/Loader/Loader";
 import Pagination from "../../components/Pagination/Pagination";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const AssignProductModal = ({ url, product, onClose }) => {
   const [stores, setStores] = useState([]);
@@ -191,9 +193,10 @@ const Products = ({ url }) => {
     setEditData({
       name: product.name,
       unit: product.unit,
+      minUnit: product.minUnit,
       priceBeforeGst: product.priceBeforeGst,
       gstPercentage: product.gstPercentage,
-      price: product.price,
+      printPrice: product.printPrice,
       status: product.status,
     });
   };
@@ -201,6 +204,12 @@ const Products = ({ url }) => {
   const handleSave = async (id) => {
     setLoading(true);
     try {
+
+      if(editData.minUnit < 0 || editData.printPrice < 0){
+        toast.error("Enter correct values.");
+        setLoading(false);
+        return
+      }
       await axios.put(`${url}/api/product/${id}`, editData, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -303,24 +312,31 @@ const Products = ({ url }) => {
         </div>
         <div className="col-md-2">
           <label className="form-label">Product Date (from):</label>
-          <input
+          <DatePicker
             className="form-control"
-            type="date"
-            value={filters.startDate}
-            onChange={(e) =>
-              setFilters({ ...filters, startDate: e.target.value })
-            }
+            selectsStart
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            selected={filters.startDate}
+            onChange={(date) => setFilters({ ...filters, startDate: date })}
+            maxDate={filters.endDate}
+            placeholderText="Start Date"
+            dateFormat="dd/MM/yyyy"
           />
         </div>
+
         <div className="col-md-2">
           <label className="form-label">Product Date (to):</label>
-          <input
+          <DatePicker
             className="form-control"
-            type="date"
-            value={filters.endDate}
-            onChange={(e) =>
-              setFilters({ ...filters, endDate: e.target.value })
-            }
+            selectsEnd
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            selected={filters.endDate}
+            onChange={(date) => setFilters({ ...filters, endDate: date })}
+            minDate={filters.startDate}
+            placeholderText="End Date"
+            dateFormat="dd/MM/yyyy"
           />
         </div>
       </div>
@@ -333,9 +349,14 @@ const Products = ({ url }) => {
               <th scope="col">Product Name</th>
               <th scope="col">Barcode</th>
               <th scope="col">Quantity</th>
-              <th scope="col" className="text-end">Price Before GST</th>
+              <th scope="col">Minimum Stock</th>
+              <th scope="col" className="text-end">
+                Price Before GST
+              </th>
               <th scope="col">GST %</th>
-              <th scope="col" className="text-end">Selling Price</th>
+              <th scope="col" className="text-end">
+                Selling Price
+              </th>
               {/* <th scope="col">First Purchase Date</th> */}
               <th scope="col">Latest Purchase Date</th>
               <th scope="col">Actions</th>
@@ -360,9 +381,27 @@ const Products = ({ url }) => {
                     product.name
                   )}
                 </th>
-                <td style={{whiteSpace: "nowrap"}}>[ {product.barcode} ]</td>
+                <td style={{ whiteSpace: "nowrap" }}>[ {product.barcode} ]</td>
                 <th className="text-primary">{product.unit}</th>
-                <td className="text-end">
+                <th className="text-danger">
+                  {editingProductId === product._id ? (
+                    <input
+                      type="number"
+                      className="form-control w-100"
+                      value={editData.minUnit}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          minUnit: e.target.value,
+                        })
+                      }
+                      min={0}
+                    />
+                  ) : (
+                    product.minUnit
+                  )}
+                </th>
+                {/* <td className="text-end">
                   {editingProductId === product._id ? (
                     <input
                       type="number"
@@ -383,6 +422,15 @@ const Products = ({ url }) => {
                       maximumFractionDigits: 2,
                     })}`
                   )}
+                </td> */}
+                <td>
+                  ₹{" "}
+                  {Number(
+                    product.printPrice / (1 + 0.01 * product.gstPercentage)
+                  ).toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </td>
                 <td>
                   {editingProductId === product._id ? (
@@ -412,9 +460,9 @@ const Products = ({ url }) => {
                     <input
                       type="number"
                       className="form-control w-100"
-                      value={editData.price}
+                      value={editData.printPrice}
                       onChange={(e) =>
-                        setEditData({ ...editData, price: e.target.value })
+                        setEditData({ ...editData, printPrice: e.target.value })
                       }
                     />
                   ) : (
@@ -428,13 +476,13 @@ const Products = ({ url }) => {
                 <td>
                   {new Date(product.lastPurchaseDate).toLocaleDateString()}
                 </td>
-                <td> 
+                <td>
                   <div
                     style={{
                       display: "flex",
                       gap: "10px",
                       alignItems: "center",
-                      justifyContent: "center"
+                      justifyContent: "center",
                     }}
                   >
                     <div className="form-check form-switch">
@@ -466,7 +514,11 @@ const Products = ({ url }) => {
                             <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q8 0 15 1.5t14 4.5l-74 74H200v560h560v-266l80-80v346q0 33-23.5 56.5T760-120H200Zm261-160L235-506l56-56 170 170 367-367 57 55-424 424Z" />
                           </svg>
                         </button>
-                        <button className="prod-btn" title="Cancel" onClick={handleCancelEdit}>
+                        <button
+                          className="prod-btn"
+                          title="Cancel"
+                          onClick={handleCancelEdit}
+                        >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             height="24px"

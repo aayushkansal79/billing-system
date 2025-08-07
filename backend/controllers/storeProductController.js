@@ -166,7 +166,6 @@ export const getStoreProducts = async (req, res) => {
       .populate({
         path: "product",
         match: {
-          status: true,
           ...(productName && {
             name: { $regex: productName, $options: "i" },
           }),
@@ -186,7 +185,6 @@ export const getStoreProducts = async (req, res) => {
       .populate({
         path: "product",
         match: {
-          status: true,
           ...(productName && {
             name: { $regex: productName, $options: "i" },
           }),
@@ -219,7 +217,7 @@ export const getStoreProductByBarcode = async (req, res) => {
         const { barcode } = req.params;
         const storeId = req.store._id;
 
-        const product = await Product.findOne({ barcode });
+        const product = await Product.findOne({ barcode, status: true });
         if (!product) {
             return res.status(404).json({ error: "Product with this barcode not found." });
         }
@@ -264,5 +262,32 @@ export const searchStoreProducts = async (req, res) => {
   } catch (err) {
     console.error("searchStoreProducts error:", err);
     res.status(500).json({ error: "Server Error" });
+  }
+};
+
+
+export const updateMinQuantity = async (req, res) => {
+  try {
+    const { storeProductId } = req.params;
+    const { minQuantity } = req.body;
+
+    if (minQuantity < 0) {
+      return res.status(400).json({ error: "minQuantity cannot be negative" });
+    }
+
+    const updated = await StoreProduct.findByIdAndUpdate(
+      storeProductId,
+      { minQuantity },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ error: "StoreProduct not found" });
+    }
+
+    res.json(updated);
+  } catch (err) {
+    console.error("Error updating minQuantity:", err);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };

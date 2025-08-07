@@ -5,6 +5,8 @@ import { toast } from "react-toastify";
 import { AuthContext } from "../../context/AuthContext";
 import Invoice from "../Invoice/Invoice";
 import Pagination from "../../components/Pagination/Pagination";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const AllBill = ({ url }) => {
   const [bills, setBills] = useState([]);
@@ -27,8 +29,8 @@ const AllBill = ({ url }) => {
     mobileNo: "",
     storeUsername: "",
     paymentStatus: "",
-    startDate: "",
-    endDate: "",
+    startDate: null,
+    endDate: null,
     page: 1,
   });
 
@@ -40,10 +42,14 @@ const AllBill = ({ url }) => {
       const params = new URLSearchParams();
 
       Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.append(key, value);
+        if (value instanceof Date) {
+          // Convert Date to ISO string
+          params.append(key, value.toISOString());
+        } else if (value) {
+          params.append(key, value);
+        }
       });
 
-      // Always sync currentPage with filters.page
       params.set("page", filters.page || currentPage);
 
       const res = await axios.get(`${url}/api/bill/all?${params.toString()}`, {
@@ -193,6 +199,36 @@ const AllBill = ({ url }) => {
         {user?.type === "admin" && <div className="col-md-2"></div>}
         <div className="col-md-2">
           <label className="form-label">Bill Date (from):</label>
+          <DatePicker
+            className="form-control"
+            selectsStart
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            selected={filters.startDate}
+            onChange={(date) => setFilters({ ...filters, startDate: date })}
+            maxDate={filters.endDate}
+            placeholderText="Start Date"
+            dateFormat="dd/MM/yyyy"
+          />
+        </div>
+
+        <div className="col-md-2">
+          <label className="form-label">Bill Date (to):</label>
+          <DatePicker
+            className="form-control"
+            selectsEnd
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            selected={filters.endDate}
+            onChange={(date) => setFilters({ ...filters, endDate: date })}
+            minDate={filters.startDate}
+            placeholderText="End Date"
+            dateFormat="dd/MM/yyyy"
+          />
+        </div>
+
+        {/* <div className="col-md-2">
+          <label className="form-label">Bill Date (from):</label>
           <input
             className="form-control"
             type="date"
@@ -212,7 +248,7 @@ const AllBill = ({ url }) => {
               setFilters({ ...filters, endDate: e.target.value })
             }
           />
-        </div>
+        </div> */}
 
         {/* <button onClick={fetchFilteredData}>Search</button> */}
       </div>
@@ -237,7 +273,7 @@ const AllBill = ({ url }) => {
               {bills.map((bill, idx) => (
                 <tr key={bill._id}>
                   <th>{(filters.page - 1) * 10 + (idx + 1)}.</th>
-                  <th>{bill.invoiceNumber}</th>
+                  <th style={{ whiteSpace: "nowrap" }}>{bill.invoiceNumber}</th>
                   <td>{bill.customerName || "N/A"}</td>
                   <td>{bill.mobileNo || "N/A"}</td>
                   {user?.type === "admin" && (
@@ -249,7 +285,7 @@ const AllBill = ({ url }) => {
                       </h5>
                     </td>
                   )}
-                  <th className="text-danger text-end">
+                  <th className="text-danger text-end" style={{ whiteSpace: "nowrap" }}>
                     ₹{" "}
                     {Number(bill.totalAmount).toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
@@ -287,7 +323,7 @@ const AllBill = ({ url }) => {
                       👁️
                     </button>
                   </td>
-                  <td>{new Date(bill.createdAt).toLocaleString()}</td>
+                  <td style={{ whiteSpace: "nowrap" }}>{new Date(bill.createdAt).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>

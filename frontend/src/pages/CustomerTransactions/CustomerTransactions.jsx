@@ -4,6 +4,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Pagination from "../../components/Pagination/Pagination";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const CustomerTransactions = ({ url }) => {
   useEffect(() => {
@@ -34,8 +36,13 @@ const CustomerTransactions = ({ url }) => {
         const params = new URLSearchParams();
 
         Object.entries(filters).forEach(([key, value]) => {
-          if (value) params.append(key, value);
-        });
+        if (value instanceof Date) {
+          // Convert Date to ISO string
+          params.append(key, value.toISOString());
+        } else if (value) {
+          params.append(key, value);
+        }
+      });
 
         // Always sync currentPage with filters.page
         params.set("page", filters.page || currentPage);
@@ -82,24 +89,31 @@ const CustomerTransactions = ({ url }) => {
         </div>
         <div className="col-md-2">
           <label className="form-label">Date (from):</label>
-          <input
+          <DatePicker
             className="form-control"
-            type="date"
-            value={filters.startDate}
-            onChange={(e) =>
-              setFilters({ ...filters, startDate: e.target.value })
-            }
+            selectsStart
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            selected={filters.startDate}
+            onChange={(date) => setFilters({ ...filters, startDate: date })}
+            maxDate={filters.endDate}
+            placeholderText="Start Date"
+            dateFormat="dd/MM/yyyy"
           />
         </div>
+
         <div className="col-md-2">
           <label className="form-label">Date (to):</label>
-          <input
+          <DatePicker
             className="form-control"
-            type="date"
-            value={filters.endDate}
-            onChange={(e) =>
-              setFilters({ ...filters, endDate: e.target.value })
-            }
+            selectsEnd
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            selected={filters.endDate}
+            onChange={(date) => setFilters({ ...filters, endDate: date })}
+            minDate={filters.startDate}
+            placeholderText="End Date"
+            dateFormat="dd/MM/yyyy"
           />
         </div>
       </div>
@@ -170,7 +184,7 @@ const CustomerTransactions = ({ url }) => {
                         ? t.paymentMethods
                             .map(
                               (m) =>
-                                `₹${Number(m.amount).toLocaleString("en-IN", {
+                                `₹ ${Number(m.amount).toLocaleString("en-IN", {
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2,
                                 })}`
@@ -200,7 +214,9 @@ const CustomerTransactions = ({ url }) => {
                         { minimumFractionDigits: 2, maximumFractionDigits: 2 }
                       )}
                     </th>
-                    <th className="text-danger text-end">₹ {t.wallet?.toFixed(2)}</th>
+                    <th className="text-danger text-end">
+                      ₹ {t.wallet?.toFixed(2)}
+                    </th>
                     <td>
                       {t.paymentMethods.map((m) => m.method).join(" + ") ||
                         "Unpaid"}

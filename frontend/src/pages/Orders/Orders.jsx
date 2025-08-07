@@ -5,6 +5,8 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../../components/Pagination/Pagination";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const InvoiceContent = React.forwardRef(function InvoiceContent(
   { url, company, products, date },
@@ -203,8 +205,13 @@ const Order = ({ url }) => {
         const params = new URLSearchParams();
 
         Object.entries(filters).forEach(([key, value]) => {
-          if (value) params.append(key, value);
-        });
+        if (value instanceof Date) {
+          // Convert Date to ISO string
+          params.append(key, value.toISOString());
+        } else if (value) {
+          params.append(key, value);
+        }
+      });
 
         const res = await axios.get(
           `${url}/api/purchase?${params.toString()}`,
@@ -376,24 +383,34 @@ const Order = ({ url }) => {
             }
           />
         </div>
+
         <div className="col-md-2">
           <label className="form-label">Purchase Date (from):</label>
-          <input
+          <DatePicker
             className="form-control"
-            type="date"
-            value={filters.startDate}
-            onChange={(e) =>
-              setFilters({ ...filters, startDate: e.target.value })
-            }
+            selectsStart
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            selected={filters.startDate}
+            onChange={(date) => setFilters({ ...filters, startDate: date })}
+            maxDate={filters.endDate}
+            placeholderText="Start Date"
+            dateFormat="dd/MM/yyyy"
           />
         </div>
+
         <div className="col-md-2">
           <label className="form-label">Purchase Date (to):</label>
-          <input
+          <DatePicker
             className="form-control"
-            type="date"
-            value={filters.endDate}
-            onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+            selectsEnd
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            selected={filters.endDate}
+            onChange={(date) => setFilters({ ...filters, endDate: date })}
+            minDate={filters.startDate}
+            placeholderText="End Date"
+            dateFormat="dd/MM/yyyy"
           />
         </div>
 
@@ -419,7 +436,7 @@ const Order = ({ url }) => {
           <tbody className="table-group-divider">
             {purchases.map((purchase, idx) => (
               <tr key={purchase._id}>
-                <th>{(filters.page - 1)*10 + (idx+1)}.</th>
+                <th>{(filters.page - 1) * 10 + (idx + 1)}.</th>
                 <td>
                   <b>Invoice No. -</b> {purchase.invoiceNumber || "N/A"} <br />
                   <b>Order No. -</b> {purchase.orderNumber || "N/A"}
