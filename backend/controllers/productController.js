@@ -115,7 +115,7 @@ export const getAllProducts = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const [products, total] = await Promise.all([
-      Product.find(query).sort({ lastPurchaseDate: -1 }).skip(skip).limit(parseInt(limit)),
+      Product.find(query).sort({ updatedAt: -1 }).skip(skip).limit(parseInt(limit)),
       Product.countDocuments(query),
     ]);
 
@@ -239,7 +239,7 @@ export const getOutOfStockProducts = async (req, res) => {
         total: totalMatching,
         currentPage: page,
         limit,
-        totalPages: Math.ceil(totalMatching / limit),
+        totalPages: Math.ceil(outOfStockProducts.length / limit),
       },
     });
   } catch (err) {

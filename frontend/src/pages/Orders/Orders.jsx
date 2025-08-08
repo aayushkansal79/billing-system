@@ -132,7 +132,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
                   className="btn btn-outline-info btn-sm"
                   onClick={() =>
                     navigate(`/purchase-list/print-tag/${p._id}`, {
-                      state: { product: p, company, date },
+                      state: { product: p, company, date, url },
                     })
                   }
                 >
@@ -194,6 +194,7 @@ const Order = ({ url }) => {
     startDate: "",
     endDate: "",
     page: 1,
+    limit: 10,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -234,6 +235,10 @@ const Order = ({ url }) => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
     setFilters((prev) => ({ ...prev, page }));
+  };
+  
+  const handleLimitChange = (limit) => {
+    setFilters((prev) => ({ ...prev, limit }));
   };
 
   const navigate = useNavigate();
@@ -436,7 +441,7 @@ const Order = ({ url }) => {
           <tbody className="table-group-divider">
             {purchases.map((purchase, idx) => (
               <tr key={purchase._id}>
-                <th>{(filters.page - 1) * 10 + (idx + 1)}.</th>
+                <th>{(filters.page - 1) * filters.limit + (idx + 1)}.</th>
                 <td>
                   <b>Invoice No. -</b> {purchase.invoiceNumber || "N/A"} <br />
                   <b>Order No. -</b> {purchase.orderNumber || "N/A"}
@@ -527,6 +532,8 @@ const Order = ({ url }) => {
       </div>
 
       <Pagination
+        limit={filters.limit}
+        hangeLimitChange={handleLimitChange}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}

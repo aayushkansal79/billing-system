@@ -21,6 +21,7 @@ const StoreProducts = ({ url }) => {
     quantity: "",
     quantityCondition: "",
     page: 1,
+    limit: 10,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -60,6 +61,10 @@ const StoreProducts = ({ url }) => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
     setFilters((prev) => ({ ...prev, page }));
+  };
+  
+  const handleLimitChange = (limit) => {
+    setFilters((prev) => ({ ...prev, limit }));
   };
 
   const handleMinQtySave = async (storeProductId) => {
@@ -156,7 +161,7 @@ const StoreProducts = ({ url }) => {
           <tbody className="table-group-divider">
             {storeProducts.map((sp, i) => (
               <tr key={sp._id}>
-                <th>{(filters.page - 1) * 10 + (i + 1)}.</th>
+                <th>{(filters.page - 1) * filters.limit + (i + 1)}.</th>
                 <th>{sp.product.name}</th>
                 <td style={{ whiteSpace: "nowrap" }}>
                   [ {sp.product.barcode} ]
@@ -269,6 +274,8 @@ const StoreProducts = ({ url }) => {
       </div>
 
       <Pagination
+        limit={filters.limit}
+        hangeLimitChange={handleLimitChange}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}

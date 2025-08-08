@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import axios from "axios";
 import Barcode from "react-barcode";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Barcode.css";
@@ -8,9 +9,11 @@ const PrintBarcode = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
 
-  const { product, company, date } = state || {};
+  const { product, company, date, url } = state || {};
   const [count, setCount] = useState(1);
   const [loading, setLoading] = useState(true);
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
   const componentRef = useRef();
 
   const barcodeValue = product?.product?.barcode?.toString() || "";
@@ -23,6 +26,25 @@ const PrintBarcode = () => {
     setTimeout(() => {
       setLoading(false);
     }, 500);
+  }, []);
+
+  const [form, setForm] = useState({
+    tagTitle: "",
+  });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get(`${url}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data) setForm(res.data);
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+      }
+    };
+
+    fetchProfile();
   }, []);
 
   const handlePrint = () => {
@@ -126,30 +148,30 @@ const PrintBarcode = () => {
           {Array.from({ length: count }).map((_, idx) => (
             <div
               key={`barcode-${idx}`}
-              className="barcode-item d-flex flex-column align-items-center text-center m-2 p-2 border"
+              className="barcode-item d-flex flex-column align-items-center text-center m-2 p-2"
               style={{ width: "180px" }}
             >
-              <strong>AJJAWAM</strong>
+              <strong>{form.tagTitle}</strong>
               <Barcode
                 value={barcodeValue}
                 format="CODE128"
                 lineColor="#000"
                 width={2}
-                height={30}
+                height={28}
                 displayValue={false}
               />
               <div
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  fontSize: "16px",
+                  fontSize: "12px",
                 }}
               >
                 <b>
                   {barcodeValue.substring(0, 2)}-{formattedDate}-
                   {barcodeValue.slice(-3)}
                 </b>
-                <b>
+                <b className="barcode-name">
                   {company.shortName}-{product.name}
                 </b>
                 <b>₹{product.printPrice?.toFixed(2)}/-</b>

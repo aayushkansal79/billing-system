@@ -1015,7 +1015,7 @@ const Billing = ({ url, setSidebarOpen }) => {
                 )}
                 <h6 className="text-primary fw-bold">Grand Total</h6>
               </div>
-              <div className="col-md-2">
+              <div className="col-md-1 text-end">
                 {(usedCoins > 0 ||
                   customer?.pendingAmount !== 0 ||
                   (discountMethod === "flat" && discountValue > 0)) && (

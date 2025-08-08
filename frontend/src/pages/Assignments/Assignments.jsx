@@ -166,6 +166,7 @@ const Assignments = ({ url }) => {
     dispatchStartDate: "",
     dispatchEndDate: "",
     page: 1,
+    limit: 10,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -207,6 +208,10 @@ const Assignments = ({ url }) => {
 
   const handlePageChange = (page) => {
     setFilters((prev) => ({ ...prev, page }));
+  };
+  
+  const handleLimitChange = (limit) => {
+    setFilters((prev) => ({ ...prev, limit }));
   };
 
   const formatDateTimeLocal = (dateString) => {
@@ -501,7 +506,7 @@ const Assignments = ({ url }) => {
           <tbody className="table-group-divider">
             {assignments.map((assignment, idx) => (
               <tr key={assignment._id}>
-                <th>{(filters.page - 1) * 10 + (idx + 1)}.</th>
+                <th>{(filters.page - 1) * filters.limit + (idx + 1)}.</th>
                 <th>{assignment.assignmentNo}</th>
                 {user?.type === "admin" && (
                   <>
@@ -736,6 +741,8 @@ const Assignments = ({ url }) => {
       </div>
 
       <Pagination
+        limit={filters.limit}
+        hangeLimitChange={handleLimitChange}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}

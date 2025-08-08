@@ -1,28 +1,33 @@
-.out{
-    padding: 1rem;
-    background-color: #f8f9fa;
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-    /* overflow-x: auto; */
+.out {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  /* overflow-x: auto; */
 }
 
-.out .prod-btn{
-    border: none;
-    background-color: transparent;
+.out .prod-btn {
+  border: none;
+  background-color: transparent;
 }
 
-.out th{
+.out th {
   text-align: center;
-  white-space: nowrap;
 }
 
-.out td{
+.out td {
   text-align: center;
-  white-space: nowrap;
 }
 
 @media (max-width: 680px) {
-  .out{
+  .out {
     width: calc(100vw - 2rem);
     overflow-x: auto;
+  }
+  .out th {
+    white-space: nowrap;
+  }
+
+  .out td {
+    white-space: nowrap;
   }
 }

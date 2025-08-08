@@ -9,6 +9,7 @@ const ProfileSchema = new mongoose.Schema({
     CompanyZip: { type: String},
     CompanyContact: { type: String},
     CompanyGST: { type: String},
+    tagTitle: { type: String},
     Thankyou: { type: String},
     RefundNote: { type: String},
 });

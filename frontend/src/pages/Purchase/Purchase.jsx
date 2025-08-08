@@ -352,15 +352,20 @@ const Purchase = ({ url }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const isAnyFieldEmpty = Object.values(companyData).some(
-        (value) =>
-          value === null ||
-          value === undefined ||
-          value.toString().trim() === ""
+      const requiredFields = ["name", "shortName", "city"];
+
+      const isAnyRequiredFieldEmpty = requiredFields.some(
+        (field) =>
+          !companyData[field] || companyData[field].toString().trim() === ""
       );
 
-      if (isAnyFieldEmpty) {
-        toast.error("Please fill in all company details.");
+      if (isAnyRequiredFieldEmpty) {
+        toast.error("Please fill in all mandatory fields.");
+        return;
+      }
+
+      if (companyData.contactPhone && companyData.contactPhone.length !== 10) {
+        toast.error("Contact number incorrect.");
         return;
       }
 

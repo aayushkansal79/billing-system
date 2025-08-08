@@ -114,8 +114,6 @@ export const getAllCompanies = async (req, res) => {
       contactPhone,
       gstNumber,
       address,
-    //   startDate,
-    //   endDate,
       page = 1,
       limit = 10,
     } = req.query;
@@ -129,27 +127,6 @@ export const getAllCompanies = async (req, res) => {
     if (contactPhone) query.contactPhone = { $regex: contactPhone, $options: "i" };
     if (gstNumber) query.gstNumber = { $regex: gstNumber, $options: "i" };
     if (address) query.address = { $regex: address, $options: "i" };
-
-    // IST date filter (convert IST to UTC)
-    // if (startDate || endDate) {
-    //   const dateQuery = {};
-
-    //   if (startDate) {
-    //     const istStart = new Date(startDate);
-    //     istStart.setHours(0, 0, 0, 0);
-    //     const utcStart = new Date(istStart.getTime() - 5.5 * 60 * 60 * 1000);
-    //     dateQuery.$gte = utcStart;
-    //   }
-
-    //   if (endDate) {
-    //     const istEnd = new Date(endDate);
-    //     istEnd.setHours(23, 59, 59, 999);
-    //     const utcEnd = new Date(istEnd.getTime() - 5.5 * 60 * 60 * 1000);
-    //     dateQuery.$lte = utcEnd;
-    //   }
-
-    //   query.createdAt = dateQuery;
-    // }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 

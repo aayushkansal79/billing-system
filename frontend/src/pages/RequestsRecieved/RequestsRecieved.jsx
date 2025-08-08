@@ -25,6 +25,7 @@ const RequestsRecieved = ({ url }) => {
     startDate: "",
     endDate: "",
     page: 1,
+    limit: 10,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -68,6 +69,10 @@ const RequestsRecieved = ({ url }) => {
   // Handle pagination change
   const handlePageChange = (page) => {
     setFilters((prev) => ({ ...prev, page }));
+  };
+  
+  const handleLimitChange = (limit) => {
+    setFilters((prev) => ({ ...prev, limit }));
   };
 
   const handleAccept = async (requestId) => {
@@ -212,7 +217,7 @@ const RequestsRecieved = ({ url }) => {
           <tbody className="table-group-divider">
             {requests.map((req, i) => (
               <tr key={req._id}>
-                <th>{(filters.page - 1) * 10 + (i + 1)}.</th>
+                <th>{(filters.page - 1) * filters.limit + (i + 1)}.</th>
                 <td scope="row">
                   <h5>
                     <span className="badge rounded-pill text-bg-secondary">
@@ -349,6 +354,8 @@ const RequestsRecieved = ({ url }) => {
       </div>
 
       <Pagination
+        limit={filters.limit}
+        hangeLimitChange={handleLimitChange}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}

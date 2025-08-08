@@ -1,28 +1,29 @@
-.assignment{
-    padding: 1rem;
-    background-color: #f8f9fa;
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-}
-
-.assignment button{
-    border: 0;
-    background-color: transparent;
+.assignment {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
 
 .assignment th {
   text-align: center;
-  white-space: nowrap;
 }
 
 .assignment td {
   text-align: center;
-  white-space: nowrap;
 }
 
 @media (max-width: 680px) {
-  .assignment{
+  .assignment {
     width: calc(100vw - 2rem);
     overflow-x: auto;
+  }
+
+  .assignment th {
+    white-space: nowrap;
+  }
+
+  .assignment td {
+    white-space: nowrap;
   }
 }
 
@@ -37,10 +38,9 @@
   background-color: transparent;
 }
 
-.assignment small{
+.assignment small {
   font-size: 12px !important;
-  >span{
+  > span {
     font-size: 12px !important;
-
   }
 }

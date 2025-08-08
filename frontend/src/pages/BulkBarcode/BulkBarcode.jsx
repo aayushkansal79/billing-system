@@ -2,12 +2,11 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useReactToPrint } from "react-to-print";
 import Barcode from "react-barcode";
 import "./BulkBarcode.css";
 import Loader from "../../components/Loader/Loader";
 
-const PrintBarcode = ({ url }) => {
+const BulkBarcode = ({ url }) => {
   const { purchaseId } = useParams();
   const [purchase, setPurchase] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -17,6 +16,27 @@ const PrintBarcode = ({ url }) => {
     sessionStorage.getItem("token") || localStorage.getItem("token");
 
   const navigate = useNavigate();
+
+  const [form, setForm] = useState({
+    tagTitle: "",
+  });
+
+  const [value, setValue] = useState(2);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get(`${url}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data) setForm(res.data);
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   useEffect(() => {
     const fetchPurchase = async () => {
@@ -46,7 +66,7 @@ const PrintBarcode = ({ url }) => {
     const frameDoc = frame1.contentWindow.document;
 
     frameDoc.open();
-    frameDoc.write("<html><head><title>Invoice Print</title>");
+    frameDoc.write("<html><head><title>Tag Print</title>");
 
     // Clone current styles
     document
@@ -55,18 +75,38 @@ const PrintBarcode = ({ url }) => {
         frameDoc.write(style.outerHTML);
       });
 
-        frameDoc.write(`
+    frameDoc.write(`
       <style>
         @media print {
           .no-print {
-          display: none !important;
-        }
+            display: none !important;
+          }
           body {
             background: white !important;
           }
           @page {
             size: auto;
             margin: 0 10px;
+          }
+          .barcode-print-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .barcode-pair {
+            width: 100%;
+            display: flex;
+            page-break-inside: avoid;
+          }
+          .barcode-item {
+            width: 180px;
+            margin: 0.5rem;
+            padding: 0.5rem;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
           }
         }
       </style>
@@ -91,18 +131,28 @@ const PrintBarcode = ({ url }) => {
       <p className="bread">Barcodes</p>
       <div className="barcode p-3 mb-3 rounded">
         <div className="d-flex justify-content-between align-items-center">
-          <div>
-            <button
-              className="btn btn-secondary mb-3"
-              onClick={() => navigate(-1)}
+          <button
+            className="btn btn-secondary mb-3"
+            onClick={() => navigate(-1)}
+          >
+            ← Back
+          </button>
+          <div className="d-flex align-items-center">
+            <label className="form-label">Tag per row: </label>
+            <select
+              className="mx-2 p-1 rounded"
+              onChange={(e) =>
+                setValue(parseInt(e.target.value))
+              }
+              value={value}
             >
-              ← Back
-            </button>
-          </div>
-          <div>
+              <option value="1">1</option>
+              <option value="2">2</option>
+            </select>
+
             <button
               onClick={handlePrint}
-              className="btn btn-success mb-3"
+              className="btn btn-success"
               disabled={loading || !purchase?.products?.length}
             >
               Print Barcodes
@@ -112,63 +162,74 @@ const PrintBarcode = ({ url }) => {
 
         <hr />
 
-        <div
-          ref={componentRef}
-          className="barcode-print-area d-flex flex-wrap justify-content-center"
-        >
-          {purchase.products.map((product, productIdx) => {
-            if (!product.barcode) {
-              console.warn(`Product ${product.name} does not have a barcode.`);
-              return null;
+        <div ref={componentRef} className="barcode-print-area">
+          {(() => {
+            const allBarcodes = [];
+
+            purchase.products.forEach((product) => {
+              if (!product.barcode) return;
+
+              for (let i = 0; i < product.quantity; i++) {
+                allBarcodes.push({
+                  barcode: product.barcode,
+                  name: product.name,
+                  price: product.printPrice,
+                  product,
+                });
+              }
+            });
+
+            const barcodePairs = [];
+            for (let i = 0; i < allBarcodes.length; i += value) {
+              barcodePairs.push(allBarcodes.slice(i, i + value));
             }
 
-            return Array.from({ length: product.quantity }).map((_, qtyIdx) => (
-              <div
-                key={`${productIdx}-${qtyIdx}`}
-                className="barcode-item d-flex flex-column align-items-center text-center m-2 p-2 border"
-                style={{ width: "180px" }}
-              >
-                <strong>AJJAWAM</strong>
-                <Barcode
-                  value={product.barcode.toString()}
-                  format="CODE128"
-                  lineColor="#000"
-                  width={2}
-                  height={30}
-                  displayValue={false}
-                />
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    fontSize: "16px",
-                  }}
-                >
-                  <b>
-                    {product.barcode.substring(0, 2)}-
-                    {String(new Date(purchase.date).getDate()).padStart(
-                      2,
-                      "0"
-                    ) +
-                      String(new Date(purchase.date).getMonth() + 1).padStart(
-                        2,
-                        "0"
-                      ) +
-                      String(new Date(purchase.date).getFullYear())}
-                    -{product.barcode.slice(-3)}
-                  </b>
-                  <b>
-                    {purchase.company.shortName}-{product.name}
-                  </b>
-                  <b>₹{product.printPrice?.toFixed(2)}/-</b>
-                </div>
+            return barcodePairs.map((pair, index) => (
+              <div key={index} className="barcode-pair">
+                {pair.map((item, idx) => (
+                  <div key={idx} className="barcode-item">
+                    <strong>{form.tagTitle}</strong>
+                    <Barcode
+                      value={item.barcode.toString()}
+                      format="CODE128"
+                      lineColor="#000"
+                      width={2}
+                      height={28}
+                      displayValue={false}
+                    />
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        fontSize: "16px",
+                      }}
+                    >
+                      <b>
+                        {item.barcode.substring(0, 2)}-
+                        {String(new Date(purchase.date).getDate()).padStart(
+                          2,
+                          "0"
+                        ) +
+                          String(
+                            new Date(purchase.date).getMonth() + 1
+                          ).padStart(2, "0") +
+                          String(new Date(purchase.date).getFullYear())}
+                        -{item.barcode.slice(-3)}
+                      </b>
+                      <b className="barcode-name">
+                        {purchase.company.shortName}-{item.name}
+                      </b>
+                      <b>₹{item.price?.toFixed(2)}/-</b>
+                    </div>
+                  </div>
+                ))}
               </div>
             ));
-          })}
+          })()}
         </div>
       </div>
     </>
   );
 };
 
-export default PrintBarcode;
+export default BulkBarcode;

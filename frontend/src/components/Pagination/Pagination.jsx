@@ -1,7 +1,7 @@
 import React from "react";
 import "./Pagination.css";
 
-const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+const Pagination = ({ currentPage, totalPages, onPageChange, limit, hangeLimitChange }) => {
   const getPageNumbers = () => {
     const maxVisible = 5;
     const half = Math.floor(maxVisible / 2);
@@ -98,6 +98,18 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         </svg>
         {/* Last */}
       </button>
+
+      <select
+        className="form-select"
+        style={{ width: "70px" }}
+        value={limit}
+        onChange={(e) => hangeLimitChange(parseInt(e.target.value))}
+      >
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
     </div>
   );
 };

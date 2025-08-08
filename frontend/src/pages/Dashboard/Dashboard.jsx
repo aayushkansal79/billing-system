@@ -254,7 +254,7 @@ const Dashboard = ({ url }) => {
                 endDate={filters.endDate}
                 selected={filters.startDate}
                 onChange={(date) => setFilters({ ...filters, startDate: date })}
-                maxDate={filters.endDate}
+                maxDate={filters.endDate || new Date()}
                 placeholderText="Start Date"
                 dateFormat="dd/MM/yyyy"
               />
@@ -270,6 +270,7 @@ const Dashboard = ({ url }) => {
                 selected={filters.endDate}
                 onChange={(date) => setFilters({ ...filters, endDate: date })}
                 minDate={filters.startDate}
+                maxDate={new Date()}
                 placeholderText="End Date"
                 dateFormat="dd/MM/yyyy"
               />

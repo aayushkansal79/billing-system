@@ -4,6 +4,7 @@ import "./Profile.css";
 import { toast } from "react-toastify";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Loader from "../../components/Loader/Loader";
 
 const Profile = ({ url }) => {
   const [logo, setLogo] = useState(null);
@@ -14,6 +15,8 @@ const Profile = ({ url }) => {
 
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
+  
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     websiteTitle: "",
@@ -24,6 +27,7 @@ const Profile = ({ url }) => {
     CompanyZip: "",
     CompanyContact: "",
     CompanyGST: "",
+    tagTitle: "",
     Thankyou: "",
     RefundNote: "",
   });
@@ -49,12 +53,19 @@ const Profile = ({ url }) => {
 
   const handleSubmit = async () => {
     try {
+      setLoading(true);
+      if(form.tagTitle.length > 20){
+        toast.error("Tag Title length is more than 20!")
+        return
+      }
       await axios.post(`${url}/api/profile`, form, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("Profile Updated!");
     } catch (err) {
       toast.error("Failed to save profile");
+    } finally{
+      setLoading(false);
     }
   };
 
@@ -156,7 +167,7 @@ const Profile = ({ url }) => {
           )}
         </div> */}
 
-        <div className="col-md-3">
+        {/* <div className="col-md-3">
           <label className="form-label">Website Title*</label>
           <input
             type="text"
@@ -167,7 +178,7 @@ const Profile = ({ url }) => {
             onChange={handleChange}
             required
           />
-        </div>
+        </div> */}
 
         <div className="col-md-3">
           <label className="form-label">Website Address*</label>
@@ -254,7 +265,18 @@ const Profile = ({ url }) => {
           />
         </div>
         <div className="col-md-3">
-          <label className="form-label">Bill Thankyou Note</label>
+          <label className="form-label">Tag Title Name*</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter Tag Title Name"
+            name="tagTitle"
+            value={form.tagTitle}
+            onChange={handleChange}
+          />
+        </div>
+        <div className="col-md-3">
+          <label className="form-label">Bill Thankyou Note*</label>
           <input
             type="text"
             className="form-control"
@@ -266,7 +288,7 @@ const Profile = ({ url }) => {
         </div>
 
         <div>
-          <label className="form-label">Bill Refund Note</label>
+          <label className="form-label">Bill Refund Note*</label>
           <EditorContent
             editor={editor}
             style={{
@@ -289,6 +311,8 @@ const Profile = ({ url }) => {
           </button>
         </div>
       </div>
+      
+      {loading && <Loader />}
     </>
   );
 };

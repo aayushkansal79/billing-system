@@ -19,7 +19,7 @@ const AllStores = ({ url }) => {
   });
 
   useEffect(() => {
-    document.title = "All Stores | Ajjawam";
+    document.title = "Stores | Ajjawam";
   }, []);
 
   const fetchStores = async () => {

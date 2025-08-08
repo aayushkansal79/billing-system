@@ -7,12 +7,10 @@
 
 .customer th{
   text-align: center;
-  white-space: nowrap;
 }
 
 .customer td{
   text-align: center;
-  white-space: nowrap;
 }
 
 .customer .cpy-btn{
@@ -25,4 +23,11 @@
     width: calc(100vw - 2rem);
     overflow-x: auto;
   }
+  .customer th{
+  white-space: nowrap;
+}
+
+.customer td{
+  white-space: nowrap;
+}
 }

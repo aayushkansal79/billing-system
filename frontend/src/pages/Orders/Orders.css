@@ -16,12 +16,10 @@
 
 .orders th {
   text-align: center;
-  white-space: nowrap;
 }
 
 .orders td {
   text-align: center;
-  white-space: nowrap;
 }
 
 @media (max-width: 991px) {
@@ -35,6 +33,14 @@
   .orders {
     width: calc(100vw - 2rem);
     overflow-x: auto;
+  }
+
+  .orders td {
+    white-space: nowrap;
+  }
+  
+  .orders th {
+    white-space: nowrap;
   }
 }
 

@@ -9,7 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 
 const CustomerTransactions = ({ url }) => {
   useEffect(() => {
-    document.title = "Customers | Ajjawam";
+    document.title = "Transactions | Ajjawam";
   }, []);
 
   const { customerId } = useParams();
@@ -25,6 +25,7 @@ const CustomerTransactions = ({ url }) => {
     startDate: "",
     endDate: "",
     page: 1,
+    limit: 10,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,13 +37,13 @@ const CustomerTransactions = ({ url }) => {
         const params = new URLSearchParams();
 
         Object.entries(filters).forEach(([key, value]) => {
-        if (value instanceof Date) {
-          // Convert Date to ISO string
-          params.append(key, value.toISOString());
-        } else if (value) {
-          params.append(key, value);
-        }
-      });
+          if (value instanceof Date) {
+            // Convert Date to ISO string
+            params.append(key, value.toISOString());
+          } else if (value) {
+            params.append(key, value);
+          }
+        });
 
         // Always sync currentPage with filters.page
         params.set("page", filters.page || currentPage);
@@ -69,6 +70,10 @@ const CustomerTransactions = ({ url }) => {
   // Handle pagination change
   const handlePageChange = (page) => {
     setFilters((prev) => ({ ...prev, page }));
+  };
+
+  const handleLimitChange = (limit) => {
+    setFilters((prev) => ({ ...prev, limit }));
   };
 
   return (
@@ -160,7 +165,7 @@ const CustomerTransactions = ({ url }) => {
               <tbody>
                 {transactions.map((t, idx) => (
                   <tr key={idx}>
-                    <th>{(filters.page - 1) * 10 + (idx + 1)}.</th>
+                    <th>{(filters.page - 1) * filters.limit + (idx + 1)}.</th>
                     {t.invoiceNo && t.billAmount ? (
                       <>
                         <th>{t.invoiceNo}</th>
@@ -246,6 +251,8 @@ const CustomerTransactions = ({ url }) => {
       </div>
 
       <Pagination
+        limit={filters.limit}
+        hangeLimitChange={handleLimitChange}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}

@@ -34,17 +34,23 @@
 
 .products th{
   text-align: center;
-  white-space: nowrap;
 }
 
 .products td{
   text-align: center;
-  white-space: nowrap;
 }
 
 @media (max-width: 680px) {
   .products{
     width: calc(100vw - 2rem);
     overflow-x: auto;
+  }
+
+  .products td {
+    white-space: nowrap;
+  }
+
+  .products th {
+    white-space: nowrap;
   }
 }

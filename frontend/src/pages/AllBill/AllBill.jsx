@@ -15,7 +15,7 @@ const AllBill = ({ url }) => {
   const [selectedBill, setSelectedBill] = useState(null);
 
   useEffect(() => {
-    document.title = "All Bills | Ajjawam";
+    document.title = "Bills | Ajjawam";
     fetchBills();
   }, []);
 
@@ -32,6 +32,7 @@ const AllBill = ({ url }) => {
     startDate: null,
     endDate: null,
     page: 1,
+    limit: 10,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -72,6 +73,10 @@ const AllBill = ({ url }) => {
   // Handle pagination change
   const handlePageChange = (page) => {
     setFilters((prev) => ({ ...prev, page }));
+  };
+  
+  const handleLimitChange = (limit) => {
+    setFilters((prev) => ({ ...prev, limit }));
   };
 
   const openModal = (bill) => {
@@ -272,7 +277,7 @@ const AllBill = ({ url }) => {
             <tbody>
               {bills.map((bill, idx) => (
                 <tr key={bill._id}>
-                  <th>{(filters.page - 1) * 10 + (idx + 1)}.</th>
+                  <th>{(filters.page - 1) * filters.limit + (idx + 1)}.</th>
                   <th style={{ whiteSpace: "nowrap" }}>{bill.invoiceNumber}</th>
                   <td>{bill.customerName || "N/A"}</td>
                   <td>{bill.mobileNo || "N/A"}</td>
@@ -384,6 +389,8 @@ const AllBill = ({ url }) => {
       </div>
 
       <Pagination
+        limit={filters.limit}
+        hangeLimitChange={handleLimitChange}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}

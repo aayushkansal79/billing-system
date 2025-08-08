@@ -4,10 +4,15 @@ import axios from "axios";
 import Pagination from "../../components/Pagination/Pagination";
 
 const OutOfStock = ({ url }) => {
+  useEffect(() => {
+    document.title = "Out Of Stock | Ajjawam";
+  }, []);
+
   const [data, setData] = useState([]);
   const [storeOrder, setStoreOrder] = useState([]);
   const [columns, setColumns] = useState([]);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
   const [totalPages, setTotalPages] = useState(1);
 
@@ -18,7 +23,7 @@ const OutOfStock = ({ url }) => {
     const fetchOutOfStockData = async () => {
       try {
         const res = await axios.get(`${url}/api/product/outofstock`, {
-          params: { search, page },
+          params: { search, page, limit },
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -36,6 +41,10 @@ const OutOfStock = ({ url }) => {
 
   const handlePageChange = (newPage) => {
     setPage(newPage);
+  };
+
+  const handleLimitChange = (limit) => {
+    setLimit(limit);
   };
 
   return (
@@ -96,9 +105,11 @@ const OutOfStock = ({ url }) => {
       </div>
 
       <Pagination
+        limit={limit}
         currentPage={page}
         totalPages={totalPages}
         onPageChange={handlePageChange}
+        hangeLimitChange={handleLimitChange}
       />
     </>
   );

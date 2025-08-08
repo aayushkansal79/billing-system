@@ -152,6 +152,7 @@ const Products = ({ url }) => {
     startDate: "",
     endDate: "",
     page: 1,
+    limit: 10,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -186,6 +187,10 @@ const Products = ({ url }) => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
     setFilters((prev) => ({ ...prev, page }));
+  };
+  
+  const handleLimitChange = (limit) => {
+    setFilters((prev) => ({ ...prev, limit }));
   };
 
   const handleEdit = (product) => {
@@ -365,7 +370,7 @@ const Products = ({ url }) => {
           <tbody className="table-group-divider">
             {allProducts.map((product, idx) => (
               <tr key={product._id}>
-                <th>{(filters.page - 1) * 10 + (idx + 1)}.</th>
+                <th>{(filters.page - 1) * filters.limit + (idx + 1)}.</th>
                 <th>
                   {editingProductId === product._id ? (
                     <input
@@ -573,6 +578,8 @@ const Products = ({ url }) => {
       )}
 
       <Pagination
+        limit={filters.limit}
+        hangeLimitChange={handleLimitChange}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}

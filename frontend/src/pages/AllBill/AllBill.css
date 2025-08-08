@@ -4,37 +4,41 @@
   box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
 
-.allbill .bill-table th{
+.allbill .bill-table th {
   text-align: center;
 }
 
-.allbill .bill-table td{
+.allbill .bill-table td {
   text-align: center;
 }
 
-.modal-bill{
-
-    --bs-modal-width: 660px;
+.modal-bill {
+  --bs-modal-width: 660px;
 }
 
-.bill-invoice td{
+.bill-invoice td {
   align-content: center;
-  white-space: nowrap;
 }
 
-.bill-invoice th{
+.bill-invoice th {
   align-content: center;
-  white-space: nowrap;
 }
 
-.bill-title{
+.bill-title {
   font-size: 18px !important;
   font-weight: 800;
 }
 
 @media (max-width: 680px) {
-  .allbill{
+  .allbill {
     width: calc(100vw - 2rem);
     overflow-x: auto;
+  }
+  .bill-invoice td {
+    white-space: nowrap;
+  }
+
+  .bill-invoice th {
+    white-space: nowrap;
   }
 }

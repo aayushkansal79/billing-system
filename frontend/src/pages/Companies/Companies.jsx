@@ -27,6 +27,7 @@ const Companies = ({ url }) => {
     // startDate: "",
     // endDate: "",
     page: 1,
+    limit: 10,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -67,6 +68,10 @@ const Companies = ({ url }) => {
   // Handle pagination change
   const handlePageChange = (page) => {
     setFilters((prev) => ({ ...prev, page }));
+  };
+
+  const handleLimitChange = (limit) => {
+    setFilters((prev) => ({ ...prev, limit }));
   };
 
   const handleEditClick = (index) => {
@@ -216,7 +221,7 @@ const Companies = ({ url }) => {
           <tbody className="table-group-divider">
             {allCompanies.map((company, index) => (
               <tr key={company._id}>
-                <th>{(filters.page - 1)*10 + (index+1)}.</th>
+                <th>{(filters.page - 1)*filters.limit + (index+1)}.</th>
                 <th>
                   {editIndex === index ? (
                     <input
@@ -365,6 +370,8 @@ const Companies = ({ url }) => {
       </div>
 
       <Pagination
+        limit={filters.limit}
+        hangeLimitChange={handleLimitChange}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}

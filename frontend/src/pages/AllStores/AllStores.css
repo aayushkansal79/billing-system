@@ -14,16 +14,21 @@
     width: calc(100vw - 2rem);
     overflow-x: auto;
   }
-}
-
-.all-stores th{
-  text-align: center;
+  .all-stores th{
   white-space: nowrap;
 }
 
 .all-stores td{
-  text-align: center;
   white-space: nowrap;
+}
+}
+
+.all-stores th{
+  text-align: center;
+}
+
+.all-stores td{
+  text-align: center;
 }
 
 .all-stores .modal-overlay {

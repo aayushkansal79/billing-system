@@ -3,10 +3,30 @@
 }
 .barcode-item{
     page-break-inside: avoid;
+    border: 1px solid #ccc;
 }
 
 .barcode{
     padding: 1rem;
     background-color: #f8f9fa;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.barcode-item strong{
+    font-size: 12px !important;
+    font-weight: 900;
+}
+
+.barcode-item b{
+    font-size: 12px !important;
+}
+
+.barcode-item .barcode-name{
+    font-weight: 900;
+}
+
+@media print {
+  .barcode-item {
+    border: 0px;
+  }
 }

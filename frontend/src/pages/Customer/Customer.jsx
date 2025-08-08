@@ -32,6 +32,7 @@ const Customer = ({ url }) => {
     state: "",
     pendingCondition: "",
     page: 1,
+    limit: 10,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -68,6 +69,10 @@ const Customer = ({ url }) => {
   // Handle pagination change
   const handlePageChange = (page) => {
     setFilters((prev) => ({ ...prev, page }));
+  };
+  
+  const handleLimitChange = (limit) => {
+    setFilters((prev) => ({ ...prev, limit }));
   };
 
   const navigate = useNavigate();
@@ -255,7 +260,7 @@ const Customer = ({ url }) => {
                 onClick={() => handleCustomerClick(customer._id)}
                 style={{ cursor: "pointer" }}
               >
-                <th>{(filters.page - 1) * 10 + (index + 1)}.</th>
+                <th>{(filters.page - 1) * filters.limit + (index + 1)}.</th>
                 <th>{customer.name}</th>
                 <td>{customer.mobile}</td>
                 <td>{customer.state}</td>
@@ -486,6 +491,8 @@ const Customer = ({ url }) => {
       )}
 
       <Pagination
+        limit={filters.limit}
+        hangeLimitChange={handleLimitChange}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}
