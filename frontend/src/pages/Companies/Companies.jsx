@@ -4,11 +4,14 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Loader from "../../components/Loader/Loader";
 import Pagination from "../../components/Pagination/Pagination";
+import { useNavigate } from "react-router-dom";
 
 const Companies = ({ url }) => {
   useEffect(() => {
     document.title = "Vendors | Ajjawam";
   }, []);
+
+  const navigate = useNavigate();
 
   const [allCompanies, setAllCompanies] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
@@ -102,13 +105,9 @@ const Companies = ({ url }) => {
     }
   };
 
-  // if (!allCompanies.length) {
-  //   return (
-  //     <div className="text-center mt-5">
-  //       <h3>No Vendors Found !</h3>
-  //     </div>
-  //   );
-  // }
+  const handleVendorClick = (id) => {
+    navigate(`/vendors/${id}/products`);
+  };
 
   return (
     <>
@@ -220,7 +219,7 @@ const Companies = ({ url }) => {
           </thead>
           <tbody className="table-group-divider">
             {allCompanies.map((company, index) => (
-              <tr key={company._id}>
+              <tr key={company._id} onClick={() => handleVendorClick(company._id)} style={{cursor: "pointer"}}>
                 <th>{(filters.page - 1)*filters.limit + (index+1)}.</th>
                 <th>
                   {editIndex === index ? (

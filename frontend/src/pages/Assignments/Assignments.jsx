@@ -742,7 +742,7 @@ const Assignments = ({ url }) => {
 
       <Pagination
         limit={filters.limit}
-        hangeLimitChange={handleLimitChange}
+        handleLimitChange={handleLimitChange}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}

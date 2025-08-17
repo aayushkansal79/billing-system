@@ -1,4 +1,8 @@
 import Company from "../models/Company.js";
+import Purchase from "../models/Purchase.js";
+import Product from "../models/Product.js";
+import StoreProduct from "../models/StoreProduct.js";
+import mongoose from "mongoose";
 
 // Get company details
 export const getCompany = async (req, res) => {
@@ -170,4 +174,68 @@ export const updateACompany = async (req, res) => {
         console.error(err);
         res.status(500).json({ error: "Server Error" });
     }
+};
+
+export const getVendorProducts = async (req, res) => {
+  try {
+    const { companyId } = req.params;
+
+    const company = await Company.findById(companyId);
+
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    const purchases = await Purchase.find({ company: companyId });
+
+    const productMap = {};
+    purchases.forEach(purchase => {
+      purchase.products.forEach(p => {
+        if (!productMap[p.product]) {
+          productMap[p.product] = {
+            productId: p.product,
+            name: p.name,
+            purchasedQty: 0,
+          };
+        }
+        productMap[p.product].purchasedQty += p.quantity;
+      });
+    });
+
+    const productIds = Object.keys(productMap);
+
+    const warehouseStocks = await Product.find({ _id: { $in: productIds } })
+      .select("_id unit");
+
+    const storeStocks = await StoreProduct.aggregate([
+      { $match: { product: { $in: productIds.map(id => new mongoose.Types.ObjectId(id)) } } },
+      { $group: { _id: "$product", total: { $sum: "$quantity" } } }
+    ]);
+
+    const result = productIds.map(id => {
+      const purchased = productMap[id].purchasedQty || 0;
+      const warehouseStock = warehouseStocks.find(p => p._id.toString() === id)?.unit || 0;
+      const storeStock = storeStocks.find(s => s._id.toString() === id)?.total || 0;
+      const currentStock = warehouseStock + storeStock;
+      const soldQty = purchased - currentStock;
+
+      return {
+        productId: id,
+        name: productMap[id].name,
+        purchasedQty: purchased,
+        warehouseStock,
+        storeStock,
+        currentStock,
+        soldQty,
+      };
+    });
+
+    res.json({
+      company,
+      products: result,
+    });
+  } catch (err) {
+    console.error("❌ Error in getVendorProducts:", err);
+    res.status(500).json({ error: "Server error" });
+  }
 };
