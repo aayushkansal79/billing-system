@@ -1,36 +1,32 @@
 import React, { useEffect, useState } from "react";
-import "./VendorProducts.css";
+import "./ProductHistory.css";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import Pagination from "../../components/Pagination/Pagination";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 
-const VendorProducts = ({ url }) => {
+const ProductHistory = ({ url }) => {
   useEffect(() => {
-    document.title = "Vendor Products | Ajjawam";
+    document.title = "Product History | Ajjawam";
   }, []);
 
-  const { companyId } = useParams();
+  const { productId } = useParams();
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
   const navigate = useNavigate();
   const [company, setCompany] = useState({});
-  const [products, setProducts] = useState([]);
+  const [productHistory, setProductHistory] = useState([]);
 
   useEffect(() => {
-    if (!companyId) return;
+    if (!productId) return;
     const fetchData = async () => {
-      const res = await axios.get(`${url}/api/company/${companyId}/products`, {
+      const res = await axios.get(`${url}/api/product/purchase/${productId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setProducts(res.data.products);
-      setCompany(res.data.company);
+      setProductHistory(res.data.purchaseHistory);
     };
     fetchData();
-  }, [companyId, url]);
+  }, [productId, url]);
 
   // Handle pagination change
   const handlePageChange = (page) => {
@@ -43,7 +39,7 @@ const VendorProducts = ({ url }) => {
 
   return (
     <>
-      <p className="bread">Vendor Products</p>
+      <p className="bread">Product History</p>
 
       {/* <div className="search row g-2 mb-4 px-2">
         <div className="col-md-2">
@@ -93,65 +89,55 @@ const VendorProducts = ({ url }) => {
           ← Back
         </button>
         <h3>
-          Products for{" "}
-          <b className="text-primary">{company.name || "Customer"}</b>
+          Purchase History for{" "}
+          <b className="text-primary">
+            {productHistory[0]?.productName || "Product"}
+          </b>
         </h3>
-        <p>
-          <b>Mobile:</b> {company.contactPhone} | <b>Address:</b>{" "}
-          {company.address} | <b>City:</b> {company.city} | <b>GST No.</b>{" "}
-          {company.gstNumber}
-        </p>
-        {products.length === 0 ? (
-          <p>No products found for this vendor.</p>
+        {productHistory.length === 0 ? (
+          <p>No History Found.</p>
         ) : (
           <div className="table-responsive">
             <table className="table align-middle table-striped table-hover my-0">
               <thead className="table-danger">
                 <tr>
                   <th>#</th>
-                  <th>Product Name</th>
+                  <th>Purchase ID</th>
+                  <th>Vendor Name</th>
                   <th>Purchased Qty</th>
                   <th className="text-end">Purchased Price</th>
-                  <th>Warehouse Stock</th>
-                  <th>Store Stock</th>
-                  <th>Current Stock</th>
                   <th className="text-end">Selling Price</th>
-                  <th>Sold Qty</th>
-                  {/* <th className="text-end">Profit</th> */}
+                  <th>Purchase Date</th>
                 </tr>
               </thead>
               <tbody>
-                {products.map((t, idx) => (
-                  <tr key={idx}>
+                {productHistory.map((p, idx) => (
+                  <tr key={idx} onClick={() => handleProductClick(p._id)}>
                     {/* <th>{(filters.page - 1) * filters.limit + (idx + 1)}.</th> */}
                     <th>{idx + 1}.</th>
-                    <th>{t.name}</th>
-                    <th className="text-primary">{t.purchasedQty}</th>
-                    <th className="text-primary text-end">
+                    <td>
+                      <b>Invoice No. - </b>{p.invoiceNumber || "N/A"} <br />
+                      <b>Order No. - </b>{p.orderNumber || "N/A"}
+                    </td>
+                    <td>{p.vendor.name}</td>
+                    <th className="text-primary">{p.purchasedQty || 0}</th>
+                    <th className="text-danger text-end">
                       ₹{" "}
-                      {Number(t.purchasePrice).toLocaleString("en-IN", {
+                      {Number(p.purchasePrice).toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
                     </th>
-                    <td>{t.warehouseStock}</td>
-                    <td>{t.storeStock}</td>
-                    <th className="text-danger">{t.currentStock}</th>
                     <th className="text-success text-end">
                       ₹{" "}
-                      {Number(t.sellingPrice).toLocaleString("en-IN", {
+                      {Number(p.sellingPrice).toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
                     </th>
-                    <th className="text-success">{t.soldQty}</th>
-                    {/* <th className="text-success text-end">
-                      ₹{" "}
-                      {Number(t.soldQty * (t.sellingPrice - t.purchasePrice)).toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </th> */}
+                    <td>
+                      {new Date(p.purchaseDate).toLocaleDateString()}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -171,4 +157,4 @@ const VendorProducts = ({ url }) => {
   );
 };
 
-export default VendorProducts;
+export default ProductHistory;

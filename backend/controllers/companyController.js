@@ -195,10 +195,22 @@ export const getVendorProducts = async (req, res) => {
           productMap[p.product] = {
             productId: p.product,
             name: p.name,
-            purchasedQty: 0,
+            purchasedQty: p.quantity || 0,
+            purchasePrice: p.purchasePriceAfterDiscount,
+            sellingPrice: p.printPrice,
+            lastPurchaseDate: purchase.date, // track purchase date
           };
+        } else {
+          // accumulate quantity
+          productMap[p.product].purchasedQty += p.quantity;
+
+          // update purchase/selling price if this purchase is newer
+          if (new Date(purchase.date) > new Date(productMap[p.product].lastPurchaseDate)) {
+            productMap[p.product].purchasePrice = p.purchasePriceAfterDiscount;
+            productMap[p.product].sellingPrice = p.printPrice;
+            productMap[p.product].lastPurchaseDate = purchase.date;
+          }
         }
-        productMap[p.product].purchasedQty += p.quantity;
       });
     });
 
@@ -214,6 +226,8 @@ export const getVendorProducts = async (req, res) => {
 
     const result = productIds.map(id => {
       const purchased = productMap[id].purchasedQty || 0;
+      const purchasePrice = productMap[id].purchasePrice || 0;
+      const sellingPrice = productMap[id].sellingPrice || 0;
       const warehouseStock = warehouseStocks.find(p => p._id.toString() === id)?.unit || 0;
       const storeStock = storeStocks.find(s => s._id.toString() === id)?.total || 0;
       const currentStock = warehouseStock + storeStock;
@@ -223,6 +237,8 @@ export const getVendorProducts = async (req, res) => {
         productId: id,
         name: productMap[id].name,
         purchasedQty: purchased,
+        purchasePrice,
+        sellingPrice,
         warehouseStock,
         storeStock,
         currentStock,
@@ -235,7 +251,7 @@ export const getVendorProducts = async (req, res) => {
       products: result,
     });
   } catch (err) {
-    console.error("❌ Error in getVendorProducts:", err);
+    console.error("Error in getVendorProducts:", err);
     res.status(500).json({ error: "Server error" });
   }
 };

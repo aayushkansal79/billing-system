@@ -3,6 +3,8 @@ import StoreProduct from "../models/StoreProduct.js";
 import Assignment from "../models/Assignment.js";
 import Store from "../models/Store.js"
 import { getNextAssignmentNumber } from "./counterController.js";
+import Purchase from "../models/Purchase.js";
+import mongoose from "mongoose";
 
 export const searchProductByName = async (req, res) => {
   const { name } = req.query;
@@ -323,5 +325,146 @@ export const assignProducts = async (req, res) => {
   } catch (err) {
     console.error("Assign Products Error:", err);
     return res.status(500).json({ error: "Server error" });
+  }
+};
+
+export const getAllProductsWithVendors = async (req, res) => {
+  try {
+    const { search, page = 1, limit = 10 } = req.query;
+
+    const purchases = await Purchase.find()
+      .populate("company", "name shortName city contactPhone gstNumber"); // populate vendor info
+
+    const productMap = {};
+    purchases.forEach(purchase => {
+      purchase.products.forEach(p => {
+        if (!productMap[p.product]) {
+          productMap[p.product] = {
+            productId: p.product,
+            name: p.name,
+            purchasedQty: p.quantity || 0,
+            purchasePrice: p.purchasePriceAfterDiscount,
+            sellingPrice: p.printPrice,
+            lastPurchaseDate: purchase.date,
+            company: purchase.company, // vendor info
+          };
+        } else {
+          // accumulate quantity
+          productMap[p.product].purchasedQty += p.quantity;
+
+          // update if this purchase is newer
+          if (new Date(purchase.date) > new Date(productMap[p.product].lastPurchaseDate)) {
+            productMap[p.product].purchasePrice = p.purchasePriceAfterDiscount;
+            productMap[p.product].sellingPrice = p.printPrice;
+            productMap[p.product].lastPurchaseDate = purchase.date;
+            productMap[p.product].company = purchase.company; // latest vendor
+          }
+        }
+      });
+    });
+
+    const productIds = Object.keys(productMap);
+
+    const warehouseStocks = await Product.find({ _id: { $in: productIds } })
+      .select("_id unit");
+
+    const storeStocks = await StoreProduct.aggregate([
+      { $match: { product: { $in: productIds.map(id => new mongoose.Types.ObjectId(id)) } } },
+      { $group: { _id: "$product", total: { $sum: "$quantity" } } }
+    ]);
+
+    let result = productIds.map(id => {
+      const purchased = productMap[id].purchasedQty || 0;
+      const purchasePrice = productMap[id].purchasePrice || 0;
+      const sellingPrice = productMap[id].sellingPrice || 0;
+      const warehouseStock = warehouseStocks.find(p => p._id.toString() === id)?.unit || 0;
+      const storeStock = storeStocks.find(s => s._id.toString() === id)?.total || 0;
+      const currentStock = warehouseStock + storeStock;
+      const soldQty = purchased - currentStock;
+
+      return {
+        productId: id,
+        name: productMap[id].name,
+        purchasedQty: purchased,
+        purchasePrice,
+        sellingPrice,
+        warehouseStock,
+        storeStock,
+        currentStock,
+        soldQty,
+        lastPurchaseDate: productMap[id].lastPurchaseDate,
+        lastVendor: productMap[id].company, // latest vendor info
+      };
+    });
+
+    if (search && search.trim() !== "") {
+      const regex = new RegExp(search.trim(), "i");
+      result = result.filter(item => regex.test(item.name));
+    }
+
+    const total = result.length;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + parseInt(limit);
+    const paginatedResult = result.slice(startIndex, endIndex);
+
+    res.json({
+      products: paginatedResult,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (err) {
+    console.error("Error in getAllProductsWithVendors:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+export const getProductPurchaseHistory = async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    if (!productId) {
+      return res.status(400).json({ error: "ProductId is required" });
+    }
+
+    // Find purchases containing this product
+    const purchases = await Purchase.find({ "products.product": productId })
+      .populate("company", "name shortName city contactPhone gstNumber")
+      .sort({ date: -1 }); // latest first
+
+    if (!purchases || purchases.length === 0) {
+      return res.status(404).json({ message: "No purchases found for this product" });
+    }
+
+    // Extract product-specific purchase records
+    const history = [];
+    purchases.forEach(purchase => {
+      purchase.products.forEach(p => {
+        if (p.product.toString() === productId) {
+          const profit = (p.printPrice || 0) - (p.purchasePriceAfterDiscount || 0);
+          history.push({
+            purchaseId: purchase._id,
+            productId: p.product,
+            productName: p.name,
+            invoiceNumber : purchase.invoiceNumber,
+            orderNumber : purchase.orderNumber,
+            purchasedQty: p.quantity,
+            purchasePrice: p.purchasePriceAfterDiscount,
+            profit,
+            sellingPrice: p.printPrice,
+            purchaseDate: purchase.date,
+            vendor: purchase.company,
+          });
+        }
+      });
+    });
+
+    res.json({
+      productId,
+      purchaseHistory: history,
+    });
+  } catch (err) {
+    console.error("Error in getProductPurchaseHistory:", err);
+    res.status(500).json({ error: "Server error" });
   }
 };

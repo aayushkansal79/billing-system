@@ -31,6 +31,8 @@ import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./context/PrivateRoute";
 import RequestsSent from "./pages/RequestsSent/RequestsSent";
 import RequestsRecieved from "./pages/RequestsRecieved/RequestsRecieved";
+import ProductReport from "./pages/ProductReport/ProductReport";
+import ProductHistory from "./pages/ProductHistory/ProductHistory";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -83,6 +85,8 @@ function App() {
               <Route path="/requests" element={<PrivateRoute roles={["admin"]}> <Requests url={url} /> </PrivateRoute>} />
               <Route path="/requests-sent" element={<PrivateRoute roles={["store"]}> <RequestsSent url={url} /> </PrivateRoute>} />
               <Route path="/requests-received" element={<PrivateRoute roles={["store"]}> <RequestsRecieved url={url} /> </PrivateRoute>} />
+              <Route path="/product-report" element={<PrivateRoute roles={["admin"]}> <ProductReport url={url} /> </PrivateRoute>} />
+              <Route path="/product-report/:productId/history" element={<PrivateRoute roles={["admin"]}> <ProductHistory url={url} /> </PrivateRoute>} />
               <Route path="/profile" element={<PrivateRoute roles={["admin"]}> <Profile url={url} /> </PrivateRoute>} />
               <Route path="/change-password" element={<PrivateRoute roles={["admin", "store"]}> <ChangePass url={url} /> </PrivateRoute>} />
             </Routes>

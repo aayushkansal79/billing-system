@@ -484,7 +484,7 @@ const Purchase = ({ url }) => {
       setDiscount(0);
     } catch (err) {
       console.error(err);
-      toast.error("Error saving purchase.");
+      toast.error(err.response?.data?.error || "Error saving purchase.");
     } finally {
       setLoading(false);
     }

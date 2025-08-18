@@ -22,6 +22,23 @@ export const createPurchase = async (req, res) => {
             return res.status(404).json({ error: "Company not found." });
         }
 
+        for (const p of products) {
+            const existingProduct = await Product.findOne({ name: p.name.trim() });
+            if (existingProduct) {
+                // Check if this product was purchased from another company before
+                const existingPurchase = await Purchase.findOne({
+                    "products.product": existingProduct._id,
+                    company: { $ne: companyId },
+                }).populate("company", "name");
+
+                if (existingPurchase) {
+                    return res.status(400).json({
+                        error: `Product "${p.name}" already purchased from ${existingPurchase.company.name}.`,
+                    });
+                }
+            }
+        }
+
         const processedProducts = [];
 
         for (const p of products) {
@@ -206,8 +223,6 @@ export const getAllPurchases = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch purchases." });
   }
 };
-
-
 
 export const getPurchaseById = async (req, res) => {
     try {

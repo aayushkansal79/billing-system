@@ -435,7 +435,7 @@ const Order = ({ url }) => {
               <th className="text-end">Amount</th>
               <th>Invoice</th>
               <th>Tags</th>
-              <th>Date & Time</th>
+              <th>Purchase Date</th>
             </tr>
           </thead>
           <tbody className="table-group-divider">
@@ -485,7 +485,7 @@ const Order = ({ url }) => {
                     </svg>
                   </button>
                 </td>
-                <td>{new Date(purchase.date).toLocaleString()}</td>
+                <td>{new Date(purchase.date).toLocaleDateString()}</td>
               </tr>
             ))}
           </tbody>
