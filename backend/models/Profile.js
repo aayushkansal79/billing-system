@@ -4,6 +4,7 @@ const ProfileSchema = new mongoose.Schema({
     websiteTitle: { type: String},
     websiteAddress: { type: String},
     CompanyName: { type: String},
+    FirmName: { type: String},
     CompanyAddress: { type: String},
     CompanyState: { type: String},
     CompanyZip: { type: String},

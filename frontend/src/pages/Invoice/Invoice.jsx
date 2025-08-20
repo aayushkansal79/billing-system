@@ -33,6 +33,7 @@ const Invoice = (
     websiteTitle: "",
     websiteAddress: "",
     CompanyName: "",
+    FirmName: "",
     CompanyAddress: "",
     CompanyState: "",
     CompanyZip: "",
@@ -108,12 +109,22 @@ const Invoice = (
     <div ref={ref} className="bill-invoice">
       <div style={{ background: "#f2f7f9", padding: "20px" }}>
         <div className="text-center bill-title">TAX INVOICE</div>
-        <div className="d-flex justify-content-between align-items-center">
-          {/* <h2>INVOICE</h2> */}
-          <img src={assets.main_logo} width={90} alt="" />
-          <div className="text-end">
+        <div className="d-flex justify-content-between align-items-start">
+          <div style={{ width: "40%" }}>
+            <b>INVOICE DETAILS</b>
+            <br />
+            <p className="m-0">Invoice No.: {invoiceNumber}</p>
             <p className="m-0">
-              <b>{form.CompanyName}</b>
+              Invoice Date: {new Date(date).toLocaleDateString("en-IN")}
+            </p>
+          </div>
+          <img src={assets.main_logo} width={90} alt="" />
+          <div className="text-end" style={{ width: "40%" }}>
+            <p className="m-0">
+              <b>Subject to Beawar Jurisdiction</b>
+            </p>
+            <p className="m-0">
+              <b>{form.FirmName}</b>
             </p>
             <p className="m-0">
               <b>
@@ -127,15 +138,15 @@ const Invoice = (
           </div>
         </div>
         <br />
-        <div>
+        {/* <div>
           <b>INVOICE DETAILS</b>
           <br />
           <p className="m-0">Invoice No.: {invoiceNumber}</p>
           <p className="m-0">
-            Invoice Date: {new Date(date).toLocaleDateString()}
+            Invoice Date: {new Date(date).toLocaleDateString("en-IN")}
           </p>
         </div>
-        <br />
+        <br /> */}
         <div className="d-flex justify-content-between">
           <div>
             <b>CUSTOMER INFORMATION</b>
@@ -148,19 +159,19 @@ const Invoice = (
             ) : (
               ""
             )}
-            State: {state}
-            <br />
-            Mobile: {mobileNo || "N/A"}
-            <br />
-            GST: {gstNumber || "N/A"}
+            {mobileNo || ""}{", "}
+            {/* <br /> */}
+            {state}{", "}
+            {/* <br /> */}
+            {gstNumber || ""}{" "}
           </div>
           <div className="text-end">
             <b>STORE INFORMATION</b>
             <br />
-            {store.address},
-            <br />
-            {store.city},
-            <br />
+            {store.address}{", "}
+            {/* <br /> */}
+            {store.city}{", "}
+            {/* <br /> */}
             {store.state} - {store.zipCode}
             <br />
             {store.contactNumber}
@@ -563,7 +574,10 @@ const Invoice = (
       </div>
       <div>
         <b>Refund Note: </b>
-        <div className="refund-note" dangerouslySetInnerHTML={{ __html: form.RefundNote }} />
+        <div
+          className="refund-note"
+          dangerouslySetInnerHTML={{ __html: form.RefundNote }}
+        />
       </div>
     </div>
   );

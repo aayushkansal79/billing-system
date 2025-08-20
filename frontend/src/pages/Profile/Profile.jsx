@@ -22,6 +22,7 @@ const Profile = ({ url }) => {
     websiteTitle: "",
     websiteAddress: "",
     CompanyName: "",
+    FirmName: "",
     CompanyAddress: "",
     CompanyState: "",
     CompanyZip: "",
@@ -200,6 +201,18 @@ const Profile = ({ url }) => {
             placeholder="Enter Company Name"
             name="CompanyName"
             value={form.CompanyName}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="col-md-3">
+          <label className="form-label">Firm Name*</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter Firm Name"
+            name="FirmName"
+            value={form.FirmName}
             onChange={handleChange}
             required
           />

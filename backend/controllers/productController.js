@@ -333,6 +333,7 @@ export const getAllProductsWithVendors = async (req, res) => {
     const { search, page = 1, limit = 10 } = req.query;
 
     const purchases = await Purchase.find()
+      .sort({ createdAt: -1 })
       .populate("company", "name shortName city contactPhone gstNumber"); // populate vendor info
 
     const productMap = {};

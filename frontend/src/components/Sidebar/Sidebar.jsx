@@ -425,6 +425,23 @@ const Sidebar = ({ sidebarOpen }) => {
           <p>All Customers</p>
         </NavLink>
 
+        {/* <NavLink
+          to="/all-customer"
+          className={sidebarOpen ? "side-item" : "side-item side-item-active"}
+          title="Sale Returns"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            height="24px"
+            viewBox="0 -960 960 960"
+            width="24px"
+            fill="#1f1f1f"
+          >
+            <path d="M280-320h400v-80H280v80Zm0-160h160v-60h-57q20-19 45-29.5t52-10.5q47 0 83.5 27.5T614-480h62q-14-70-69-115t-127-45q-39 0-75.5 15T340-582v-58h-60v160ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
+          </svg>
+          <p>Sale Returns</p>
+        </NavLink> */}
+
         <NavLink
           to="/mastersearch"
           className={sidebarOpen ? "side-item" : "side-item side-item-active"}
@@ -538,23 +555,25 @@ const Sidebar = ({ sidebarOpen }) => {
           ""
         )}
 
-        <NavLink
-          to="/product-report"
-          className={sidebarOpen ? "side-item" : "side-item side-item-active"}
-          title="Product Report"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            height="20px"
-            viewBox="0 -960 960 960"
-            width="24px"
-            fill="#000000"
+        {user?.type === "admin" && (
+          <NavLink
+            to="/product-report"
+            className={sidebarOpen ? "side-item" : "side-item side-item-active"}
+            title="Product Report"
           >
-            <path d="M280-280h80v-200h-80v200Zm320 0h80v-400h-80v400Zm-160 0h80v-120h-80v120Zm0-200h80v-80h-80v80ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
-          </svg>
-          {/* <div class="vr"></div> */}
-          <p>Product Report</p>
-        </NavLink>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              height="20px"
+              viewBox="0 -960 960 960"
+              width="24px"
+              fill="#000000"
+            >
+              <path d="M280-280h80v-200h-80v200Zm320 0h80v-400h-80v400Zm-160 0h80v-120h-80v120Zm0-200h80v-80h-80v80ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
+            </svg>
+            {/* <div class="vr"></div> */}
+            <p>Product Report</p>
+          </NavLink>
+        )}
       </nav>
     </aside>
   );
