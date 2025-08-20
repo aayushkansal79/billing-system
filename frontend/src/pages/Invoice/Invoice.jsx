@@ -24,6 +24,7 @@ const Invoice = (
     paidAmount,
     usedCoins,
     date,
+    showGst = false,
   },
   ref
 ) => {
@@ -118,7 +119,12 @@ const Invoice = (
               Invoice Date: {new Date(date).toLocaleDateString("en-GB")}
             </p>
           </div>
-          <img src={assets.main_logo} width={90} style={{opacity: "0.8"}} alt="" />
+          <img
+            src={assets.main_logo}
+            width={90}
+            style={{ opacity: "0.8" }}
+            alt=""
+          />
           <div className="text-end" style={{ width: "40%" }}>
             <p className="m-0">
               <b>Subject to Beawar Jurisdiction</b>
@@ -159,18 +165,22 @@ const Invoice = (
             ) : (
               ""
             )}
-            {mobileNo || ""}{", "}
+            {mobileNo || ""}
+            {", "}
             {/* <br /> */}
-            {state}{", "}
+            {state}
+            {", "}
             {/* <br /> */}
-            {gstNumber || ""}{" "}
+            {gstNumber || ""}
           </div>
           <div className="text-end">
             <b>STORE INFORMATION</b>
             <br />
-            {store.address}{", "}
+            {store.address}
+            {", "}
             {/* <br /> */}
-            {store.city}{", "}
+            {store.city}
+            {", "}
             {/* <br /> */}
             {store.state} - {store.zipCode}
             <br />
@@ -183,18 +193,23 @@ const Invoice = (
           <tr>
             <th>#</th>
             <th>Product</th>
+            <th>HSN</th>
             <th>Qty</th>
-            <th>Price</th>
+            <th style={{ textWrap: "nowrap" }}>
+              Price <br /> (Excl. GST)
+            </th>
             {discountMethod === "percentage" && discount > 0 && (
               <>
                 <th>Discount</th>
                 <th>Price After Discount</th>
               </>
             )}
-            <th>GST %</th>
-            <th>GST Type</th>
-            <th>GST Amount</th>
-            <th>Unit Price</th>
+            <th className={showGst ? "" : "no-print"}>GST %</th>
+            <th className={showGst ? "" : "no-print"}>GST Type</th>
+            <th className={showGst ? "" : "no-print"}>GST Amount</th>
+            <th style={{ textWrap: "nowrap" }}>
+              Unit Price <br /> (Incl. GST)
+            </th>
             <th>Total</th>
           </tr>
         </thead>
@@ -203,6 +218,7 @@ const Invoice = (
             <tr key={idx}>
               <td>{idx + 1}.</td>
               <td>{p.productName}</td>
+              <td>540752</td>
               <td>{p.quantity}</td>
               <td>
                 ₹
@@ -229,7 +245,7 @@ const Invoice = (
                   </td>
                 </>
               )}
-              <td>
+              <td className={showGst ? "" : "no-print"}>
                 {store.state === state ? (
                   <>
                     {p.gstPercentage / 2}% <br />
@@ -239,7 +255,7 @@ const Invoice = (
                   <>{p.gstPercentage}%</>
                 )}
               </td>
-              <td>
+              <td className={showGst ? "" : "no-print"}>
                 {store.state === state ? (
                   <>
                     CGST
@@ -250,7 +266,7 @@ const Invoice = (
                   <>IGST</>
                 )}
               </td>
-              <td>
+              <td className={showGst ? "" : "no-print"}>
                 {store.state === state ? (
                   <>
                     ₹
@@ -300,7 +316,7 @@ const Invoice = (
         <tfoot>
           <tr>
             <td
-              colSpan={discountMethod === "percentage" && discount > 0 ? 4 : 3}
+              colSpan={discountMethod === "percentage" && discount > 0 ? 5 : 4}
               className="text-start"
             >
               <strong>Sub Total</strong>
@@ -325,8 +341,8 @@ const Invoice = (
                 })}
               </strong>
             </td>
-            <td colSpan="2"></td>
-            <td>
+            <td colSpan="2" className={`${showGst ? "" : "no-print"}`}></td>
+            <td className={showGst ? "" : "no-print"}>
               <strong>
                 ₹
                 {Number(totalGST)?.toLocaleString("en-IN", {
@@ -347,43 +363,97 @@ const Invoice = (
             </td>
           </tr>
           {usedCoins > 0 && (
-            <tr>
-              <td
-                colSpan={
-                  discountMethod === "percentage" && discount > 0 ? 10 : 8
-                }
-              >
-                <strong>Coins Used</strong>
-              </td>
-              <td>
-                <strong>₹ {usedCoins || 0}</strong>
-              </td>
-            </tr>
+            <>
+              <tr className="no-print">
+                <td
+                  colSpan={
+                    discountMethod === "percentage" && discount > 0 ? 11 : 9
+                  }
+                >
+                  <strong>Coins Used</strong>
+                </td>
+                <td>
+                  <strong>₹ {usedCoins || 0}</strong>
+                </td>
+              </tr>
+              <tr className="no-screen">
+                <td
+                  colSpan={discountMethod === "percentage" && discount > 0 ? (showGst ? 11 : 8) : (showGst ? 9 : 6)}
+                >
+                  <strong>Coins Used</strong>
+                </td>
+                <td>
+                  <strong>₹ {usedCoins || 0}</strong>
+                </td>
+              </tr>
+            </>
           )}
           {discountMethod === "flat" && discount > 0 && (
-            <tr>
-              <td colSpan="8">
-                <strong>Discount</strong>
-              </td>
-              <td>
-                <strong>
-                  ₹{" "}
-                  {Number(discount).toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </strong>
-              </td>
-            </tr>
+            <>
+              <tr className="no-print">
+                <td
+                  colSpan={
+                    discountMethod === "percentage" && discount > 0 ? 11 : 9
+                  }
+                >
+                  <strong>Discount</strong>
+                </td>
+                <td>
+                  <strong>
+                    ₹{" "}
+                    {Number(discount).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </strong>
+                </td>
+              </tr>
+              <tr className="no-screen">
+                <td
+                  colSpan={discountMethod === "percentage" && discount > 0 ? (showGst ? 11 : 8) : (showGst ? 9 : 6)}
+                >
+                  <strong>Discount</strong>
+                </td>
+                <td>
+                  <strong>
+                    ₹{" "}
+                    {Number(discount).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </strong>
+                </td>
+              </tr>
+            </>
           )}
-          <tr>
+          <tr className="no-print">
             <td
-              colSpan={discountMethod === "percentage" && discount > 0 ? 10 : 8}
+              colSpan={discountMethod === "percentage" && discount > 0 ? 11 : 9}
             >
               <strong>Grand Total</strong>
             </td>
             <td>
-              <strong>
+              <strong style={{ textWrap: "nowrap" }}>
+                ₹{" "}
+                {Math.floor(
+                  baseTotal -
+                    (usedCoins || 0) -
+                    (discountMethod === "flat" ? discount : 0)
+                ).toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </strong>
+            </td>
+          </tr>
+          <tr className="no-screen">
+            <td
+              colSpan={discountMethod === "percentage" && discount > 0 ? (showGst ? 11 : 8) : (showGst ? 9 : 6)}
+            >
+              <strong>Grand Total</strong>
+            </td>
+            <td>
+              <strong style={{ textWrap: "nowrap" }}>
                 ₹{" "}
                 {Math.floor(
                   baseTotal -
@@ -409,7 +479,7 @@ const Invoice = (
       </div>
 
       <br />
-      <div className="row justify-content-end">
+      <div className={`row justify-content-end ${showGst ? "" : "no-print"}`}>
         <div className="text-end" style={{ width: "300px" }}>
           <table className="table table-bordered">
             <thead>

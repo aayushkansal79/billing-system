@@ -21,7 +21,7 @@ const ProductReport = ({ url }) => {
 
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
@@ -84,23 +84,25 @@ const ProductReport = ({ url }) => {
               <tr>
                 <th>#</th>
                 <th>Product Name</th>
-                <th>Purchased Qty</th>
                 <th className="text-end">Purchased Price</th>
+                <th>Purchase</th>
+                <th className="text-end">Selling Price</th>
+                <th>Sale</th>
                 <th>Warehouse Stock</th>
                 <th>Store Stock</th>
-                <th>Current Stock</th>
-                <th className="text-end">Selling Price</th>
-                <th>Sold Qty</th>
-                {/* <th className="text-end">Profit</th> */}
-                {/* <th className="text-end">Last Purchase Date</th> */}
+                <th>Closing Stock</th>
+                <th className="text-end">Cls. Stk. Amt.</th>
               </tr>
             </thead>
             <tbody>
               {products.map((t, idx) => (
-                <tr key={idx} onClick={() => handleProductClick(t.productId)} style={{ cursor: "pointer" }}>
+                <tr
+                  key={idx}
+                  onClick={() => handleProductClick(t.productId)}
+                  style={{ cursor: "pointer" }}
+                >
                   <th>{(filters.page - 1) * filters.limit + (idx + 1)}.</th>
                   <th>{t.name}</th>
-                  <th className="text-primary">{t.purchasedQty}</th>
                   <th className="text-primary text-end">
                     ₹{" "}
                     {Number(t.purchasePrice).toLocaleString("en-IN", {
@@ -108,9 +110,7 @@ const ProductReport = ({ url }) => {
                       maximumFractionDigits: 2,
                     })}
                   </th>
-                  <td>{t.warehouseStock}</td>
-                  <td>{t.storeStock}</td>
-                  <th className="text-danger">{t.currentStock}</th>
+                  <th className="text-primary">{t.purchasedQty}</th>
                   <th className="text-success text-end">
                     ₹{" "}
                     {Number(t.sellingPrice).toLocaleString("en-IN", {
@@ -119,14 +119,19 @@ const ProductReport = ({ url }) => {
                     })}
                   </th>
                   <th className="text-success">{t.soldQty}</th>
-                  {/* <th className="text-success text-end">
-                      ₹{" "}
-                      {Number(t.soldQty * (t.sellingPrice - t.purchasePrice)).toLocaleString("en-IN", {
+                  <td>{t.warehouseStock}</td>
+                  <td>{t.storeStock}</td>
+                  <th className="text-danger">{t.currentStock}</th>
+                  <th className="text-success text-end">
+                    ₹{" "}
+                    {Number(t.currentStock * t.purchasePrice).toLocaleString(
+                      "en-IN",
+                      {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
-                      })}
-                    </th> */}
-                  {/* <td>{new Date(t.lastPurchaseDate).toLocaleDateString()}</td> */}
+                      }
+                    )}
+                  </th>
                 </tr>
               ))}
             </tbody>

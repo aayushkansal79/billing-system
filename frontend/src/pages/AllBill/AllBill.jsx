@@ -13,6 +13,7 @@ const AllBill = ({ url }) => {
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
   const [selectedBill, setSelectedBill] = useState(null);
+  const [showGst, setShowGst] = useState(false);
 
   useEffect(() => {
     document.title = "Bills | Ajjawam";
@@ -74,7 +75,7 @@ const AllBill = ({ url }) => {
   const handlePageChange = (page) => {
     setFilters((prev) => ({ ...prev, page }));
   };
-  
+
   const handleLimitChange = (limit) => {
     setFilters((prev) => ({ ...prev, limit }));
   };
@@ -96,7 +97,6 @@ const AllBill = ({ url }) => {
     frameDoc.open();
     frameDoc.write("<html><head><title>Tax Print</title>");
 
-    // Clone current styles
     document
       .querySelectorAll('link[rel="stylesheet"], style')
       .forEach((style) => {
@@ -104,29 +104,41 @@ const AllBill = ({ url }) => {
       });
 
     frameDoc.write(`
-      <style>
-        @media print {
-          .no-print {
+    <style>
+      @media print {
+        .no-print {
           display: none !important;
         }
-          body {
-            background: white !important;
-          }
-          @page {
-            size: auto;
-            margin: 0 10px;
-          }
+        .no-screen {
+          display: table-row !important;
         }
-      </style>
-    </head><body>`);
+        .no-screen td {
+          display: table-cell !important;
+        }
+        .no-screen td strong{
+          display: block !important;
+        }
+        body {
+          background: white !important;
+        }
+        @page {
+          size: auto;
+          margin: 0 10px;
+        }
+      }
+    </style>
+  </head><body>`);
+
     frameDoc.write(contents);
     frameDoc.write("</body></html>");
     frameDoc.close();
 
+    
     setTimeout(() => {
       frame1.contentWindow.focus();
       frame1.contentWindow.print();
       document.body.removeChild(frame1);
+      setShowGst(false);
     }, 500);
   };
 
@@ -290,7 +302,10 @@ const AllBill = ({ url }) => {
                       </h5>
                     </td>
                   )}
-                  <th className="text-danger text-end" style={{ whiteSpace: "nowrap" }}>
+                  <th
+                    className="text-danger text-end"
+                    style={{ whiteSpace: "nowrap" }}
+                  >
                     ₹{" "}
                     {Number(bill.totalAmount).toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
@@ -328,7 +343,9 @@ const AllBill = ({ url }) => {
                       👁️
                     </button>
                   </td>
-                  <td style={{ whiteSpace: "nowrap" }}>{new Date(bill.createdAt).toLocaleString("en-GB")}</td>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    {new Date(bill.createdAt).toLocaleString("en-GB")}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -372,9 +389,22 @@ const AllBill = ({ url }) => {
                     paidAmount={selectedBill.paidAmount}
                     usedCoins={selectedBill.usedCoins}
                     date={selectedBill.date}
+                    showGst={showGst}
                   />
                 </div>
                 <div className="modal-footer">
+                  <div className="form-check form-switch">
+                    <label className="form-label">GST Bill</label>
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      title="Change Status"
+                      checked={showGst}
+                      onChange={() => setShowGst(!showGst)}
+                      style={{ cursor: "pointer" }}
+                    />
+                  </div>
                   <button className="btn btn-secondary" onClick={closeModal}>
                     Close
                   </button>

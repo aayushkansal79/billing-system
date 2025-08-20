@@ -41,6 +41,11 @@ const VendorProducts = ({ url }) => {
     setFilters((prev) => ({ ...prev, limit }));
   };
 
+  const totalPurchase = products.reduce((sum, prod) => sum + prod.purchasedQty, 0);
+  const totalSale = products.reduce((sum, prod) => sum + prod.soldQty, 0);
+  const totalClosing = products.reduce((sum, prod) => sum + prod.currentStock, 0);
+  const totalAmount = products.reduce((sum, prod) => sum + (prod.currentStock * (prod.purchasePrice)), 0);
+
   return (
     <>
       <p className="bread">Vendor Products</p>
@@ -110,14 +115,14 @@ const VendorProducts = ({ url }) => {
                 <tr>
                   <th>#</th>
                   <th>Product Name</th>
-                  <th>Purchased Qty</th>
-                  <th className="text-end">Purchased Price</th>
+                  <th className="text-end">Purchase Price</th>
+                  <th>Purchase</th>
+                  <th className="text-end">Selling Price</th>
+                  <th>Sales</th>
                   <th>Warehouse Stock</th>
                   <th>Store Stock</th>
-                  <th>Current Stock</th>
-                  <th className="text-end">Selling Price</th>
-                  <th>Sold Qty</th>
-                  {/* <th className="text-end">Profit</th> */}
+                  <th>Closing Stock</th>
+                  <th className="text-end">Cls. Stk. Amt.</th>
                 </tr>
               </thead>
               <tbody>
@@ -126,7 +131,6 @@ const VendorProducts = ({ url }) => {
                     {/* <th>{(filters.page - 1) * filters.limit + (idx + 1)}.</th> */}
                     <th>{idx + 1}.</th>
                     <th>{t.name}</th>
-                    <th className="text-primary">{t.purchasedQty}</th>
                     <th className="text-primary text-end">
                       ₹{" "}
                       {Number(t.purchasePrice).toLocaleString("en-IN", {
@@ -134,9 +138,7 @@ const VendorProducts = ({ url }) => {
                         maximumFractionDigits: 2,
                       })}
                     </th>
-                    <td>{t.warehouseStock}</td>
-                    <td>{t.storeStock}</td>
-                    <th className="text-danger">{t.currentStock}</th>
+                    <th className="text-primary">{t.purchasedQty}</th>
                     <th className="text-success text-end">
                       ₹{" "}
                       {Number(t.sellingPrice).toLocaleString("en-IN", {
@@ -145,15 +147,36 @@ const VendorProducts = ({ url }) => {
                       })}
                     </th>
                     <th className="text-success">{t.soldQty}</th>
-                    {/* <th className="text-success text-end">
+                    <td>{t.warehouseStock}</td>
+                    <td>{t.storeStock}</td>
+                    <th className="text-danger">{t.currentStock}</th>
+                    <th className="text-success text-end">
                       ₹{" "}
-                      {Number(t.soldQty * (t.sellingPrice - t.purchasePrice)).toLocaleString("en-IN", {
+                      {Number(t.currentStock * (t.purchasePrice)).toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
-                    </th> */}
+                    </th>
                   </tr>
                 ))}
+                <tr>
+                  <th className="text-end">Grand Total</th>
+                  <td></td>
+                  <td></td>
+                  <th>{totalPurchase}</th>
+                  <td></td>
+                  <th>{totalSale}</th>
+                  <td></td>
+                  <td></td>
+                  <th>{totalClosing}</th>
+                  <th className="text-end">
+                    ₹{" "}
+                    {Number(totalAmount).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </th>
+                </tr>
               </tbody>
             </table>
           </div>
