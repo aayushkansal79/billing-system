@@ -54,7 +54,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
       <div className="d-flex justify-content-between">
         <h2>INVOICE</h2>
         <p>
-          <b>Purchase Date:</b> {new Date(date).toLocaleDateString()}
+          <b>Purchase Date:</b> {new Date(date).toLocaleDateString("en-GB")}
         </p>
       </div>
       <div className="d-flex justify-content-between">
@@ -485,7 +485,7 @@ const Order = ({ url }) => {
                     </svg>
                   </button>
                 </td>
-                <td>{new Date(purchase.date).toLocaleDateString()}</td>
+                <td>{new Date(purchase.date).toLocaleDateString("en-GB")}</td>
               </tr>
             ))}
           </tbody>

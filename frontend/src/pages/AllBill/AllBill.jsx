@@ -328,7 +328,7 @@ const AllBill = ({ url }) => {
                       👁️
                     </button>
                   </td>
-                  <td style={{ whiteSpace: "nowrap" }}>{new Date(bill.createdAt).toLocaleString()}</td>
+                  <td style={{ whiteSpace: "nowrap" }}>{new Date(bill.createdAt).toLocaleString("en-GB")}</td>
                 </tr>
               ))}
             </tbody>

@@ -307,7 +307,7 @@ const Companies = ({ url }) => {
                     company.gstNumber
                   )}
                 </td>
-                <td>{new Date(company.updatedAt).toLocaleString()}</td>
+                <td>{new Date(company.updatedAt).toLocaleString("en-GB")}</td>
                 <td>
                   {/* {new Date(company.updatedAt).toLocaleString()}
                   <hr /> */}

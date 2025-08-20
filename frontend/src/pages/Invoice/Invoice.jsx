@@ -115,10 +115,10 @@ const Invoice = (
             <br />
             <p className="m-0">Invoice No.: {invoiceNumber}</p>
             <p className="m-0">
-              Invoice Date: {new Date(date).toLocaleDateString("en-IN")}
+              Invoice Date: {new Date(date).toLocaleDateString("en-GB")}
             </p>
           </div>
-          <img src={assets.main_logo} width={90} alt="" />
+          <img src={assets.main_logo} width={90} style={{opacity: "0.8"}} alt="" />
           <div className="text-end" style={{ width: "40%" }}>
             <p className="m-0">
               <b>Subject to Beawar Jurisdiction</b>
@@ -133,7 +133,7 @@ const Invoice = (
               </b>
             </p>
             <p className="m-0">
-              <b>GST No.: {form.CompanyGST}</b>
+              <b>GSTIN: {form.CompanyGST}</b>
             </p>
           </div>
         </div>
@@ -573,7 +573,7 @@ const Invoice = (
         </div>
       </div>
       <div>
-        <b>Refund Note: </b>
+        <b>Terms & Conditions: </b>
         <div
           className="refund-note"
           dangerouslySetInnerHTML={{ __html: form.RefundNote }}

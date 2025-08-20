@@ -275,7 +275,7 @@ const AllStores = ({ url }) => {
                     store.contactNumber
                   )}
                 </td>
-                <td>{new Date(store.createdAt).toLocaleString()}</td>
+                <td>{new Date(store.createdAt).toLocaleString("en-GB")}</td>
                 <td>
                   <div
                     style={{

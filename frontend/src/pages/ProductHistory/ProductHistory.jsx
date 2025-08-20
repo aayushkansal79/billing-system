@@ -136,7 +136,7 @@ const ProductHistory = ({ url }) => {
                       })}
                     </th>
                     <td>
-                      {new Date(p.purchaseDate).toLocaleDateString()}
+                      {new Date(p.purchaseDate).toLocaleDateString("en-GB")}
                     </td>
                   </tr>
                 ))}

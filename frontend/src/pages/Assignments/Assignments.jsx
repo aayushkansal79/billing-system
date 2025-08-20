@@ -579,7 +579,7 @@ const Assignments = ({ url }) => {
                           {assignment.dispatchDateTime
                             ? new Date(
                                 assignment.dispatchDateTime
-                              ).toLocaleString()
+                              ).toLocaleString("en-GB")
                             : "Not set"}
                         </span>
                         <br />
@@ -595,7 +595,7 @@ const Assignments = ({ url }) => {
                   </td>
                 ) : assignment.dispatchDateTime ? (
                   <td>
-                    {new Date(assignment.dispatchDateTime).toLocaleString()}
+                    {new Date(assignment.dispatchDateTime).toLocaleString("en-GB")}
                   </td>
                 ) : (
                   <td>N/A</td>
@@ -634,7 +634,7 @@ const Assignments = ({ url }) => {
                     👁️
                   </button>
                 </td>
-                <td>{new Date(assignment.createdAt).toLocaleString()}</td>
+                <td>{new Date(assignment.createdAt).toLocaleString("en-GB")}</td>
                 <th>
                   {user?.type === "admin" ? (
                     assignment.assignStatus === "Process" ? (

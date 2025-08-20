@@ -406,7 +406,7 @@ const Customer = ({ url }) => {
                             <th className="text-danger">₹ {bill.billAmount}</th>
                             <td>
                               <small>
-                                {new Date(bill.createdAt).toLocaleDateString()}
+                                {new Date(bill.createdAt).toLocaleDateString("en-GB")}
                               </small>
                             </td>
                           </tr>

@@ -479,7 +479,7 @@ const Products = ({ url }) => {
                 </th>
                 {/* <td>{new Date(product.createdAt).toLocaleDateString()}</td> */}
                 <td>
-                  {new Date(product.lastPurchaseDate).toLocaleDateString()}
+                  {new Date(product.lastPurchaseDate).toLocaleDateString("en-GB")}
                 </td>
                 <td>
                   <div

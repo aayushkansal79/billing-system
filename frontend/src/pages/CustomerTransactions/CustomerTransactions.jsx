@@ -241,7 +241,7 @@ const CustomerTransactions = ({ url }) => {
                         <b className="m-0">{t.generatedCoins}</b>
                       </div>
                     </td>
-                    <td>{new Date(t.createdAt).toLocaleString()}</td>
+                    <td>{new Date(t.createdAt).toLocaleString("en-GB")}</td>
                   </tr>
                 ))}
               </tbody>

@@ -312,13 +312,13 @@ const RequestsRecieved = ({ url }) => {
                 </th>
                 <td>
                   <small>
-                    Req At: {new Date(req.requestedAt).toLocaleString()}
+                    Req At: {new Date(req.requestedAt).toLocaleString("en-GB")}
                     <br />
                     {/* {req.acceptedAt &&
                       `Acc At: ${new Date(req.acceptedAt).toLocaleString()}`} */}
                     {req.rejectedAt
-                      ? `Rej At: ${new Date(req.rejectedAt).toLocaleString()}`
-                      : `Acc At: ${new Date(req.acceptedAt).toLocaleString()}`}
+                      ? `Rej At: ${new Date(req.rejectedAt).toLocaleString("en-GB")}`
+                      : `Acc At: ${new Date(req.acceptedAt).toLocaleString("en-GB")}`}
                     <br />
                     {req.status === 0 && (
                       <span className="badge bg-warning text-dark">
