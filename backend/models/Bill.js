@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const BillProductSchema = new mongoose.Schema({
     product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
     productName: { type: String, required: true },
+    hsn: { type: String, required: true },
     quantity: { type: Number, required: true },
     priceBeforeGst: { type: Number },
     discountMethod: { type: String, enum: ["percentage", "flat"] },

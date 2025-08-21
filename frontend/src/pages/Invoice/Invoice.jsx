@@ -25,6 +25,8 @@ const Invoice = (
     usedCoins,
     date,
     showGst = false,
+    ptTable = true,
+    tnc = true,
   },
   ref
 ) => {
@@ -218,7 +220,7 @@ const Invoice = (
             <tr key={idx}>
               <td>{idx + 1}.</td>
               <td>{p.productName}</td>
-              <td>540752</td>
+              <td>{p.hsn}</td>
               <td>{p.quantity}</td>
               <td>
                 ₹
@@ -512,7 +514,7 @@ const Invoice = (
 
       {/* <hr /> */}
 
-      <table className="table bill-foot">
+      <table className={`table bill-foot ${ptTable ? "" : "no-print"}`}>
         <tbody>
           <tr>
             {discount > 0 ? (
@@ -642,7 +644,7 @@ const Invoice = (
           />
         </div>
       </div>
-      <div>
+      <div className={tnc ? "" : "no-print"}>
         <b>Terms & Conditions: </b>
         <div
           className="refund-note"

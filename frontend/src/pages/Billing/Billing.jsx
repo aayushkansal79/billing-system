@@ -22,6 +22,7 @@ const Billing = ({ url, setSidebarOpen }) => {
     {
       product: null,
       productName: "",
+      hsn: "",
       quantity: "",
       priceBeforeGst: "",
       discountMethod: "percentage",
@@ -58,6 +59,12 @@ const Billing = ({ url, setSidebarOpen }) => {
   ]);
   const [paidAmount, setPaidAmount] = useState();
   const [usedCoins, setUsedCoins] = useState();
+
+  const [printControl, setPrintControl] = useState({
+    showGst: false,
+    ptTable: true,
+    tnc: true,
+  });
 
   const [selectedTransactions, setSelectedTransactions] = useState([]);
   const [selectedTransactionsTotal, setSelectedTransactionsTotal] = useState(0);
@@ -223,6 +230,7 @@ const Billing = ({ url, setSidebarOpen }) => {
       ...newProducts[index],
       product: product._id,
       productName: product.name,
+      hsn: product.hsn,
       // priceBeforeGst: product.priceBeforeGst,
       priceBeforeGst: (
         product.printPrice /
@@ -312,6 +320,7 @@ const Billing = ({ url, setSidebarOpen }) => {
                 ...updatedProducts[index],
                 product: sp.product._id,
                 productName: sp.product.name,
+                hsn: sp.product.hsn,
                 // priceBeforeGst: sp.product.priceBeforeGst,
                 priceBeforeGst: (
                   sp.product.printPrice /
@@ -369,6 +378,7 @@ const Billing = ({ url, setSidebarOpen }) => {
         {
           product: null,
           productName: "",
+          hsn: "",
           quantity: "",
           priceBeforeGst: "",
           discountMethod: p.discountMethod,
@@ -574,6 +584,7 @@ const Billing = ({ url, setSidebarOpen }) => {
         products: filteredProducts.map((p) => ({
           product: p.product,
           productName: p.productName.trim(),
+          hsn: p.hsn,
           quantity: parseFloat(p.quantity),
           priceBeforeGst: parseFloat(p.priceBeforeGst),
           discountMethod: p.discountMethod,
@@ -606,6 +617,7 @@ const Billing = ({ url, setSidebarOpen }) => {
         {
           product: null,
           productName: "",
+          hsn: "",
           quantity: "",
           priceBeforeGst: "",
           discountMethod: "percentage",
@@ -660,7 +672,6 @@ const Billing = ({ url, setSidebarOpen }) => {
     frameDoc.open();
     frameDoc.write("<html><head><title>Tax Print</title>");
 
-    // Clone current styles
     document
       .querySelectorAll('link[rel="stylesheet"], style')
       .forEach((style) => {
@@ -668,21 +679,31 @@ const Billing = ({ url, setSidebarOpen }) => {
       });
 
     frameDoc.write(`
-      <style>
-        @media print {
-          .no-print {
+    <style>
+	    .no-print {
           display: none !important;
         }
-          body {
-            background: white !important;
-          }
-          @page {
-            size: auto;
-            margin: 0 10px;
-          }
+        .no-screen {
+          display: table-row !important;
         }
-      </style>
-    </head><body>`);
+        .no-screen td {
+          display: table-cell !important;
+        }
+        .no-screen td strong{
+          display: block !important;
+        }
+      @media print {
+        body {
+          background: white !important;
+        }
+        @page {
+          size: auto;
+          margin: 0 10px;
+        }
+      }
+    </style>
+  </head><body>`);
+
     frameDoc.write(contents);
     frameDoc.write("</body></html>");
     frameDoc.close();
@@ -691,6 +712,7 @@ const Billing = ({ url, setSidebarOpen }) => {
       frame1.contentWindow.focus();
       frame1.contentWindow.print();
       document.body.removeChild(frame1);
+      setPrintControl((prev) => ({ ...prev, showGst: false }));
     }, 500);
   };
 
@@ -1302,9 +1324,63 @@ const Billing = ({ url, setSidebarOpen }) => {
                   paidAmount={billInvoice.paidAmount}
                   usedCoins={billInvoice.usedCoins}
                   date={billInvoice.date}
+                  showGst={printControl.showGst}
+                  ptTable={printControl.ptTable}
+                  tnc={printControl.tnc}
                 />
               </div>
               <div className="modal-footer">
+                <div className="form-check form-switch">
+                  <label className="form-label">Coins Table</label>
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    title="Change Status"
+                    checked={printControl.ptTable}
+                    onChange={() =>
+                      setPrintControl((prev) => ({
+                        ...prev,
+                        ptTable: !prev.ptTable,
+                      }))
+                    }
+                    style={{ cursor: "pointer" }}
+                  />
+                </div>
+                <div className="form-check form-switch">
+                  <label className="form-label">T&C</label>
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    title="Change Status"
+                    checked={printControl.tnc}
+                    onChange={() =>
+                      setPrintControl((prev) => ({
+                        ...prev,
+                        tnc: !prev.tnc,
+                      }))
+                    }
+                    style={{ cursor: "pointer" }}
+                  />
+                </div>
+                <div className="form-check form-switch">
+                  <label className="form-label">GST Bill</label>
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    title="Change Status"
+                    checked={printControl.showGst}
+                    onChange={() =>
+                      setPrintControl((prev) => ({
+                        ...prev,
+                        showGst: !prev.showGst,
+                      }))
+                    }
+                    style={{ cursor: "pointer" }}
+                  />
+                </div>
                 <button className="btn btn-secondary" onClick={closeModal}>
                   Close
                 </button>

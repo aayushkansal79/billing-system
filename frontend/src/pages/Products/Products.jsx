@@ -428,7 +428,7 @@ const Products = ({ url }) => {
                     })}`
                   )}
                 </td> */}
-                <td>
+                <td className="text-end">
                   ₹{" "}
                   {Number(
                     product.printPrice / (1 + 0.01 * product.gstPercentage)

@@ -14,11 +14,6 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
 ) {
   const navigate = useNavigate();
 
-  const total = products.reduce(
-    (sum, item) => sum + item.quantity * item.purchasePriceAfterDiscount,
-    0
-  );
-
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
 
@@ -48,6 +43,16 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
 
     fetchProfile();
   }, []);
+
+  const totalQty = products.reduce((sum, item) => sum + item.quantity, 0);
+  const total = products.reduce(
+    (sum, item) => sum + item.quantity * item.purchasePriceAfterDiscount * (1 + item.gstPercentage / 100),
+    0
+  );
+  const totaldiscount = products.reduce(
+    (sum, item) => sum + item.quantity * (item.purchasePrice - item.purchasePriceAfterDiscount),
+    0
+  );
 
   return (
     <div ref={ref} style={{ padding: "20px" }}>
@@ -94,6 +99,8 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <th>Qty</th>
             <th>Purchase Price</th>
             <th>Price After Discount</th>
+            <th>GST %</th>
+            <th>GST Amount</th>
             <th>Total</th>
             <th className="no-print">Tag</th>
           </tr>
@@ -118,7 +125,26 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
                   maximumFractionDigits: 2,
                 })}
               </td>
+              <td>{p.gstPercentage}%</td>
               <td>
+                ₹
+                {Number(
+                  p.purchasePriceAfterDiscount*(p.gstPercentage / 100)
+                ).toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </td>
+              <td>
+                ₹
+                {Number(
+                  p.quantity * p.purchasePriceAfterDiscount * (1 +p.gstPercentage / 100)
+                ).toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </td>
+              {/* <td>
                 ₹
                 {Number(
                   p.quantity * p.purchasePriceAfterDiscount
@@ -126,7 +152,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
-              </td>
+              </td> */}
               <td className="no-print">
                 <button
                   className="btn btn-outline-info btn-sm"
@@ -152,13 +178,29 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
         </tbody>
         <tfoot>
           <tr>
-            <td colSpan="5" className="text-end">
+            <td colSpan={2}>
               <strong>Grand Total</strong>
             </td>
+            <th>{totalQty}</th>
+            <td colSpan={4}></td>
             <td>
               <strong>
                 ₹
                 {Number(total).toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </strong>
+            </td>
+          </tr>
+          <tr>
+            <td colSpan={2}>
+              <strong>Total Discount</strong>
+            </td>
+            <td>
+              <strong>
+                ₹
+                {Number(totaldiscount).toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -206,13 +248,13 @@ const Order = ({ url }) => {
         const params = new URLSearchParams();
 
         Object.entries(filters).forEach(([key, value]) => {
-        if (value instanceof Date) {
-          // Convert Date to ISO string
-          params.append(key, value.toISOString());
-        } else if (value) {
-          params.append(key, value);
-        }
-      });
+          if (value instanceof Date) {
+            // Convert Date to ISO string
+            params.append(key, value.toISOString());
+          } else if (value) {
+            params.append(key, value);
+          }
+        });
 
         const res = await axios.get(
           `${url}/api/purchase?${params.toString()}`,
@@ -236,7 +278,7 @@ const Order = ({ url }) => {
     setCurrentPage(page);
     setFilters((prev) => ({ ...prev, page }));
   };
-  
+
   const handleLimitChange = (limit) => {
     setFilters((prev) => ({ ...prev, limit }));
   };
@@ -427,7 +469,8 @@ const Order = ({ url }) => {
           <thead className="table-danger">
             <tr>
               <th>#</th>
-              <th>Purchase ID</th>
+              <th>Invoice No.</th>
+              <th>Order No.</th>
               <th>Vendor Name</th>
               <th>City</th>
               <th>Contact</th>
@@ -442,10 +485,8 @@ const Order = ({ url }) => {
             {purchases.map((purchase, idx) => (
               <tr key={purchase._id}>
                 <th>{(filters.page - 1) * filters.limit + (idx + 1)}.</th>
-                <td>
-                  <b>Invoice No. -</b> {purchase.invoiceNumber || "N/A"} <br />
-                  <b>Order No. -</b> {purchase.orderNumber || "N/A"}
-                </td>
+                <td>{purchase.invoiceNumber || "N/A"}</td>
+                <td>{purchase.orderNumber || "N/A"}</td>
                 <td>{purchase.company?.name}</td>
                 <td>{purchase.company?.city}</td>
                 <td>{purchase.company?.contactPhone}</td>

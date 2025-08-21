@@ -14,6 +14,7 @@ const PurchaseSchema = new mongoose.Schema({
         {
             product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
             name: { type: String, required: true },
+            hsn: { type: String, required: true },
             quantity: { type: Number, required: true },
             purchasePrice: { type: Number, required: true },
             purchasePriceAfterDiscount: { type: Number },

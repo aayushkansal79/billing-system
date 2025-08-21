@@ -20,7 +20,7 @@ export const generateBarcode = async () => {
 
 export const createProduct = async (req, res) => {
   try {
-    const { name, unit, priceBeforeGst, price, gstPercentage, printPrice, lastPurchaseDate } = req.body;
+    const { name, hsn, unit, priceBeforeGst, price, gstPercentage, printPrice, lastPurchaseDate } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({ error: "Product name is required." });
@@ -51,6 +51,7 @@ export const createProduct = async (req, res) => {
 
     const product = new Product({
       name: name.trim(),
+      hsn: hsn.trim(),
       unit: unit || "",
       priceBeforeGst: priceBeforeGst || 0,
       price: price || 0,

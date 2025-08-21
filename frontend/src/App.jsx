@@ -33,6 +33,7 @@ import RequestsSent from "./pages/RequestsSent/RequestsSent";
 import RequestsRecieved from "./pages/RequestsRecieved/RequestsRecieved";
 import ProductReport from "./pages/ProductReport/ProductReport";
 import ProductHistory from "./pages/ProductHistory/ProductHistory";
+import VendorReport from "./pages/VendorReport/VendorReport";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -68,7 +69,6 @@ function App() {
               <Route path="/purchase-list/print-tags/:purchaseId" element={<PrivateRoute roles={["admin"]}> <BulkBarcode url={url} /> </PrivateRoute>} />
               <Route path="/purchase-list/print-tag/:id" element={<PrivateRoute roles={["admin"]}> <PrintBarcode url={url} /> </PrivateRoute>} />
               <Route path="/vendors" element={<PrivateRoute roles={["admin"]}> <Companies url={url} /> </PrivateRoute>} />
-              <Route path="/vendors/:companyId/products" element={<PrivateRoute roles={["admin"]}> <VendorProducts url={url} /> </PrivateRoute>} />
               <Route path="/products" element={<PrivateRoute roles={["admin"]}> <Products url={url} /> </PrivateRoute>} />
               <Route path="/store-products" element={<PrivateRoute roles={["store"]}> <StoreProducts url={url} /> </PrivateRoute>} />
               <Route path="/assign-products" element={<PrivateRoute roles={["admin"]}> <AssignProducts url={url} /> </PrivateRoute>} />
@@ -87,6 +87,8 @@ function App() {
               <Route path="/requests-received" element={<PrivateRoute roles={["store"]}> <RequestsRecieved url={url} /> </PrivateRoute>} />
               <Route path="/product-report" element={<PrivateRoute roles={["admin"]}> <ProductReport url={url} /> </PrivateRoute>} />
               <Route path="/product-report/:productId/history" element={<PrivateRoute roles={["admin"]}> <ProductHistory url={url} /> </PrivateRoute>} />
+              <Route path="/vendor-report" element={<PrivateRoute roles={["admin"]}> <VendorReport url={url} /> </PrivateRoute>} />
+              <Route path="/vendors/:companyId/products" element={<PrivateRoute roles={["admin"]}> <VendorProducts url={url} /> </PrivateRoute>} />
               <Route path="/profile" element={<PrivateRoute roles={["admin"]}> <Profile url={url} /> </PrivateRoute>} />
               <Route path="/change-password" element={<PrivateRoute roles={["admin", "store"]}> <ChangePass url={url} /> </PrivateRoute>} />
             </Routes>

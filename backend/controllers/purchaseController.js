@@ -48,6 +48,7 @@ export const createPurchase = async (req, res) => {
                 // Create new product
                 product = new Product({
                     name: p.name.trim(),
+                    hsn: p.hsn.trim() || "",
                     unit: 0,
                     priceBeforeGst: p.priceBeforeGst,
                     gstPercentage: p.gstPercentage,
@@ -56,7 +57,9 @@ export const createPurchase = async (req, res) => {
                     lastPurchaseDate: date,
                 });
             }
-
+            if (p.hsn) {
+                product.hsn = p.hsn.trim();
+            }
             // Increment stock and update price regardless
             product.unit += Number(p.quantity);
             if (p.priceBeforeGst) {
@@ -78,6 +81,7 @@ export const createPurchase = async (req, res) => {
             processedProducts.push({
                 product: product._id,
                 name: product.name,
+                hsn: product.hsn,
                 quantity: p.quantity,
                 purchasePrice: p.purchasePrice,
                 purchasePriceAfterDiscount: p.purchasePriceAfterDiscount,

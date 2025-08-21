@@ -13,7 +13,11 @@ const AllBill = ({ url }) => {
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
   const [selectedBill, setSelectedBill] = useState(null);
-  const [showGst, setShowGst] = useState(false);
+  const [printControl, setPrintControl] = useState({
+    showGst: false,
+    ptTable: true,
+    tnc: true,
+  });
 
   useEffect(() => {
     document.title = "Bills | Ajjawam";
@@ -105,8 +109,7 @@ const AllBill = ({ url }) => {
 
     frameDoc.write(`
     <style>
-      @media print {
-        .no-print {
+	    .no-print {
           display: none !important;
         }
         .no-screen {
@@ -118,6 +121,7 @@ const AllBill = ({ url }) => {
         .no-screen td strong{
           display: block !important;
         }
+      @media print {
         body {
           background: white !important;
         }
@@ -133,12 +137,11 @@ const AllBill = ({ url }) => {
     frameDoc.write("</body></html>");
     frameDoc.close();
 
-    
     setTimeout(() => {
       frame1.contentWindow.focus();
       frame1.contentWindow.print();
       document.body.removeChild(frame1);
-      setShowGst(false);
+      setPrintControl((prev) => ({ ...prev, showGst: false }));
     }, 500);
   };
 
@@ -389,10 +392,46 @@ const AllBill = ({ url }) => {
                     paidAmount={selectedBill.paidAmount}
                     usedCoins={selectedBill.usedCoins}
                     date={selectedBill.date}
-                    showGst={showGst}
+                    showGst={printControl.showGst}
+                    ptTable={printControl.ptTable}
+                    tnc={printControl.tnc}
                   />
                 </div>
                 <div className="modal-footer">
+                  <div className="form-check form-switch">
+                    <label className="form-label">Coins Table</label>
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      title="Change Status"
+                      checked={printControl.ptTable}
+                      onChange={() =>
+                        setPrintControl((prev) => ({
+                          ...prev,
+                          ptTable: !prev.ptTable,
+                        }))
+                      }
+                      style={{ cursor: "pointer" }}
+                    />
+                  </div>
+                  <div className="form-check form-switch">
+                    <label className="form-label">T&C</label>
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      title="Change Status"
+                      checked={printControl.tnc}
+                      onChange={() =>
+                        setPrintControl((prev) => ({
+                          ...prev,
+                          tnc: !prev.tnc,
+                        }))
+                      }
+                      style={{ cursor: "pointer" }}
+                    />
+                  </div>
                   <div className="form-check form-switch">
                     <label className="form-label">GST Bill</label>
                     <input
@@ -400,8 +439,13 @@ const AllBill = ({ url }) => {
                       type="checkbox"
                       role="switch"
                       title="Change Status"
-                      checked={showGst}
-                      onChange={() => setShowGst(!showGst)}
+                      checked={printControl.showGst}
+                      onChange={() =>
+                        setPrintControl((prev) => ({
+                          ...prev,
+                          showGst: !prev.showGst,
+                        }))
+                      }
                       style={{ cursor: "pointer" }}
                     />
                   </div>

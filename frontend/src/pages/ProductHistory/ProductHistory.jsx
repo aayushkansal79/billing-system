@@ -102,7 +102,8 @@ const ProductHistory = ({ url }) => {
               <thead className="table-danger">
                 <tr>
                   <th>#</th>
-                  <th>Purchase ID</th>
+                  <th>Invoice No.</th>
+                  <th>Order No.</th>
                   <th>Vendor Name</th>
                   <th>Purchased Qty</th>
                   <th className="text-end">Purchased Price</th>
@@ -115,10 +116,8 @@ const ProductHistory = ({ url }) => {
                   <tr key={idx} onClick={() => handleProductClick(p._id)}>
                     {/* <th>{(filters.page - 1) * filters.limit + (idx + 1)}.</th> */}
                     <th>{idx + 1}.</th>
-                    <td>
-                      <b>Invoice No. - </b>{p.invoiceNumber || "N/A"} <br />
-                      <b>Order No. - </b>{p.orderNumber || "N/A"}
-                    </td>
+                    <td>{p.invoiceNumber || "N/A"}</td>
+                    <td>{p.orderNumber || "N/A"}</td>
                     <td>{p.vendor.name}</td>
                     <th className="text-primary">{p.purchasedQty || 0}</th>
                     <th className="text-danger text-end">

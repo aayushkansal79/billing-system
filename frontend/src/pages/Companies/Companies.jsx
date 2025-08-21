@@ -105,10 +105,6 @@ const Companies = ({ url }) => {
     }
   };
 
-  const handleVendorClick = (id) => {
-    navigate(`/vendors/${id}/products`);
-  };
-
   return (
     <>
       <p className="bread">Vendors</p>
@@ -120,9 +116,7 @@ const Companies = ({ url }) => {
             className="form-control"
             placeholder="Vendor Name"
             value={filters.name}
-            onChange={(e) =>
-              setFilters({ ...filters, name: e.target.value })
-            }
+            onChange={(e) => setFilters({ ...filters, name: e.target.value })}
           />
         </div>
         <div className="col-md-2">
@@ -210,6 +204,7 @@ const Companies = ({ url }) => {
               <th>#</th>
               <th scope="col">Vendor Name</th>
               <th scope="col">Short Name</th>
+              <th scope="col">City</th>
               <th scope="col">Address</th>
               <th scope="col">Contact No.</th>
               <th scope="col">GST Number</th>
@@ -219,8 +214,8 @@ const Companies = ({ url }) => {
           </thead>
           <tbody className="table-group-divider">
             {allCompanies.map((company, index) => (
-              <tr key={company._id} onClick={() => handleVendorClick(company._id)} style={{cursor: "pointer"}}>
-                <th>{(filters.page - 1)*filters.limit + (index+1)}.</th>
+              <tr key={company._id}>
+                <th>{(filters.page - 1) * filters.limit + (index + 1)}.</th>
                 <th>
                   {editIndex === index ? (
                     <input
@@ -251,32 +246,32 @@ const Companies = ({ url }) => {
                 </th>
                 <td>
                   {editIndex === index ? (
-                    <>
-                      <input
-                        type="text"
-                        className="form-control mb-1"
-                        placeholder="Address"
-                        value={editData.address}
-                        onChange={(e) =>
-                          handleInputChange("address", e.target.value)
-                        }
-                      />
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="City"
-                        value={editData.city}
-                        onChange={(e) =>
-                          handleInputChange("city", e.target.value)
-                        }
-                      />
-                    </>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="City"
+                      value={editData.city}
+                      onChange={(e) =>
+                        handleInputChange("city", e.target.value)
+                      }
+                    />
                   ) : (
-                    <>
-                      {company.address}
-                      <br />
-                      <b>City -</b> {company.city}
-                    </>
+                    company.city
+                  )}
+                </td>
+                <td>
+                  {editIndex === index ? (
+                    <input
+                      type="text"
+                      className="form-control mb-1"
+                      placeholder="Address"
+                      value={editData.address}
+                      onChange={(e) =>
+                        handleInputChange("address", e.target.value)
+                      }
+                    />
+                  ) : (
+                    company.address
                   )}
                 </td>
                 <td>

@@ -37,6 +37,7 @@ const Purchase = ({ url }) => {
   const [products, setProducts] = useState([
     {
       name: "",
+      hsn: "",
       quantity: "",
       purchasePrice: "",
       purchasePriceAfterDiscount: "",
@@ -122,6 +123,7 @@ const Purchase = ({ url }) => {
   const handleProductSelect = (index, product) => {
     const newProducts = [...products];
     newProducts[index].name = product.name;
+    newProducts[index].hsn = product.hsn;
     setProducts(newProducts);
 
     const newSelectedProducts = [...selectedProducts];
@@ -250,6 +252,7 @@ const Purchase = ({ url }) => {
     if (
       isLast &&
       p.name.trim() &&
+      p.hsn.trim() &&
       p.quantity &&
       p.purchasePrice &&
       p.profitPercentage &&
@@ -259,6 +262,7 @@ const Purchase = ({ url }) => {
         ...newProducts,
         {
           name: "",
+          hsn: "",
           quantity: "",
           purchasePrice: "",
           purchasePriceAfterDiscount: "",
@@ -414,6 +418,7 @@ const Purchase = ({ url }) => {
               `${url}/api/product`,
               {
                 name: p.name.trim(),
+                hsn: p.hsn.trim() || "",
                 priceBeforeGst: p.priceBeforeGst || "0",
                 gstPercentage: p.gstPercentage || "0",
                 price: p.sellingPrice || "0",
@@ -431,6 +436,7 @@ const Purchase = ({ url }) => {
         processedProducts.push({
           product: productInDB._id,
           name: p.name.trim(),
+          hsn: p.hsn.trim() || "",
           quantity: Number(p.quantity),
           purchasePrice: Number(p.purchasePrice),
           purchasePriceAfterDiscount: Number(p.purchasePriceAfterDiscount),
@@ -469,6 +475,7 @@ const Purchase = ({ url }) => {
       setProducts([
         {
           name: "",
+          hsn: "",
           quantity: "",
           purchasePrice: "",
           purchasePriceAfterDiscount: "",
@@ -670,36 +677,39 @@ const Purchase = ({ url }) => {
         </div>
         <form className="row g-3" onSubmit={handleSubmit}>
           <div className="col-md-2">
-            <label className="form-label">Product Name*</label>
+            <label className="form-label">Product Name</label>
           </div>
           <div className="col-md-1">
-            <label className="form-label">Quantity*</label>
+            <label className="form-label">HSN Code</label>
           </div>
           <div className="col-md-1">
-            <label className="form-label">Purchase Price (₹)*</label>
+            <label className="form-label">Quantity</label>
+          </div>
+          <div className="col-md-1">
+            <label className="form-label">Purchase Price (₹)</label>
           </div>
           <div className="col-md-2">
             <label className="form-label">
-              Purchase Price After Discount ({discount}%)*
+              Purchase Price After Discount ({discount}%)
             </label>
           </div>
           <div className="col-md-1">
-            <label className="form-label">Total (₹)*</label>
+            <label className="form-label">Total (₹)</label>
           </div>
           <div className="col-md-1">
-            <label className="form-label">Profit %*</label>
+            <label className="form-label">Profit %</label>
           </div>
           {/* <div className="col-md-1">
             <label className="form-label">Price Before GST*</label>
           </div> */}
           <div className="col-md-1">
-            <label className="form-label">GST %*</label>
+            <label className="form-label">GST %</label>
           </div>
           <div className="col-md-1">
-            <label className="form-label">Selling Price (₹)*</label>
+            <label className="form-label">Selling Price (₹)</label>
           </div>
-          <div className="col-md-2">
-            <label className="form-label">Print Price (₹)*</label>
+          <div className="col-md-1">
+            <label className="form-label">Print Price (₹)</label>
           </div>
           {products.map((product, index) => (
             <div
@@ -737,6 +747,17 @@ const Purchase = ({ url }) => {
                       ))}
                     </ul>
                   )}
+              </div>
+              <div className="col-md-1">
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="HSN Code"
+                  value={product.hsn}
+                  onChange={(e) =>
+                    handleChangeProd(index, "hsn", e.target.value)
+                  }
+                />
               </div>
               <div className="col-md-1">
                 <input
@@ -827,7 +848,7 @@ const Purchase = ({ url }) => {
                   disabled
                 />
               </div>
-              <div className="col-md-2 d-flex">
+              <div className="col-md-1 d-flex">
                 <input
                   type="number"
                   className="form-control"

@@ -555,24 +555,79 @@ const Sidebar = ({ sidebarOpen }) => {
           ""
         )}
 
-        {user?.type === "admin" && (
-          <NavLink
-            to="/product-report"
-            className={sidebarOpen ? "side-item" : "side-item side-item-active"}
-            title="Product Report"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              height="20px"
-              viewBox="0 -960 960 960"
-              width="24px"
-              fill="#000000"
+        {user?.type === "admin" ? (
+          <>
+            <div
+              onClick={() => toggleMenu("report")}
+              className={
+                sidebarOpen ? "side-item" : "side-item side-item-active"
+              }
+              title="Reports"
             >
-              <path d="M280-280h80v-200h-80v200Zm320 0h80v-400h-80v400Zm-160 0h80v-120h-80v120Zm0-200h80v-80h-80v80ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
-            </svg>
-            {/* <div class="vr"></div> */}
-            <p>Product Report</p>
-          </NavLink>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="20px"
+                viewBox="0 -960 960 960"
+                width="24px"
+                fill="#000000"
+              >
+                <path d="M280-280h80v-200h-80v200Zm320 0h80v-400h-80v400Zm-160 0h80v-120h-80v120Zm0-200h80v-80h-80v80ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
+              </svg>
+              {/* <div class="vr"></div> */}
+              <p>Reports</p>
+              <span className={sidebarOpen ? "arrow" : "arrow arrow-active"}>
+                {openMenu === "report" ? "▾" : "▸"}
+              </span>
+            </div>
+
+            {openMenu === "report" && (
+              <>
+                <NavLink
+                  to="/product-report"
+                  className={`side-item menu-item ${
+                    sidebarOpen ? "" : "side-item-active menu-item-active"
+                  }`}
+                  style={{ paddingLeft: "30px" }}
+                  title="Product Report"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="20px"
+                    viewBox="0 -960 960 960"
+                    width="24px"
+                    fill="#000000"
+                  >
+                    <path d="M80-140v-320h320v320H80Zm80-80h160v-160H160v160Zm60-340 220-360 220 360H220Zm142-80h156l-78-126-78 126ZM863-42 757-148q-21 14-45.5 21t-51.5 7q-75 0-127.5-52.5T480-300q0-75 52.5-127.5T660-480q75 0 127.5 52.5T840-300q0 26-7 50.5T813-204L919-98l-56 56ZM660-200q42 0 71-29t29-71q0-42-29-71t-71-29q-42 0-71 29t-29 71q0 42 29 71t71 29ZM320-380Zm120-260Z" />
+                  </svg>
+                  {/* <div class="vr"></div> */}
+                  <p>Product Report</p>
+                </NavLink>
+
+                <NavLink
+                  to="/vendor-report"
+                  className={`side-item menu-item ${
+                    sidebarOpen ? "" : "side-item-active menu-item-active"
+                  }`}
+                  style={{ paddingLeft: "30px" }}
+                  title="All Stores"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="20px"
+                    viewBox="0 -960 960 960"
+                    width="24px"
+                    fill="#000000"
+                  >
+                    <path d="M120-120v-560h160v-160h400v320h160v400H520v-160h-80v160H120Zm80-80h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 320h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 480h80v-80h-80v80Zm0-160h80v-80h-80v80Z" />
+                  </svg>
+                  {/* <div class="vr"></div> */}
+                  <p>Vendor Report</p>
+                </NavLink>
+              </>
+            )}
+          </>
+        ) : (
+          ""
         )}
       </nav>
     </aside>
