@@ -883,7 +883,7 @@ const Purchase = ({ url }) => {
             <div className="col-md-2">
               <h6 className="text-danger fw-bold">Grand Total</h6>
             </div>
-            <div className="col-md-4"></div>
+            <div className="col-md-5"></div>
             <div className="col-md-2">
               <h6 className="text-danger fw-bold">
                 ₹ {totalPriceAfterDiscount}
