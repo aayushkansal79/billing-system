@@ -20,7 +20,7 @@ export const getCompany = async (req, res) => {
 // Create company
 export const createCompany = async (req, res) => {
     try {
-        const { name, shortName, city, contactPhone, gstNumber, address } = req.body;
+        const { name, shortName, state, contactPhone, gstNumber, address } = req.body;
 
         if (!name || name.trim() === "") {
             return res.status(400).json({ error: "Company name is required." });
@@ -28,6 +28,10 @@ export const createCompany = async (req, res) => {
         
         if (!shortName || shortName.trim() === "") {
             return res.status(400).json({ error: "Company shortName is required." });
+        }
+
+        if (!state || state.trim() === "") {
+            return res.status(400).json({ error: "Company state is required." });
         }
 
         // Check for duplicates by name, shortName, contactPhone, or gstNumber
@@ -50,7 +54,7 @@ export const createCompany = async (req, res) => {
         const company = new Company({
             name: name.trim(),
             shortName: shortName.trim(),
-            city: city?.trim(),
+            state: state.trim(),
             contactPhone: contactPhone?.trim(),
             gstNumber: gstNumber?.trim(),
             address: address?.trim(),
@@ -114,7 +118,7 @@ export const getAllCompanies = async (req, res) => {
     const {
       name,
       shortName,
-      city,
+      state,
       contactPhone,
       gstNumber,
       address,
@@ -127,7 +131,7 @@ export const getAllCompanies = async (req, res) => {
     // Partial match filters
     if (name) query.name = { $regex: name, $options: "i" };
     if (shortName) query.shortName = { $regex: shortName, $options: "i" };
-    if (city) query.city = { $regex: city, $options: "i" };
+    if (state) query.state = { $regex: state, $options: "i" };
     if (contactPhone) query.contactPhone = { $regex: contactPhone, $options: "i" };
     if (gstNumber) query.gstNumber = { $regex: gstNumber, $options: "i" };
     if (address) query.address = { $regex: address, $options: "i" };
@@ -164,7 +168,7 @@ export const updateACompany = async (req, res) => {
 
         company.name = req.body.name || company.name;
         company.address = req.body.address || company.address;
-        company.city = req.body.city || company.city;
+        company.state = req.body.state || company.state;
         company.contactPhone = req.body.contactPhone || company.contactPhone;
         company.gstNumber = req.body.gstNumber || company.gstNumber;
 

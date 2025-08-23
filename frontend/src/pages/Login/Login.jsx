@@ -56,7 +56,7 @@ const Login = ({ url }) => {
 
   return (
     <div className="login-container">
-      <form onSubmit={handleSubmit} className="text-center p-4 shadow bg-light">
+      <form onSubmit={handleSubmit} className="text-center p-4 px-5 shadow bg-light">
         <img src={assets.main_logo} alt="Logo" width={150} className="mb-3 rounded-circle" />
         <div className="form-group mb-3 text-start">
           <label>Username</label>

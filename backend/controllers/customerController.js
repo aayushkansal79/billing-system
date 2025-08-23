@@ -99,3 +99,21 @@ export const getAllCustomers = async (req, res) => {
   }
 };
 
+export const updateCustomer = async (req, res) => {
+    try {
+        const customer = await Customer.findById(req.params.id);
+        if (!customer) {
+            return res.status(404).json({ message: "Customer not found" });
+        }
+
+        customer.name = req.body.name || customer.name;
+        customer.gst = req.body.gst || customer.gst;
+        customer.state = req.body.state || customer.state;
+
+        await customer.save();
+        res.json({ message: "Customer updated successfully", customer });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Server Error" });
+    }
+};

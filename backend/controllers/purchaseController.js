@@ -144,7 +144,7 @@ export const getAllPurchases = async (req, res) => {
       companyName,
       contactPhone,
       gstNumber,
-      city,
+      state,
       address,
       startDate,
       endDate,
@@ -183,7 +183,7 @@ export const getAllPurchases = async (req, res) => {
       ...(companyName && { name: { $regex: companyName, $options: "i" } }),
       ...(contactPhone && { contactPhone: { $regex: contactPhone, $options: "i" } }),
       ...(gstNumber && { gstNumber: { $regex: gstNumber, $options: "i" } }),
-      ...(city && { city: { $regex: city, $options: "i" } }),
+      ...(state && { state: { $regex: state, $options: "i" } }),
       ...(address && { address: { $regex: address, $options: "i" } }),
     };
 
@@ -192,7 +192,7 @@ export const getAllPurchases = async (req, res) => {
     const purchases = await Purchase.find(query)
       .populate({
         path: "company",
-        select: "name shortName city contactPhone gstNumber address",
+        select: "name shortName state contactPhone gstNumber address",
         match: Object.keys(companyFilter).length > 0 ? companyFilter : undefined,
       })
       .populate("products.product", "name price barcode")
@@ -262,3 +262,45 @@ export const getPurchaseById = async (req, res) => {
         res.status(500).json({ error: "Server error while fetching purchase." });
     }
 };
+
+export const searchPurchasesByProductName = async (req, res) => {
+  try {
+    const { name } = req.query;
+    console.log("Query params:", req.query);
+
+    if (!name) {
+      return res.status(400).json({ message: "Product name is required" });
+    }
+
+    const purchases = await Purchase.find({
+      "products.name": { $regex: name, $options: "i" }
+    })
+      .populate("company", "name shortName state contactPhone gstNumber address")
+      .populate("products.product", "name barcode");
+
+    const results = [];
+
+    purchases.forEach(purchase => {
+      purchase.products.forEach(prod => {
+        if (prod?.name && prod.name.toLowerCase().includes(name.toLowerCase())) {
+          results.push({
+            product: prod.product,
+            name: prod.name,
+            barcode: prod.product?.barcode || "",
+            purchasePriceAfterDiscount: prod.purchasePriceAfterDiscount,
+            printPrice: prod.printPrice,
+            purchasedQty: prod.quantity,
+            purchaseDate: purchase.date,
+            company: purchase.company,
+          });
+        }
+      });
+    });
+
+    res.json({ matches: results });
+  } catch (error) {
+    console.error("Error searching purchases:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+

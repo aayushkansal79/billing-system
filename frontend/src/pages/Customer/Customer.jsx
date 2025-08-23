@@ -25,6 +25,9 @@ const Customer = ({ url }) => {
     { method: "", amount: "" },
   ]);
 
+  const [editIndex, setEditIndex] = useState(null);
+  const [editData, setEditData] = useState({});
+
   const [filters, setFilters] = useState({
     name: "",
     mobile: "",
@@ -70,7 +73,7 @@ const Customer = ({ url }) => {
   const handlePageChange = (page) => {
     setFilters((prev) => ({ ...prev, page }));
   };
-  
+
   const handleLimitChange = (limit) => {
     setFilters((prev) => ({ ...prev, limit }));
   };
@@ -173,6 +176,34 @@ const Customer = ({ url }) => {
     }
   };
 
+  const handleEditClick = (index) => {
+    setEditIndex(index);
+    setEditData(customerList[index]);
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async (id) => {
+      setLoading(true);
+      try {
+        await axios.patch(
+          `${url}/api/customer/${id}`,
+          { ...editData },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success("Customer updated successfully.");
+        setEditIndex(null);
+        fetchCustomers();
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to update customer.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
   const handleCustomerClick = (customerId) => {
     navigate(`/all-customer/${customerId}/transactions`);
   };
@@ -244,11 +275,21 @@ const Customer = ({ url }) => {
               <th scope="col">Mobile No.</th>
               <th scope="col">State</th>
               <th scope="col">GST</th>
-              <th scope="col" className="text-end">Total Amt</th>
-              <th scope="col" className="text-end">Paid Amt</th>
-              <th scope="col" className="text-end">Pending Amt</th>
-              <th scope="col" className="text-end">Unused Coins</th>
-              <th scope="col" className="text-end">Used Coins</th>
+              <th scope="col" className="text-end">
+                Total Amt
+              </th>
+              <th scope="col" className="text-end">
+                Paid Amt
+              </th>
+              <th scope="col" className="text-end">
+                Wallet
+              </th>
+              <th scope="col" className="text-end">
+                Unused Coins
+              </th>
+              <th scope="col" className="text-end">
+                Used Coins
+              </th>
               <th scope="col">Date & Time</th>
               <th scope="col">Actions</th>
             </tr>
@@ -261,25 +302,74 @@ const Customer = ({ url }) => {
                 style={{ cursor: "pointer" }}
               >
                 <th>{(filters.page - 1) * filters.limit + (index + 1)}.</th>
-                <th>{customer.name}</th>
+                <th>
+                  {editIndex === index ? (
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editData.name}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
+                    />
+                  ) : (
+                    customer.name
+                  )}
+                </th>
                 <td>{customer.mobile}</td>
-                <td>{customer.state}</td>
-                <td>{customer.gst || "N/A"}</td>
-                <th className="text-primary text-end">
+                <td>
+                  {editIndex === index ? (
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editData.state}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) =>
+                        handleInputChange("state", e.target.value)
+                      }
+                    />
+                  ) : (
+                    customer.state
+                  )}
+                </td>
+                <td>
+                  {editIndex === index ? (
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editData.gst}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => handleInputChange("gst", e.target.value)}
+                    />
+                  ) : (
+                    customer.gst || "N/A"
+                  )}
+                </td>
+                <th
+                  className="text-primary text-end"
+                  style={{ textWrap: "nowrap" }}
+                >
                   ₹{" "}
                   {Number(customer.totalAmount).toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
                 </th>
-                <th className="text-success text-end">
+                <th
+                  className="text-success text-end"
+                  style={{ textWrap: "nowrap" }}
+                >
                   ₹{" "}
                   {Number(customer.paidAmount).toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
                 </th>
-                <th className="text-danger text-end">
+                <th
+                  className="text-danger text-end"
+                  style={{ textWrap: "nowrap" }}
+                >
                   ₹{" "}
                   {Number(customer.pendingAmount).toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
@@ -318,6 +408,65 @@ const Customer = ({ url }) => {
                 </td>
                 <td>{new Date(customer.updatedAt).toLocaleString()}</td>
                 <td>
+                  {editIndex === index ? (
+                    <>
+                      <button
+                        className="cpy-btn"
+                        title="Save"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSave(customer._id);
+                        }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          height="24px"
+                          viewBox="0 -960 960 960"
+                          width="24px"
+                          fill="green"
+                        >
+                          <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q8 0 15 1.5t14 4.5l-74 74H200v560h560v-266l80-80v346q0 33-23.5 56.5T760-120H200Zm261-160L235-506l56-56 170 170 367-367 57 55-424 424Z" />
+                        </svg>
+                      </button>
+                      <button
+                        className="cpy-btn mx-2"
+                        title="Cancel"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditIndex(null);
+                        }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          height="24px"
+                          viewBox="0 -960 960 960"
+                          width="24px"
+                          fill="red"
+                        >
+                          <path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
+                        </svg>
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="cpy-btn"
+                      title="Edit"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditClick(index);
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        height="24px"
+                        viewBox="0 -960 960 960"
+                        width="35px"
+                        fill="green"
+                      >
+                        <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h357l-80 80H200v560h560v-278l80-80v358q0 33-23.5 56.5T760-120H200Zm280-360ZM360-360v-170l367-367q12-12 27-18t30-6q16 0 30.5 6t26.5 18l56 57q11 12 17 26.5t6 29.5q0 15-5.5 29.5T897-728L530-360H360Zm481-424-56-56 56 56ZM440-440h56l232-232-28-28-29-28-231 231v57Zm260-260-29-28 29 28 28 28-28-28Z" />
+                      </svg>
+                    </button>
+                  )}
                   <button
                     className="btn btn-success"
                     onClick={(e) => {
@@ -406,7 +555,9 @@ const Customer = ({ url }) => {
                             <th className="text-danger">₹ {bill.billAmount}</th>
                             <td>
                               <small>
-                                {new Date(bill.createdAt).toLocaleDateString("en-GB")}
+                                {new Date(bill.createdAt).toLocaleDateString(
+                                  "en-GB"
+                                )}
                               </small>
                             </td>
                           </tr>

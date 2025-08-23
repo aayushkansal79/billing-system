@@ -197,6 +197,7 @@ const Products = ({ url }) => {
     setEditingProductId(product._id);
     setEditData({
       name: product.name,
+      hsn: product.hsn,
       unit: product.unit,
       minUnit: product.minUnit,
       priceBeforeGst: product.priceBeforeGst,
@@ -352,6 +353,7 @@ const Products = ({ url }) => {
             <tr>
               <th scope="col">#</th>
               <th scope="col">Product Name</th>
+              <th scope="col">HSN Code</th>
               <th scope="col">Barcode</th>
               <th scope="col">Quantity</th>
               <th scope="col">Minimum Stock</th>
@@ -386,6 +388,21 @@ const Products = ({ url }) => {
                     product.name
                   )}
                 </th>
+                <td>
+                  {editingProductId === product._id ? (
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editData.hsn}
+                      onChange={(e) =>
+                        setEditData({ ...editData, hsn: e.target.value })
+                      }
+                      autoFocus
+                    />
+                  ) : (
+                    product.hsn
+                  )}
+                </td>
                 <td style={{ whiteSpace: "nowrap" }}>[ {product.barcode} ]</td>
                 <th className="text-primary">{product.unit}</th>
                 <th className="text-danger">

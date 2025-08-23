@@ -377,7 +377,7 @@ const AssignProducts = ({ url }) => {
             <b>{totalQuantity}</b>
           </div>
 
-          <div style={{width: "220px"}}>
+          {/* <div style={{width: "220px"}}>
             <label className="form-label">Dispatch Date & Time</label>
             <input
               type="datetime-local"
@@ -385,7 +385,7 @@ const AssignProducts = ({ url }) => {
               value={dispatchDateTime}
               onChange={(e) => setDispatchDateTime(e.target.value)}
             />
-          </div>
+          </div> */}
         </div>
       </div>
 

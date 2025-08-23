@@ -5,6 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
+import Select from "react-select";
 import Loader from "../../components/Loader/Loader";
 
 const Purchase = ({ url }) => {
@@ -17,7 +18,7 @@ const Purchase = ({ url }) => {
   const [companyData, setCompanyData] = useState({
     name: "",
     shortName: "",
-    city: "",
+    state: "",
     contactPhone: "",
     gstNumber: "",
     address: "",
@@ -51,8 +52,53 @@ const Purchase = ({ url }) => {
   const [productDropdowns, setProductDropdowns] = useState({});
   const [selectedProducts, setSelectedProducts] = useState([null]);
 
-  const handleCompanyChange = async (e) => {
-    const value = e.target.value;
+  const indianStatesAndUTs = [
+    {
+      value: "Andaman and Nicobar Islands",
+      label: "Andaman and Nicobar Islands",
+    },
+    { value: "Andhra Pradesh", label: "Andhra Pradesh" },
+    { value: "Arunachal Pradesh", label: "Arunachal Pradesh" },
+    { value: "Assam", label: "Assam" },
+    { value: "Bihar", label: "Bihar" },
+    { value: "Chandigarh", label: "Chandigarh" },
+    { value: "Chhattisgarh", label: "Chhattisgarh" },
+    {
+      value: "Dadra and Nagar Haveli and Daman and Diu",
+      label: "Dadra and Nagar Haveli and Daman and Diu",
+    },
+    { value: "Delhi", label: "Delhi" },
+    { value: "Goa", label: "Goa" },
+    { value: "Gujarat", label: "Gujarat" },
+    { value: "Haryana", label: "Haryana" },
+    { value: "Himachal Pradesh", label: "Himachal Pradesh" },
+    { value: "Jammu and Kashmir", label: "Jammu and Kashmir" },
+    { value: "Jharkhand", label: "Jharkhand" },
+    { value: "Karnataka", label: "Karnataka" },
+    { value: "Kerala", label: "Kerala" },
+    { value: "Ladakh", label: "Ladakh" },
+    { value: "Lakshadweep", label: "Lakshadweep" },
+    { value: "Madhya Pradesh", label: "Madhya Pradesh" },
+    { value: "Maharashtra", label: "Maharashtra" },
+    { value: "Manipur", label: "Manipur" },
+    { value: "Meghalaya", label: "Meghalaya" },
+    { value: "Mizoram", label: "Mizoram" },
+    { value: "Nagaland", label: "Nagaland" },
+    { value: "Odisha", label: "Odisha" },
+    { value: "Puducherry", label: "Puducherry" },
+    { value: "Punjab", label: "Punjab" },
+    { value: "Rajasthan", label: "Rajasthan" },
+    { value: "Sikkim", label: "Sikkim" },
+    { value: "Tamil Nadu", label: "Tamil Nadu" },
+    { value: "Telangana", label: "Telangana" },
+    { value: "Tripura", label: "Tripura" },
+    { value: "Uttar Pradesh", label: "Uttar Pradesh" },
+    { value: "Uttarakhand", label: "Uttarakhand" },
+    { value: "West Bengal", label: "West Bengal" },
+  ];
+
+  const handleCompanyChange = async (value) => {
+    // const value = e.target.value;
     setCompanyData((prev) => ({ ...prev, name: value }));
 
     if (value.trim()) {
@@ -78,7 +124,7 @@ const Purchase = ({ url }) => {
     setCompanyData({
       name: company.name || "",
       shortName: company.shortName || "",
-      city: company.city || "",
+      state: company.state || "",
       contactPhone: company.contactPhone || "",
       gstNumber: company.gstNumber || "",
       address: company.address || "",
@@ -356,7 +402,7 @@ const Purchase = ({ url }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const requiredFields = ["name", "shortName", "city"];
+      const requiredFields = ["name", "shortName", "state"];
 
       const isAnyRequiredFieldEmpty = requiredFields.some(
         (field) =>
@@ -466,7 +512,7 @@ const Purchase = ({ url }) => {
       setCompanyData({
         name: "",
         shortName: "",
-        city: "",
+        state: "",
         contactPhone: "",
         gstNumber: "",
         address: "",
@@ -510,14 +556,14 @@ const Purchase = ({ url }) => {
             Vendor Details
           </div>
           <form className="row g-3">
-            <div className="col-md-4 position-relative" ref={companyRef}>
+            <div className="col-md-4 position-relative company-select" ref={companyRef}>
               <label className="form-label">Vendor Name*</label>
-              <input
+              {/* <input
                 type="text"
                 className="form-control"
                 placeholder="Enter Name"
                 value={companyData.name}
-                onChange={handleCompanyChange}
+                onChange={(e) => handleCompanyChange(e.target.value)}
                 onFocus={() => companyData.name && setShowCompanyDropdown(true)}
                 required
               />
@@ -536,8 +582,32 @@ const Purchase = ({ url }) => {
                     </li>
                   ))}
                 </ul>
-              )}
+              )} */}
+              <Select
+                options={companyDropdown.map((company) => ({
+                  value: company.name,
+                  label: company.name,
+                  _id: company._id,
+                }))}
+                value={companyDropdown.find(
+                  (option) => option.value === companyData.name
+                )}
+                onChange={(selectedOption) => {
+                  const selectedCompany = companyDropdown.find(
+                    (company) => company.name === selectedOption.value
+                  );
+                  handleCompanySelect(selectedCompany);
+                }}
+                onInputChange={(newValue) => {
+                  handleCompanyChange(newValue);
+                }}
+                className="basic-single-select"
+                classNamePrefix="select"
+                onMenuClose={() => setShowCompanyDropdown(false)}
+                onMenuOpen={() => setShowCompanyDropdown(true)}
+              />
             </div>
+
             <div className="col-md-4">
               <label className="form-label">Vendor Short Name*</label>
               <input
@@ -550,19 +620,6 @@ const Purchase = ({ url }) => {
                     ...prev,
                     shortName: e.target.value,
                   }))
-                }
-                required
-              />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">City*</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter City"
-                value={companyData.city}
-                onChange={(e) =>
-                  setCompanyData((prev) => ({ ...prev, city: e.target.value }))
                 }
                 required
               />
@@ -584,21 +641,6 @@ const Purchase = ({ url }) => {
               />
             </div>
             <div className="col-md-4">
-              <label className="form-label">GST Number</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter GST Number"
-                value={companyData.gstNumber}
-                onChange={(e) =>
-                  setCompanyData((prev) => ({
-                    ...prev,
-                    gstNumber: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="col-md-4">
               <label className="form-label">Address</label>
               <input
                 type="text"
@@ -609,6 +651,39 @@ const Purchase = ({ url }) => {
                   setCompanyData((prev) => ({
                     ...prev,
                     address: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label">State*</label>
+              <Select
+                options={indianStatesAndUTs}
+                value={indianStatesAndUTs.find(
+                  (option) => option.value === companyData.state
+                )}
+                onChange={(selectedOption) =>
+                  setCompanyData((prev) => ({
+                    ...prev,
+                    state: selectedOption?.value || "",
+                  }))
+                }
+                classNamePrefix="select"
+                placeholder="Choose..."
+                required
+              />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label">GST Number</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Enter GST Number"
+                value={companyData.gstNumber}
+                onChange={(e) =>
+                  setCompanyData((prev) => ({
+                    ...prev,
+                    gstNumber: e.target.value,
                   }))
                 }
               />

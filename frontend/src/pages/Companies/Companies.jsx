@@ -23,7 +23,7 @@ const Companies = ({ url }) => {
   const [filters, setFilters] = useState({
     name: "",
     shortName: "",
-    city: "",
+    state: "",
     contactPhone: "",
     gstNumber: "",
     address: "",
@@ -142,12 +142,12 @@ const Companies = ({ url }) => {
           />
         </div>
         <div className="col-md-2">
-          <label className="form-label">City:</label>
+          <label className="form-label">State:</label>
           <input
             className="form-control"
-            placeholder="Vendor City"
-            value={filters.city}
-            onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+            placeholder="Vendor State"
+            value={filters.state}
+            onChange={(e) => setFilters({ ...filters, state: e.target.value })}
           />
         </div>
         <div className="col-md-2">
@@ -204,7 +204,7 @@ const Companies = ({ url }) => {
               <th>#</th>
               <th scope="col">Vendor Name</th>
               <th scope="col">Short Name</th>
-              <th scope="col">City</th>
+              <th scope="col">State</th>
               <th scope="col">Address</th>
               <th scope="col">Contact No.</th>
               <th scope="col">GST Number</th>
@@ -249,14 +249,14 @@ const Companies = ({ url }) => {
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="City"
-                      value={editData.city}
+                      placeholder="State"
+                      value={editData.state}
                       onChange={(e) =>
-                        handleInputChange("city", e.target.value)
+                        handleInputChange("state", e.target.value)
                       }
                     />
                   ) : (
-                    company.city
+                    company.state
                   )}
                 </td>
                 <td>

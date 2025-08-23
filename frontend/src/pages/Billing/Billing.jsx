@@ -905,6 +905,36 @@ const Billing = ({ url, setSidebarOpen }) => {
                       </ul>
                     )}
                 </div>
+                {/* <div className="col-md-2">
+                  <Select
+                    options={productDropdowns[index]?.map((prod) => ({
+                      value: prod.product.name,
+                      label: prod.product.name,
+                      _id: prod.product._id,
+                    }))}
+                    value={productDropdowns[index]?.find(
+                      (option) => option.value === products[index]?.productName
+                    )}
+                    onChange={(selectedOption) => {
+                      const selectedProduct = productDropdowns[index].find(
+                        (prod) => prod.product.name === selectedOption.value
+                      );
+
+                      handleProductSelect(index, selectedProduct);
+                      handleChangeProd(
+                        index,
+                        "productName",
+                        selectedOption.value
+                      );
+                    }}
+                    onInputChange={(newValue) => {
+                      fetchProductSuggestions(index, newValue);
+                    }}
+                    className="basic-single-select"
+                    classNamePrefix="select"
+                  />
+                </div> */}
+
                 <div className="col-md-1 mt-1">
                   <input
                     type="number"

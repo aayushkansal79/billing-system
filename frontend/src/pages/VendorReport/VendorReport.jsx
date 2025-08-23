@@ -21,7 +21,7 @@ const VendorReport = ({ url }) => {
   const [filters, setFilters] = useState({
     name: "",
     shortName: "",
-    city: "",
+    state: "",
     contactPhone: "",
     gstNumber: "",
     address: "",
@@ -116,12 +116,12 @@ const VendorReport = ({ url }) => {
           />
         </div>
         <div className="col-md-2">
-          <label className="form-label">City:</label>
+          <label className="form-label">State:</label>
           <input
             className="form-control"
-            placeholder="Vendor City"
-            value={filters.city}
-            onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+            placeholder="Vendor State"
+            value={filters.state}
+            onChange={(e) => setFilters({ ...filters, state: e.target.value })}
           />
         </div>
         <div className="col-md-2">
@@ -178,7 +178,7 @@ const VendorReport = ({ url }) => {
               <th>#</th>
               <th scope="col">Vendor Name</th>
               <th scope="col">Short Name</th>
-              <th scope="col">City</th>
+              <th scope="col">State</th>
               <th scope="col">Address</th>
               <th scope="col">Contact No.</th>
               <th scope="col">GST Number</th>
@@ -195,7 +195,7 @@ const VendorReport = ({ url }) => {
                 <th>{(filters.page - 1) * filters.limit + (index + 1)}.</th>
                 <th>{company.name}</th>
                 <th>{company.shortName}</th>
-                <th>{company.city}</th>
+                <th>{company.state}</th>
                 <td>{company.address}</td>
                 <td>{company.contactPhone}</td>
                 <td>{company.gstNumber}</td>

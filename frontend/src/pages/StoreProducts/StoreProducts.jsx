@@ -145,6 +145,7 @@ const StoreProducts = ({ url }) => {
             <tr>
               <th scope="col">#</th>
               <th scope="col">Product Name</th>
+              <th scope="col">HSN Code</th>
               <th scope="col">Barcode</th>
               <th scope="col">Quantity</th>
               <th scope="col">Minimum Stock</th>
@@ -163,6 +164,7 @@ const StoreProducts = ({ url }) => {
               <tr key={sp._id}>
                 <th>{(filters.page - 1) * filters.limit + (i + 1)}.</th>
                 <th>{sp.product.name}</th>
+                <th>{sp.product.hsn}</th>
                 <td style={{ whiteSpace: "nowrap" }}>
                   [ {sp.product.barcode} ]
                 </td>

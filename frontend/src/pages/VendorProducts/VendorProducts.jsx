@@ -103,7 +103,7 @@ const VendorProducts = ({ url }) => {
         </h3>
         <p>
           <b>Mobile:</b> {company.contactPhone} | <b>Address:</b>{" "}
-          {company.address} | <b>City:</b> {company.city} | <b>GST No.</b>{" "}
+          {company.address} | <b>State:</b> {company.state} | <b>GST No.</b>{" "}
           {company.gstNumber}
         </p>
         {products.length === 0 ? (

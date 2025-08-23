@@ -45,12 +45,26 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
   }, []);
 
   const totalQty = products.reduce((sum, item) => sum + item.quantity, 0);
+
   const total = products.reduce(
-    (sum, item) => sum + item.quantity * item.purchasePriceAfterDiscount * (1 + item.gstPercentage / 100),
+    (sum, item) =>
+      sum +
+      item.quantity *
+        item.purchasePriceAfterDiscount *
+        (1 + item.gstPercentage / 100),
     0
   );
   const totaldiscount = products.reduce(
-    (sum, item) => sum + item.quantity * (item.purchasePrice - item.purchasePriceAfterDiscount),
+    (sum, item) =>
+      sum +
+      item.quantity * (item.purchasePrice - item.purchasePriceAfterDiscount),
+    0
+  );
+  const totalGST = products.reduce(
+    (sum, item) =>
+      sum +
+      item.quantity *
+        (item.purchasePriceAfterDiscount * (item.gstPercentage / 100)),
     0
   );
 
@@ -70,7 +84,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
           <br />
           {company?.address}
           <br />
-          {company?.city}
+          {company?.state}
           <br />
           Contact: {company?.contactPhone}
           <br />
@@ -96,6 +110,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
           <tr>
             <th>#</th>
             <th>Product</th>
+            <th>HSN Code</th>
             <th>Qty</th>
             <th>Purchase Price</th>
             <th>Price After Discount</th>
@@ -110,6 +125,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <tr key={idx}>
               <td>{idx + 1}.</td>
               <td>{p.name}</td>
+              <td>{p.hsn}</td>
               <td>{p.quantity}</td>
               <td>
                 ₹
@@ -129,7 +145,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               <td>
                 ₹
                 {Number(
-                  p.purchasePriceAfterDiscount*(p.gstPercentage / 100)
+                  p.purchasePriceAfterDiscount * (p.gstPercentage / 100)
                 ).toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -138,7 +154,9 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               <td>
                 ₹
                 {Number(
-                  p.quantity * p.purchasePriceAfterDiscount * (1 +p.gstPercentage / 100)
+                  p.quantity *
+                    p.purchasePriceAfterDiscount *
+                    (1 + p.gstPercentage / 100)
                 ).toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -182,7 +200,48 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               <strong>Grand Total</strong>
             </td>
             <th>{totalQty}</th>
-            <td colSpan={4}></td>
+            <td colSpan={3}></td>
+            <td>
+              <strong>
+                {form.CompanyState &&
+                company.state &&
+                form.CompanyState === company.state ? (
+                  <>
+                    <span>CGST</span> <br /> <span>SGST</span>
+                  </>
+                ) : (
+                  "IGST"
+                )}
+              </strong>
+            </td>
+            <td>
+              <strong>
+                {form.CompanyState &&
+                company.state &&
+                form.CompanyState === company.state ? (
+                  <>
+                    ₹
+                    {Number(totalGST / 2).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                    <br />₹
+                    {Number(totalGST / 2).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </>
+                ) : (
+                  <>
+                    ₹
+                    {Number(totalGST).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </>
+                )}
+              </strong>
+            </td>
             <td>
               <strong>
                 ₹
@@ -207,6 +266,50 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               </strong>
             </td>
           </tr>
+          {/* <tr>
+            <td colSpan={2}>
+              <strong>
+                {form.CompanyState &&
+                company.state &&
+                form.CompanyState === company.state ? (
+                  <>
+                    <span>CGST</span> <br /> <span>SGST</span>
+                  </>
+                ) : (
+                  "IGST"
+                )}
+              </strong>
+            </td>
+            <td>
+              <strong>
+                {form.CompanyState &&
+                company.state &&
+                form.CompanyState === company.state ? (
+                  <>
+                    ₹
+                    {Number(totalGST/2).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                    <br />
+                    ₹{Number(totalGST/2).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+
+                  </>
+                ) : (
+                  <>
+                    ₹
+                    {Number(totalGST).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </>
+                )}
+              </strong>
+            </td>
+          </tr> */}
         </tfoot>
       </table>
     </div>
@@ -222,6 +325,10 @@ const Order = ({ url }) => {
   const [selectedPurchase, setSelectedPurchase] = useState(null);
   const componentRef = useRef();
 
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [query, setQuery] = useState("");
+  const [productList, setProductList] = useState([]);
+
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
 
@@ -231,7 +338,7 @@ const Order = ({ url }) => {
     companyName: "",
     contactPhone: "",
     gstNumber: "",
-    city: "",
+    state: "",
     // address: "",
     startDate: "",
     endDate: "",
@@ -340,13 +447,18 @@ const Order = ({ url }) => {
     setSelectedPurchase(null);
   };
 
-  // if (!purchases?.length) {
-  //   return (
-  //     <div className="text-center mt-5">
-  //       <h3>No Purchases Found !</h3>
-  //     </div>
-  //   );
-  // }
+  const fetchProductList = async () => {
+    if (!query.trim()) return;
+    try {
+      const res = await axios.get(`${url}/api/purchase/product`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { name: query },
+      });
+      setProductList(res.data.matches);
+    } catch (err) {
+      console.error("Error fetching product list:", err);
+    }
+  };
 
   return (
     <>
@@ -399,12 +511,12 @@ const Order = ({ url }) => {
           />
         </div> */}
         <div className="col-md-2">
-          <label className="form-label">City:</label>
+          <label className="form-label">State:</label>
           <input
             className="form-control"
-            placeholder="Vendor City"
-            value={filters.city}
-            onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+            placeholder="Vendor State"
+            value={filters.state}
+            onChange={(e) => setFilters({ ...filters, state: e.target.value })}
           />
         </div>
         <div className="col-md-2">
@@ -461,7 +573,23 @@ const Order = ({ url }) => {
           />
         </div>
 
-        {/* <button onClick={fetchFilteredData}>Search</button> */}
+        <div className="d-flex align-self-end justify-content-end">
+          <button
+            className="btn btn-primary d-flex align-items-center gap-2"
+            onClick={(e) => setShowProductModal(true)}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              height="20px"
+              viewBox="0 -960 960 960"
+              width="20px"
+              fill="white"
+            >
+              <path d="M40-200v-560h80v560H40Zm120 0v-560h80v560h-80Zm120 0v-560h40v560h-40Zm120 0v-560h80v560h-80Zm120 0v-560h120v560H520Zm160 0v-560h40v560h-40Zm120 0v-560h120v560H800Z" />
+            </svg>
+            Product Tag Print
+          </button>
+        </div>
       </div>
 
       <div className="orders rounded mb-3">
@@ -472,7 +600,7 @@ const Order = ({ url }) => {
               <th>Invoice No.</th>
               <th>Order No.</th>
               <th>Vendor Name</th>
-              <th>City</th>
+              <th>State</th>
               <th>Contact</th>
               <th>GST No.</th>
               <th className="text-end">Amount</th>
@@ -488,7 +616,7 @@ const Order = ({ url }) => {
                 <td>{purchase.invoiceNumber || "N/A"}</td>
                 <td>{purchase.orderNumber || "N/A"}</td>
                 <td>{purchase.company?.name}</td>
-                <td>{purchase.company?.city}</td>
+                <td>{purchase.company?.state}</td>
                 <td>{purchase.company?.contactPhone}</td>
                 <td>{purchase.company?.gstNumber}</td>
                 <th className="text-danger text-end">
@@ -571,6 +699,109 @@ const Order = ({ url }) => {
           </div>
         )}
       </div>
+
+      {showProductModal && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <div className="d-flex align-items-center">
+              <label className="form-label" style={{ width: "140px" }}>
+                Product Name:
+              </label>
+              <input
+                type="text"
+                placeholder="Search Product"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                }}
+                className="form-control mx-2"
+              />
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={fetchProductList}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height="24px"
+                  viewBox="0 -960 960 960"
+                  width="24px"
+                  fill="white"
+                >
+                  <path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z" />
+                </svg>
+              </button>
+            </div>
+            {productList.length > 0 && (
+              <>
+                <h5 className="my-2" style={{ color: "#6d0616" }}>
+                  Product search for "{query}"
+                </h5>
+                <table className="table table-bordered mt-3">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Product Name</th>
+                      <th>Vendor Name</th>
+                      <th>Quantity</th>
+                      <th>Price</th>
+                      <th>Date</th>
+                      <th>Tag</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {productList.map((p) => (
+                      <tr key={p.product}>
+                        <td>{p.name}</td>
+                        <td>{p.company.name}</td>
+                        <td>{p.purchasedQty}</td>
+                        <td>₹ {p.printPrice}</td>
+                        <td>
+                          {new Date(p.purchaseDate).toLocaleDateString("en-GB")}
+                        </td>
+                        <td>
+                          <button
+                            className="btn btn-outline-info btn-sm"
+                            onClick={() =>
+                              navigate(
+                                `/purchase-list/print-tag/${p.product._id}`,
+                                {
+                                  state: {
+                                    product: p,
+                                    company: p.company,
+                                    date: p.purchaseDate,
+                                    url,
+                                  },
+                                }
+                              )
+                            }
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              height="24px"
+                              viewBox="0 -960 960 960"
+                              width="24px"
+                              fill="#000000"
+                            >
+                              <path d="M640-640v-120H320v120h-80v-200h480v200h-80Zm-480 80h640-640Zm560 100q17 0 28.5-11.5T760-500q0-17-11.5-28.5T720-540q-17 0-28.5 11.5T680-500q0 17 11.5 28.5T720-460Zm-80 260v-160H320v160h320Zm80 80H240v-160H80v-240q0-51 35-85.5t85-34.5h560q51 0 85.5 34.5T880-520v240H720v160Zm80-240v-160q0-17-11.5-28.5T760-560H200q-17 0-28.5 11.5T160-520v160h80v-80h480v80h80Z" />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+            <div className="text-end mt-3">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowProductModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Pagination
         limit={filters.limit}
