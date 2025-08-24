@@ -27,6 +27,7 @@ const Purchase = ({ url }) => {
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [highlightedIndex, setHighlightedIndex] = useState({});
+  const [highlightedCompanyIndex, setHighlightedCompanyIndex] = useState(-1);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [invoiceNo, setInvoiceNo] = useState("");
@@ -120,6 +121,29 @@ const Purchase = ({ url }) => {
       setShowCompanyDropdown(false);
     }
   };
+
+  const handleCompanyKeyDown = (e) => {
+  if (!companyDropdown || companyDropdown.length === 0) return;
+
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    setHighlightedCompanyIndex((prev) =>
+      prev < companyDropdown.length - 1 ? prev + 1 : 0
+    );
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    setHighlightedCompanyIndex((prev) =>
+      prev > 0 ? prev - 1 : companyDropdown.length - 1
+    );
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    if (highlightedCompanyIndex >= 0) {
+      handleCompanySelect(companyDropdown[highlightedCompanyIndex]);
+      setHighlightedCompanyIndex(-1);
+    }
+  }
+};
+
 
   const handleCompanySelect = (company) => {
     setCompanyData({
@@ -596,13 +620,14 @@ const Purchase = ({ url }) => {
               ref={companyRef}
             >
               <label className="form-label">Vendor Name*</label>
-              {/* <input
+              <input
                 type="text"
                 className="form-control"
                 placeholder="Enter Name"
                 value={companyData.name}
                 onChange={(e) => handleCompanyChange(e.target.value)}
                 onFocus={() => companyData.name && setShowCompanyDropdown(true)}
+                onKeyDown={handleCompanyKeyDown}
                 required
               />
               {showCompanyDropdown && companyDropdown.length > 0 && (
@@ -613,15 +638,19 @@ const Purchase = ({ url }) => {
                   {companyDropdown.map((company, index) => (
                     <li
                       key={index}
-                      className="list-group-item list-group-item-action bg-black text-white"
+                      className={`list-group-item list-group-item-action fw-bold ${
+                              index === highlightedCompanyIndex
+                                ? "active bg-primary text-white "
+                                : "bg-white text-black"
+                            }`}
                       onMouseDown={() => handleCompanySelect(company)}
                     >
                       {company.name}
                     </li>
                   ))}
                 </ul>
-              )} */}
-              <Select
+              )}
+              {/* <Select
                 options={companyDropdown.map((company) => ({
                   value: company.name,
                   label: company.name,
@@ -643,7 +672,7 @@ const Purchase = ({ url }) => {
                 classNamePrefix="select"
                 onMenuClose={() => setShowCompanyDropdown(false)}
                 onMenuOpen={() => setShowCompanyDropdown(true)}
-              />
+              /> */}
             </div>
 
             <div className="col-md-4">
@@ -853,9 +882,11 @@ const Purchase = ({ url }) => {
                       {productDropdowns[index].map((prod, idx) => (
                         <li
                           key={idx}
-                          className={`list-group-item list-group-item-action bg-black text-white ${
-                            highlightedIndex[index] === idx ? "active" : ""
-                          }`}
+                          className={`list-group-item list-group-item-action fw-bold ${
+                              highlightedIndex[index] === idx
+                                ? "active bg-primary text-white "
+                                : "bg-white text-black"
+                            }`}
                           onMouseDown={() => handleProductSelect(index, prod)}
                         >
                           {prod.name}

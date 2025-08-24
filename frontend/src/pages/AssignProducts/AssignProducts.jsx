@@ -25,6 +25,8 @@ const AssignProducts = ({ url }) => {
   ]);
   const [dispatchDateTime, setDispatchDateTime] = useState("");
   const [productDropdowns, setProductDropdowns] = useState({});
+  const [highlightedIndex, setHighlightedIndex] = useState({});
+
   const [assignStatus, setAssignStatus] = useState("");
   const productRefs = useRef({});
   const token =
@@ -79,6 +81,40 @@ const AssignProducts = ({ url }) => {
       fetchProductSuggestions(index, value);
     }
     setProductEntries(updated);
+  };
+
+  const handleKeyDown = (e, index) => {
+    if (!productDropdowns[index] || productDropdowns[index].length === 0)
+      return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => ({
+        ...prev,
+        [index]:
+          prev[index] < productDropdowns[index].length - 1
+            ? (prev[index] || 0) + 1
+            : 0,
+      }));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => ({
+        ...prev,
+        [index]:
+          prev[index] > 0
+            ? prev[index] - 1
+            : productDropdowns[index].length - 1,
+      }));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (highlightedIndex[index] >= 0) {
+        handleProductSelect(
+          index,
+          productDropdowns[index][highlightedIndex[index]]
+        );
+        setHighlightedIndex((prev) => ({ ...prev, [index]: -1 }));
+      }
+    }
   };
 
   const handleProductSelect = (index, product) => {
@@ -296,6 +332,7 @@ const AssignProducts = ({ url }) => {
                 onChange={(e) =>
                   handleChangeProd(index, "name", e.target.value)
                 }
+                onKeyDown={(e) => handleKeyDown(e, index)}
               />
               {productDropdowns[index] &&
                 productDropdowns[index].length > 0 && (
@@ -306,7 +343,11 @@ const AssignProducts = ({ url }) => {
                     {productDropdowns[index].map((prod, idx) => (
                       <li
                         key={idx}
-                        className="list-group-item list-group-item-action bg-black text-white"
+                        className={`list-group-item list-group-item-action fw-bold ${
+                          highlightedIndex[index] === idx
+                            ? "active bg-primary text-white "
+                            : "bg-white text-black"
+                        }`}
                         onMouseDown={() => handleProductSelect(index, prod)}
                       >
                         {prod.name}

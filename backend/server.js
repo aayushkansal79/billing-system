@@ -10,6 +10,7 @@ import assignmentRoutes from './routes/assignmentRoutes.js';
 import storeRoutes from './routes/storeRoutes.js';
 import storeProductRoutes from './routes/storeProductRoutes.js';
 import billRoutes from './routes/billRoutes.js';
+import saleReturnRoutes from './routes/saleReturnRoutes.js';
 import costomerRoutes from './routes/customerRoutes.js'
 import transactionRoutes from './routes/transactionRoutes.js'
 import masterSearchRoutes from './routes/masterSearchRoutes.js';
@@ -38,6 +39,7 @@ app.use("/api/assignments", assignmentRoutes);
 app.use("/api/stores", storeRoutes);
 app.use("/api/store-products", storeProductRoutes);
 app.use("/api/bill", billRoutes);
+app.use("/api/sale-return", saleReturnRoutes);
 app.use("/api/customer", costomerRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/master-search", masterSearchRoutes);

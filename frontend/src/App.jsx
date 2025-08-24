@@ -21,6 +21,8 @@ import AllStores from "./pages/AllStores/AllStores";
 import LoginAsStore from "./pages/LoginAsStore/LoginAsStore";
 import Billing from "./pages/Billing/Billing";
 import AllBill from "./pages/AllBill/AllBill";
+import AddSaleReturn from "./pages/AddSaleReturn/AddSaleReturn";
+import SaleReturn from "./pages/SaleReturn/SaleReturn";
 import Customer from "./pages/Customer/Customer";
 import CustomerTransactions from "./pages/CustomerTransactions/CustomerTransactions";
 import MasterSearch from "./pages/MasterSearch/MasterSearch";
@@ -79,6 +81,8 @@ function App() {
               <Route path="/login-as-store" element={<PrivateRoute roles={["admin"]}> <LoginAsStore url={url} /> </PrivateRoute>} />
               <Route path="/billing" element={<PrivateRoute roles={["store"]}> <Billing url={url} setSidebarOpen={setSidebarOpen} /> </PrivateRoute>} />
               <Route path="/all-bill" element={<PrivateRoute roles={["admin", "store"]}> <AllBill url={url} /> </PrivateRoute>} />
+              <Route path="/sales-return" element={<PrivateRoute roles={["admin", "store"]}> <AddSaleReturn url={url} /> </PrivateRoute>} />
+              <Route path="/sales-return-list" element={<PrivateRoute roles={["admin", "store"]}> <SaleReturn url={url} /> </PrivateRoute>} />
               <Route path="/all-customer" element={<PrivateRoute roles={["admin", "store"]}> <Customer url={url} /> </PrivateRoute>} />
               <Route path="/all-customer/:customerId/transactions" element={<PrivateRoute roles={["admin", "store"]}> <CustomerTransactions url={url} /> </PrivateRoute>} />
               <Route path="/mastersearch" element={<PrivateRoute roles={["admin", "store"]}> <MasterSearch url={url} /> </PrivateRoute>} />

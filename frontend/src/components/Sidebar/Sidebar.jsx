@@ -407,6 +407,81 @@ const Sidebar = ({ sidebarOpen }) => {
           <p>All Bills</p>
         </NavLink>
 
+        {user?.type === "store" ? (
+          <>
+            <div
+              onClick={() => toggleMenu("salereturn")}
+              className={
+                sidebarOpen ? "side-item" : "side-item side-item-active"
+              }
+              title="Sales Return"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="20px"
+                viewBox="0 -960 960 960"
+                width="24px"
+                fill="#000000"
+              >
+                <path d="M160-501q0 71 47.5 122T326-322l-62-62 56-56 160 160-160 160-56-56 64-64q-105-6-176.5-81T80-500q0-109 75.5-184.5T340-760h140v80H340q-75 0-127.5 52T160-501Zm400 261v-80h320v80H560Zm0-220v-80h320v80H560Zm0-220v-80h320v80H560Z" />
+              </svg>
+              {/* <div class="vr"></div> */}
+              <p>Sales Return</p>
+              <span className={sidebarOpen ? "arrow" : "arrow arrow-active"}>
+                {openMenu === "salereturn" ? "▾" : "▸"}
+              </span>
+            </div>
+
+            {openMenu === "salereturn" && (
+              <>
+                <NavLink
+                  to="/sales-return"
+                  className={`side-item menu-item ${
+                    sidebarOpen ? "" : "side-item-active menu-item-active"
+                  }`}
+                  style={{ paddingLeft: "30px" }}
+                  title="Add Sales Return"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="20px"
+                    viewBox="0 -960 960 960"
+                    width="24px"
+                    fill="#000000"
+                  >
+                    <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h360v80H200v560h560v-360h80v360q0 33-23.5 56.5T760-120H200Zm120-160v-80h320v80H320Zm0-120v-80h320v80H320Zm0-120v-80h320v80H320Zm360-80v-80h-80v-80h80v-80h80v80h80v80h-80v80h-80Z" />
+                  </svg>
+                  {/* <div class="vr"></div> */}
+                  <p>Add Sales Return</p>
+                </NavLink>
+
+                <NavLink
+                  to="/sales-return-list"
+                  className={`side-item menu-item ${
+                    sidebarOpen ? "" : "side-item-active menu-item-active"
+                  }`}
+                  style={{ paddingLeft: "30px" }}
+                  title="Sales Return List"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="20px"
+                    viewBox="0 -960 960 960"
+                    width="24px"
+                    fill="#000000"
+                  >
+                    <path d="m480-320 56-56-63-64h167v-80H473l63-64-56-56-160 160 160 160ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h168q13-36 43.5-58t68.5-22q38 0 68.5 22t43.5 58h168q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm280-590q13 0 21.5-8.5T510-820q0-13-8.5-21.5T480-850q-13 0-21.5 8.5T450-820q0 13 8.5 21.5T480-790ZM200-200v-560 560Z" />
+                  </svg>
+                  {/* <div class="vr"></div> */}
+                  <p>Sales Return List</p>
+                </NavLink>
+              </>
+            )}
+          </>
+        ) : (
+          ""
+        )}
+
         <NavLink
           to="/all-customer"
           className={sidebarOpen ? "side-item" : "side-item side-item-active"}

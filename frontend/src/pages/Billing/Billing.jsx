@@ -933,8 +933,10 @@ const Billing = ({ url, setSidebarOpen }) => {
                         {productDropdowns[index].map((prod, idx) => (
                           <li
                             key={idx}
-                            className={`list-group-item list-group-item-action bg-black text-white ${
-                              highlightedIndex[index] === idx ? "active" : ""
+                            className={`list-group-item list-group-item-action fw-bold ${
+                              highlightedIndex[index] === idx
+                                ? "active bg-primary text-white "
+                                : "bg-white text-black"
                             }`}
                             onMouseDown={() => handleProductSelect(index, prod)}
                           >
