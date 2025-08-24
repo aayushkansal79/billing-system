@@ -66,6 +66,8 @@ const Billing = ({ url, setSidebarOpen }) => {
     tnc: true,
   });
 
+  const [highlightedIndex, setHighlightedIndex] = useState({});
+
   const [selectedTransactions, setSelectedTransactions] = useState([]);
   const [selectedTransactionsTotal, setSelectedTransactionsTotal] = useState(0);
 
@@ -185,6 +187,40 @@ const Billing = ({ url, setSidebarOpen }) => {
     } catch (err) {
       console.error(err);
       setProductDropdowns((prev) => ({ ...prev, [index]: [] }));
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    if (!productDropdowns[index] || productDropdowns[index].length === 0)
+      return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => ({
+        ...prev,
+        [index]:
+          prev[index] < productDropdowns[index].length - 1
+            ? (prev[index] || 0) + 1
+            : 0,
+      }));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => ({
+        ...prev,
+        [index]:
+          prev[index] > 0
+            ? prev[index] - 1
+            : productDropdowns[index].length - 1,
+      }));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (highlightedIndex[index] >= 0) {
+        handleProductSelect(
+          index,
+          productDropdowns[index][highlightedIndex[index]]
+        );
+        setHighlightedIndex((prev) => ({ ...prev, [index]: -1 }));
+      }
     }
   };
 
@@ -885,56 +921,29 @@ const Billing = ({ url, setSidebarOpen }) => {
                     onChange={(e) =>
                       handleChangeProd(index, "productName", e.target.value)
                     }
+                    onKeyDown={(e) => handleKeyDown(e, index)}
                     // required
                   />
                   {productDropdowns[index] &&
                     productDropdowns[index].length > 0 && (
                       <ul
-                        className="list-group position-absolute w-100"
+                        className="list-group position-absolute w-100 cursor-pointer"
                         style={{ zIndex: 1000 }}
                       >
-                        {productDropdowns[index].map((sp, idx) => (
+                        {productDropdowns[index].map((prod, idx) => (
                           <li
                             key={idx}
-                            className="list-group-item list-group-item-action bg-black text-white"
-                            onMouseDown={() => handleProductSelect(index, sp)}
+                            className={`list-group-item list-group-item-action bg-black text-white ${
+                              highlightedIndex[index] === idx ? "active" : ""
+                            }`}
+                            onMouseDown={() => handleProductSelect(index, prod)}
                           >
-                            {sp.product.name}
+                            {prod.product.name}
                           </li>
                         ))}
                       </ul>
                     )}
                 </div>
-                {/* <div className="col-md-2">
-                  <Select
-                    options={productDropdowns[index]?.map((prod) => ({
-                      value: prod.product.name,
-                      label: prod.product.name,
-                      _id: prod.product._id,
-                    }))}
-                    value={productDropdowns[index]?.find(
-                      (option) => option.value === products[index]?.productName
-                    )}
-                    onChange={(selectedOption) => {
-                      const selectedProduct = productDropdowns[index].find(
-                        (prod) => prod.product.name === selectedOption.value
-                      );
-
-                      handleProductSelect(index, selectedProduct);
-                      handleChangeProd(
-                        index,
-                        "productName",
-                        selectedOption.value
-                      );
-                    }}
-                    onInputChange={(newValue) => {
-                      fetchProductSuggestions(index, newValue);
-                    }}
-                    className="basic-single-select"
-                    classNamePrefix="select"
-                  />
-                </div> */}
-
                 <div className="col-md-1 mt-1">
                   <input
                     type="number"

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "../../components/Pagination/Pagination";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import Loader from "../../components/Loader/Loader";
 
 const InvoiceContent = React.forwardRef(function InvoiceContent(
   { url, company, products, date },
@@ -331,6 +332,7 @@ const Order = ({ url }) => {
 
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
+  const [loading, setLoading] = useState(false);
 
   const [filters, setFilters] = useState({
     invoiceNumber: "",
@@ -448,6 +450,7 @@ const Order = ({ url }) => {
   };
 
   const fetchProductList = async () => {
+    setLoading(true);
     if (!query.trim()) return;
     try {
       const res = await axios.get(`${url}/api/purchase/product`, {
@@ -457,6 +460,8 @@ const Order = ({ url }) => {
       setProductList(res.data.matches);
     } catch (err) {
       console.error("Error fetching product list:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -714,6 +719,11 @@ const Order = ({ url }) => {
                 onChange={(e) => {
                   setQuery(e.target.value);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    fetchProductList();
+                  }
+                }}
                 className="form-control mx-2"
               />
               <button
@@ -802,6 +812,8 @@ const Order = ({ url }) => {
           </div>
         </div>
       )}
+
+      {loading && <Loader />}
 
       <Pagination
         limit={filters.limit}

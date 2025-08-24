@@ -26,6 +26,7 @@ const Purchase = ({ url }) => {
   const [companyDropdown, setCompanyDropdown] = useState([]);
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
+  const [highlightedIndex, setHighlightedIndex] = useState({});
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [invoiceNo, setInvoiceNo] = useState("");
@@ -163,6 +164,40 @@ const Purchase = ({ url }) => {
     } catch (err) {
       console.error(err);
       setProductDropdowns((prev) => ({ ...prev, [index]: [] }));
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    if (!productDropdowns[index] || productDropdowns[index].length === 0)
+      return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => ({
+        ...prev,
+        [index]:
+          prev[index] < productDropdowns[index].length - 1
+            ? (prev[index] || 0) + 1
+            : 0,
+      }));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => ({
+        ...prev,
+        [index]:
+          prev[index] > 0
+            ? prev[index] - 1
+            : productDropdowns[index].length - 1,
+      }));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (highlightedIndex[index] >= 0) {
+        handleProductSelect(
+          index,
+          productDropdowns[index][highlightedIndex[index]]
+        );
+        setHighlightedIndex((prev) => ({ ...prev, [index]: -1 }));
+      }
     }
   };
 
@@ -556,7 +591,10 @@ const Purchase = ({ url }) => {
             Vendor Details
           </div>
           <form className="row g-3">
-            <div className="col-md-4 position-relative company-select" ref={companyRef}>
+            <div
+              className="col-md-4 position-relative company-select"
+              ref={companyRef}
+            >
               <label className="form-label">Vendor Name*</label>
               {/* <input
                 type="text"
@@ -803,6 +841,7 @@ const Purchase = ({ url }) => {
                   onChange={(e) =>
                     handleChangeProd(index, "name", e.target.value)
                   }
+                  onKeyDown={(e) => handleKeyDown(e, index)}
                   // required
                 />
                 {productDropdowns[index] &&
@@ -814,7 +853,9 @@ const Purchase = ({ url }) => {
                       {productDropdowns[index].map((prod, idx) => (
                         <li
                           key={idx}
-                          className="list-group-item list-group-item-action bg-black text-white"
+                          className={`list-group-item list-group-item-action bg-black text-white ${
+                            highlightedIndex[index] === idx ? "active" : ""
+                          }`}
                           onMouseDown={() => handleProductSelect(index, prod)}
                         >
                           {prod.name}
