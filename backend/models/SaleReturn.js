@@ -12,8 +12,9 @@ const saleReturnSchema = new mongoose.Schema({
       total: { type: Number, required: true },
     }
   ],
+  returnMethod: { type: String, required: true },
   date: { type: Date, default: Date.now },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Store" }
+  store: { type: mongoose.Schema.Types.ObjectId, ref: "Store" }
 }, { timestamps: true });
 
 export default mongoose.model("SaleReturn", saleReturnSchema);

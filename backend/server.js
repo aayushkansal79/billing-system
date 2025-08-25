@@ -5,6 +5,7 @@ import 'dotenv/config';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import companyRoutes from './routes/companyRoutes.js';
 import purchaseRoutes from "./routes/purchaseRoutes.js";
+import purchaseReturnRoutes from './routes/purchaseReturnRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import assignmentRoutes from './routes/assignmentRoutes.js';
 import storeRoutes from './routes/storeRoutes.js';
@@ -34,6 +35,7 @@ app.get("/", (req, res) => {
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/company", companyRoutes);
 app.use("/api/purchase", purchaseRoutes);
+app.use("/api/purchase-return", purchaseReturnRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/stores", storeRoutes);

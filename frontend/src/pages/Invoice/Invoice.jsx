@@ -173,7 +173,7 @@ const Invoice = (
             {state}
             {", "}
             {/* <br /> */}
-            {gstNumber || ""}
+            {gstNumber || "N/A"}
           </div>
           <div className="text-end">
             <b>STORE INFORMATION</b>

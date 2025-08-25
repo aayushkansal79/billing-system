@@ -5,20 +5,46 @@ import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 
 const InvoiceContent = React.forwardRef(function InvoiceContent(
-  { url, invoiceNumber, customer, store, products, returnMethod, date },
+  { url, invoiceNumber, company, products, totalReturnAmount, date },
   ref
 ) {
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
 
-  const totalQty = products.reduce((sum, item) => sum + item.quantity, 0);
+  const [form, setForm] = useState({
+    websiteTitle: "",
+    websiteAddress: "",
+    CompanyName: "",
+    CompanyAddress: "",
+    CompanyState: "",
+    CompanyZip: "",
+    CompanyContact: "",
+    CompanyGST: "",
+    Extra: "",
+  });
 
-  const totalAmount = products.reduce((sum, item) => sum + item.total, 0);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get(`${url}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data) setForm(res.data);
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+  const totalQty = products.reduce((sum, item) => sum + item.returnQty, 0);
 
   return (
     <div ref={ref} style={{ padding: "20px" }}>
       <div className="d-flex justify-content-between">
-        <h2>SALE RETURN</h2>
+        <h2>PURCHASE RETURN</h2>
         <p>
-          <b>Return Date:</b> {new Date(date).toLocaleDateString("en-GB")}
+          <b>Purchase Date:</b> {new Date(date).toLocaleDateString("en-GB")}
         </p>
       </div>
       <div>
@@ -27,22 +53,30 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
       <br />
       <div className="d-flex justify-content-between">
         <div>
-          <b>CUSTOMER INFORMATION</b>
+          <b>SELLER INFORMATION</b>
           <br />
-          {customer?.name}
+          <strong>{company?.name}</strong>
           <br />
-          {customer?.mobile}{", "}
-          {customer?.state}{", "}
-          {customer?.gstNumber || "N/A"}
+          {company?.address}
+          <br />
+          {company?.state}
+          <br />
+          Contact: {company?.contactPhone}
+          <br />
+          GST: {company?.gstNumber}
         </div>
         <div className="text-end">
-          <b>STORE INFORMATION</b>
+          <b>PURCHASER INFORMATION</b>
           <br />
-          {store.address} {" "}
-          {store.city} {" "}
-          {store.state} - {store.zipCode}
+          <strong>{form.CompanyName}</strong>
           <br />
-          Contact: {store.contactNumber}
+          {form.CompanyAddress}
+          <br />
+          {form.CompanyState} - {form.CompanyZip}, India
+          <br />
+          Contact: {form.CompanyContact}
+          <br />
+          GST: {form.CompanyGST}
         </div>
       </div>
 
@@ -52,7 +86,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <th>#</th>
             <th>Product</th>
             <th>Qty</th>
-            <th>Price</th>
+            <th>Purchase Price</th>
             <th>Return Total</th>
           </tr>
         </thead>
@@ -61,10 +95,10 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <tr key={idx}>
               <td>{idx + 1}.</td>
               <td>{p.name}</td>
-              <td>{p.quantity}</td>
+              <td>{p.returnQty}</td>
               <td>
                 ₹
-                {Number(p.price).toLocaleString("en-IN", {
+                {Number(p.purchasePriceAfterDiscount).toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -86,23 +120,21 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             </td>
             <th>{totalQty}</th>
             <td></td>
-            <th>₹
-                {Number(totalAmount).toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}</th>
+            <th>
+              ₹
+              {Number(totalReturnAmount).toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </th>
           </tr>
         </tfoot>
       </table>
-
-      <div>
-        Return by: <b>{returnMethod}</b>
-      </div>
     </div>
   );
 });
 
-const SaleReturn = ({ url }) => {
+const PurchaseReturn = ({ url }) => {
   const [returns, setReturns] = useState([]);
   const token = localStorage.getItem("token");
   const [selectedReturn, setSelectedReturn] = useState(null);
@@ -110,8 +142,9 @@ const SaleReturn = ({ url }) => {
 
   const [filters, setFilters] = useState({
     invoiceNumber: "",
-    customerName: "",
+    companyName: "",
     mobile: "",
+    state: "",
     startDate: null,
     endDate: null,
     page: 1,
@@ -136,13 +169,13 @@ const SaleReturn = ({ url }) => {
       params.set("page", filters.page || currentPage);
 
       const res = await axios.get(
-        `${url}/api/sale-return?${params.toString()}`,
+        `${url}/api/purchase-return?${params.toString()}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      setReturns(res.data.saleReturns);
+      setReturns(res.data.results);
       setCurrentPage(res.data.page || 1);
       setTotalPages(res.data.totalPages || 1);
     } catch (err) {
@@ -217,7 +250,7 @@ const SaleReturn = ({ url }) => {
 
   return (
     <>
-      <div className="bread">Sales Return List</div>
+      <div className="bread">Purchase Return List</div>
       <div className="search row g-2 mb-4 px-2">
         <div className="col-md-2">
           <label className="form-label">Invoice Number:</label>
@@ -231,13 +264,13 @@ const SaleReturn = ({ url }) => {
           />
         </div>
         <div className="col-md-2">
-          <label className="form-label">Customer Name:</label>
+          <label className="form-label">Vendor Name:</label>
           <input
             className="form-control"
             placeholder="Customer Name"
-            value={filters.customerName}
+            value={filters.companyName}
             onChange={(e) =>
-              setFilters({ ...filters, customerName: e.target.value })
+              setFilters({ ...filters, companyName: e.target.value })
             }
           />
         </div>
@@ -248,6 +281,15 @@ const SaleReturn = ({ url }) => {
             placeholder="Mobile No"
             value={filters.mobile}
             onChange={(e) => setFilters({ ...filters, mobile: e.target.value })}
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">State:</label>
+          <input
+            className="form-control"
+            placeholder="Mobile No"
+            value={filters.state}
+            onChange={(e) => setFilters({ ...filters, state: e.target.value })}
           />
         </div>
         <div className="col-md-2">
@@ -285,8 +327,10 @@ const SaleReturn = ({ url }) => {
             <tr>
               <th>#</th>
               <th>Invoice No.</th>
-              <th>Customer Name</th>
+              <th>Vendor Name</th>
               <th>Mobile No.</th>
+              <th>Address</th>
+              <th>State</th>
               <th>Return Amount</th>
               <th>View Return</th>
               <th>Date & Time</th>
@@ -299,18 +343,19 @@ const SaleReturn = ({ url }) => {
                 <th style={{ whiteSpace: "nowrap" }}>
                   {returnItem.invoiceNumber}
                 </th>
-                <td>{returnItem.customer.name}</td>
-                <td>{returnItem.customer.mobile}</td>
+                <td>{returnItem.company.name}</td>
+                <td>{returnItem.company.contactPhone}</td>
+                <td>{returnItem.company.address}</td>
+                <td>{returnItem.company.state}</td>
                 <td>
                   ₹{" "}
-                  {Number(
-                    returnItem.products
-                      .map((product) => product.total)
-                      .reduce((acc, curr) => acc + curr, 0)
-                  ).toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
+                  {Number(returnItem.totalReturnAmount).toLocaleString(
+                    "en-IN",
+                    {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }
+                  )}
                 </td>
                 <td>
                   <button
@@ -322,9 +367,7 @@ const SaleReturn = ({ url }) => {
                     👁️
                   </button>
                 </td>
-                <td>
-                  {new Date(returnItem.date).toLocaleString("en-GB")}
-                </td>
+                <td>{new Date(returnItem.date).toLocaleString("en-GB")}</td>
               </tr>
             ))}
           </tbody>
@@ -340,7 +383,7 @@ const SaleReturn = ({ url }) => {
             <div className="modal-dialog modal-lg" role="document">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">Sale Return Preview</h5>
+                  <h5 className="modal-title">Purchase Return Preview</h5>
                   <button
                     type="button"
                     className="btn-close"
@@ -352,10 +395,9 @@ const SaleReturn = ({ url }) => {
                     url={url}
                     ref={componentRef}
                     invoiceNumber={selectedReturn.invoiceNumber}
-                    customer={selectedReturn.customer}
-                    store={selectedReturn.store}
+                    company={selectedReturn.company}
                     products={selectedReturn.products}
-                    returnMethod={selectedReturn.returnMethod}
+                    totalReturnAmount={selectedReturn.totalReturnAmount}
                     date={selectedReturn.date}
                   />
                 </div>
@@ -384,4 +426,4 @@ const SaleReturn = ({ url }) => {
   );
 };
 
-export default SaleReturn;
+export default PurchaseReturn;

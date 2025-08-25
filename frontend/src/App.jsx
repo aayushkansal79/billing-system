@@ -10,6 +10,8 @@ import Orders from "./pages/Orders/Orders";
 import BulkBarcode from "./pages/BulkBarcode/BulkBarcode";
 import PrintBarcode from "./pages/Barcode/Barcode";
 import Companies from "./pages/Companies/Companies";
+import AddPurchaseReturn from "./pages/AddPurchaseReturn/AddPurchaseReturn";
+import PurchaseReturn from "./pages/PurchaseReturn/PurchaseReturn";
 import VendorProducts from "./pages/VendorProducts/VendorProducts";
 import Products from "./pages/Products/Products";
 import StoreProducts from "./pages/StoreProducts/StoreProducts";
@@ -71,6 +73,8 @@ function App() {
               <Route path="/purchase-list/print-tags/:purchaseId" element={<PrivateRoute roles={["admin"]}> <BulkBarcode url={url} /> </PrivateRoute>} />
               <Route path="/purchase-list/print-tag/:id" element={<PrivateRoute roles={["admin"]}> <PrintBarcode url={url} /> </PrivateRoute>} />
               <Route path="/vendors" element={<PrivateRoute roles={["admin"]}> <Companies url={url} /> </PrivateRoute>} />
+              <Route path="/purchase-return" element={<PrivateRoute roles={["admin"]}> <AddPurchaseReturn url={url} /> </PrivateRoute>} />
+              <Route path="/purchase-return-list" element={<PrivateRoute roles={["admin"]}> <PurchaseReturn url={url} /> </PrivateRoute>} />
               <Route path="/products" element={<PrivateRoute roles={["admin"]}> <Products url={url} /> </PrivateRoute>} />
               <Route path="/store-products" element={<PrivateRoute roles={["store"]}> <StoreProducts url={url} /> </PrivateRoute>} />
               <Route path="/assign-products" element={<PrivateRoute roles={["admin"]}> <AssignProducts url={url} /> </PrivateRoute>} />

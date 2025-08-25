@@ -36,78 +36,15 @@ export const getBillByInvoice = async (req, res) => {
   }
 };
 
-// export const createSaleReturn = async (req, res) => {
-//   try {
-//     const { invoiceNumber, products, returnMethod } = req.body;
-//     const storeId = req.store._id;
-
-//     if (!invoiceNumber || !products || products.length === 0) {
-//       return res.status(400).json({ error: "Invoice number and products are required" });
-//     }
-
-//     const bill = await Bill.findOne({ invoiceNumber }).populate("products.product", "name");
-//     if (!bill) return res.status(404).json({ error: "Invoice not found" });
-
-//     let returnProducts = [];
-
-//     for (let item of products) {
-//       const billItem = bill.products.find(
-//         p => p.product._id.toString() === item.productId
-//       );
-
-//       if (!billItem) {
-//         return res.status(400).json({ error: `Product ${item.productId} not found in this bill` });
-//       }
-
-//       if (item.quantity > billItem.quantity) {
-//         return res.status(400).json({ error: `Return qty exceeds sold qty for ${billItem.product.name}` });
-//       }
-
-//       returnProducts.push({
-//         product: billItem.product._id,
-//         name: billItem.product.name,
-//         quantity: item.quantity,
-//         price: billItem.finalPrice,
-//         total: (billItem.finalPrice) * item.quantity
-//       });
-
-//       await StoreProduct.findOneAndUpdate(
-//         { product: billItem.product._id, store: storeId },
-//         { $inc: { quantity: item.quantity } },
-//         { new: true, upsert: false }
-//       );
-//     }
-
-//     const saleReturn = new SaleReturn({
-//       invoiceNumber,
-//       customer: bill.customer,
-//       products: returnProducts,
-//       createdBy: storeId
-//     });
-
-//     await saleReturn.save();
-
-//     res.json({
-//       message: "Sale return processed successfully",
-//       saleReturn
-//     });
-
-//   } catch (err) {
-//     console.error("❌ Error in createSaleReturn:", err);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// };
-
 export const createSaleReturn = async (req, res) => {
   try {
     const { invoiceNumber, products, returnMethod } = req.body;
     const storeId = req.store._id;
 
-    if (!invoiceNumber || !products || products.length === 0) {
-      return res.status(400).json({ error: "Invoice number and products are required" });
+    if (!invoiceNumber || !products || products.length === 0 || !returnMethod) {
+      return res.status(400).json({ error: "Invoice number, products, and return method are required" });
     }
 
-    // 1. Fetch Bill
     const bill = await Bill.findOne({ invoiceNumber }).populate("products.product", "name");
     if (!bill) return res.status(404).json({ error: "Invoice not found" });
 
@@ -122,7 +59,6 @@ export const createSaleReturn = async (req, res) => {
     let returnProducts = [];
     let returnTotal = 0;
 
-    // 2. Validate & Update Stock
     for (let item of products) {
       const billItem = bill.products.find(
         (p) => p.product._id.toString() === item.productId
@@ -151,7 +87,6 @@ export const createSaleReturn = async (req, res) => {
         total: itemTotal,
       });
 
-      // Add stock back
       await StoreProduct.findOneAndUpdate(
         { product: billItem.product._id, store: storeId },
         { $inc: { quantity: item.quantity } },
@@ -159,19 +94,16 @@ export const createSaleReturn = async (req, res) => {
       );
     }
 
-    // 3. Adjust Customer financials (if bill has a customer)
     let coinsToReverse = 0;
     if (customerDoc) {
       customerDoc.totalAmount -= returnTotal;
 
       if (returnMethod === "Cash" || returnMethod === "UPI" || returnMethod === "Bank Transfer") {
-        // direct refund
         customerDoc.paidAmount -= returnTotal;
         customerDoc.pendingAmount = customerDoc.paidAmount - customerDoc.totalAmount + (customerDoc.usedCoins || 0);
         coinsToReverse = Math.floor(returnTotal / 100);
         customerDoc.coins = Math.max(0, customerDoc.coins - coinsToReverse);
       } else if (returnMethod === "Wallet") {
-        // store as balance for next purchases
         customerDoc.remainingPaid += returnTotal;
         customerDoc.pendingAmount += returnTotal;
       }
@@ -179,18 +111,16 @@ export const createSaleReturn = async (req, res) => {
       await customerDoc.save();
     }
 
-    // 4. Save SaleReturn entry
     const saleReturn = new SaleReturn({
       invoiceNumber,
       customer: bill.customer || null,
       products: returnProducts,
       returnTotal,
       returnMethod,
-      createdBy: storeId,
+      store: storeId,
     });
     await saleReturn.save();
 
-    // 5. Save a Transaction (only if customer exists)
     let returnTransaction = null;
     if (customerDoc) {
       returnTransaction = new Transaction({
@@ -215,7 +145,7 @@ export const createSaleReturn = async (req, res) => {
       customer: customerDoc,
     });
   } catch (err) {
-    console.error("❌ Error in createSaleReturn:", err);
+    console.error("Error in createSaleReturn:", err);
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -261,7 +191,8 @@ export const getAllSaleReturns = async (req, res) => {
     }
 
     const saleReturns = await SaleReturn.find(query)
-      .populate("customer", "name mobile")
+      .populate("customer", "name mobile state gst")
+      .populate("store")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
@@ -276,7 +207,7 @@ export const getAllSaleReturns = async (req, res) => {
       saleReturns
     });
   } catch (err) {
-    console.error("❌ Error in getAllSaleReturns:", err);
+    console.error("Error in getAllSaleReturns:", err);
     res.status(500).json({ error: "Server error" });
   }
 };
