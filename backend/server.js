@@ -16,6 +16,7 @@ import costomerRoutes from './routes/customerRoutes.js'
 import transactionRoutes from './routes/transactionRoutes.js'
 import masterSearchRoutes from './routes/masterSearchRoutes.js';
 import productRequestRoutes from './routes/productRequestRoutes.js'
+import expenseRoutes from './routes/expenseRoutes.js'
 import profileRoutes from './routes/profileRoutes.js'
 
 // app config
@@ -46,6 +47,7 @@ app.use("/api/customer", costomerRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/master-search", masterSearchRoutes);
 app.use("/api/product-requests", productRequestRoutes);
+app.use("/api/expense", expenseRoutes);
 app.use("/api/profile", profileRoutes);
 
 // database connection

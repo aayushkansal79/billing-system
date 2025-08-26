@@ -35,6 +35,7 @@ import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./context/PrivateRoute";
 import RequestsSent from "./pages/RequestsSent/RequestsSent";
 import RequestsRecieved from "./pages/RequestsRecieved/RequestsRecieved";
+import Expense from "./pages/Expense/Expense";
 import ProductReport from "./pages/ProductReport/ProductReport";
 import ProductHistory from "./pages/ProductHistory/ProductHistory";
 import VendorReport from "./pages/VendorReport/VendorReport";
@@ -93,6 +94,7 @@ function App() {
               <Route path="/requests" element={<PrivateRoute roles={["admin"]}> <Requests url={url} /> </PrivateRoute>} />
               <Route path="/requests-sent" element={<PrivateRoute roles={["store"]}> <RequestsSent url={url} /> </PrivateRoute>} />
               <Route path="/requests-received" element={<PrivateRoute roles={["store"]}> <RequestsRecieved url={url} /> </PrivateRoute>} />
+              <Route path="/expense" element={<PrivateRoute roles={["admin","store"]}> <Expense url={url} /> </PrivateRoute>} />
               <Route path="/product-report" element={<PrivateRoute roles={["admin"]}> <ProductReport url={url} /> </PrivateRoute>} />
               <Route path="/product-report/:productId/history" element={<PrivateRoute roles={["admin"]}> <ProductHistory url={url} /> </PrivateRoute>} />
               <Route path="/vendor-report" element={<PrivateRoute roles={["admin"]}> <VendorReport url={url} /> </PrivateRoute>} />

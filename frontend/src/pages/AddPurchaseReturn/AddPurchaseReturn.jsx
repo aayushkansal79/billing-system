@@ -3,6 +3,7 @@ import "./AddPurchaseReturn.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Loader from "../../components/Loader/Loader";
+import Swal from "sweetalert2";
 
 const AddPurchaseReturn = ({ url }) => {
   const [invoice, setInvoice] = useState("");
@@ -67,9 +68,8 @@ const AddPurchaseReturn = ({ url }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      toast.success("Purchase return processed successfully!");
-      console.log(res.data);
-
+      // toast.success("Purchase return processed successfully!");
+      Swal.fire("Success", "Purchase return processed successfully!", "success");
       setPurchase(null);
       setReturnProducts([]);
       setInvoice("");

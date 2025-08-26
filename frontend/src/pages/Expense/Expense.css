@@ -1,0 +1,49 @@
+.Expenditure {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.Expenditure th {
+  text-align: center;
+}
+
+.Expenditure td {
+  text-align: center;
+}
+
+.Expenditure label {
+  font-weight: 700;
+}
+
+.Expenditure .del-btn {
+  border: none;
+  background-color: transparent;
+}
+
+.summary {
+  font-size: 14px !important;
+  >b{
+    font-size: 15px !important;
+  }
+}
+
+.modal-title{
+  font-size: 14px !important;
+}
+
+@media (max-width: 680px) {
+  .Expenditure {
+    width: calc(100vw - 2rem);
+    overflow-x: auto;
+  }
+
+  .Expenditure td {
+    white-space: nowrap;
+  }
+
+  .Expenditure th {
+    white-space: nowrap;
+  }
+}
+
