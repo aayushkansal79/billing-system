@@ -160,9 +160,10 @@ const Expense = ({ url }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setAllExpenses((prev) =>
-        prev.map((exp) => (exp._id === id ? res.data.updated : exp))
-      );
+      // setAllExpenses((prev) =>
+      //   prev.map((exp) => (exp._id === id ? res.data.updated : exp))
+      // );
+      fetchExpenses();
       fetchExpenseSummary();
       toast.success("Expense updated successfully");
       setEditIndex(null);
@@ -281,7 +282,7 @@ const Expense = ({ url }) => {
           <label className="form-label">Expense Field:</label>
           <input
             className="form-control"
-            placeholder="Invoice Number"
+            placeholder="Expense Field"
             value={filters.field}
             onChange={(e) => setFilters({ ...filters, field: e.target.value })}
           />
