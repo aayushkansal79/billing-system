@@ -309,38 +309,65 @@ export const searchPurchasesByProductName = async (req, res) => {
 
 
 // UPDATE purchase
-  export const updatePurchase = async (req, res) => {
+export const updatePurchase = async (req, res) => {
   try {
     const { id } = req.params;
-    const { companyId, date, invoiceNumber, orderNumber, discount, products } = req.body;
+    const {
+      companyId,
+      date,
+      invoiceNumber,
+      orderNumber,
+      discount,
+      products,
+    } = req.body;
 
-    // Find existing purchase
-    const existingPurchase = await Purchase.findById(id);
-    if (!existingPurchase) {
-      return res.status(404).json({ error: "Purchase not found" });
+    if (!companyId || !date || !products || products.length === 0) {
+      return res.status(400).json({ error: "Required fields are missing." });
     }
 
-    // --- STEP 1: Rollback old stock (remove old purchase effect from Product) ---
-    for (const oldProd of existingPurchase.products) {
-      if (oldProd.product) {
-        const product = await Product.findById(oldProd.product);
-        if (product) {
-          product.unit -= Number(oldProd.quantity) || 0;
-          if (product.unit < 0) product.unit = 0; // avoid negative stock
-          await product.save();
+    const company = await Company.findById(companyId);
+    if (!company) {
+      return res.status(404).json({ error: "Company not found." });
+    }
+
+    const existingPurchase = await Purchase.findById(id);
+    if (!existingPurchase) {
+      return res.status(404).json({ error: "Purchase not found." });
+    }
+
+    for (const p of products) {
+      const existingProduct = await Product.findOne({ name: p.name.trim() });
+      if (existingProduct) {
+        const otherPurchase = await Purchase.findOne({
+          "products.product": existingProduct._id,
+          company: { $ne: companyId },
+        }).populate("company", "name");
+
+        if (otherPurchase) {
+          return res.status(400).json({
+            error: `Product "${p.name}" already purchased from ${otherPurchase.company.name}.`,
+          });
         }
       }
     }
 
-    // --- STEP 2: Process updated products and adjust stock ---
+    const oldQuantities = {};
+    for (const oldItem of existingPurchase.products) {
+      oldQuantities[String(oldItem.product)] = oldItem.quantity;
+    }
+
+    const productUpdates = [];
     const processedProducts = [];
+
     for (const p of products) {
-      let product = await Product.findById(p.product);
+      const name = p.name.trim();
+      let product = await Product.findOne({ name });
+      let isNew = false;
 
       if (!product) {
-        // If product doesn�t exist, create a new one
+        isNew = true;
         product = new Product({
-          name: p.name.trim(),
+          name,
           hsn: p.hsn?.trim() || "",
           unit: 0,
           priceBeforeGst: p.priceBeforeGst,
@@ -351,23 +378,33 @@ export const searchPurchasesByProductName = async (req, res) => {
         });
       }
 
-      // Update product details
+      const oldQty = oldQuantities[product._id?.toString()] || 0;
+      const newQty = Number(p.quantity);
+      const diff = newQty - oldQty;
+
+      if (diff < 0 && product.unit < Math.abs(diff)) {
+        return res.status(400).json({
+          error: `Not enough stock to reduce for product "${name}". Available: ${product.unit}, Difference: ${diff}`,
+        });
+      }
+
+      product.unit += diff;
+      if (product.unit < 0) product.unit = 0;
+
       if (p.hsn) product.hsn = p.hsn.trim();
-      product.unit += Number(p.quantity) || 0;
       if (p.priceBeforeGst) product.priceBeforeGst = Number(p.priceBeforeGst);
       if (p.gstPercentage) product.gstPercentage = Number(p.gstPercentage);
       if (p.sellingPrice) product.price = Number(p.sellingPrice);
       if (p.printPrice) product.printPrice = Number(p.printPrice);
       product.lastPurchaseDate = date;
 
-      await product.save();
+      productUpdates.push({ product, isNew });
 
-      // Save processed product details for Purchase
       processedProducts.push({
         product: product._id,
         name: product.name,
         hsn: product.hsn,
-        quantity: p.quantity,
+        quantity: newQty,
         purchasePrice: p.purchasePrice,
         purchasePriceAfterDiscount: p.purchasePriceAfterDiscount,
         profitPercentage: p.profitPercentage,
@@ -378,20 +415,22 @@ export const searchPurchasesByProductName = async (req, res) => {
       });
     }
 
-    // --- STEP 3: Update Purchase document ---
-    existingPurchase.company = companyId;
+    for (const { product, isNew } of productUpdates) {
+      await product.save();
+    }
+
+    existingPurchase.company = company._id;
     existingPurchase.date = date;
     existingPurchase.invoiceNumber = invoiceNumber;
     existingPurchase.orderNumber = orderNumber;
     existingPurchase.discount = discount;
     existingPurchase.products = processedProducts;
 
-    const updatedPurchase = await existingPurchase.save();
+    const updated = await existingPurchase.save();
 
-    res.json(updatedPurchase);
+    res.json(updated);
   } catch (err) {
     console.error("Error updating purchase:", err);
-    res.status(500).json({ error: "Server error while updating purchase" });
+    res.status(500).json({ error: "Server error while updating purchase." });
   }
 };
-  
