@@ -137,7 +137,7 @@ export const deleteExpense = async (req, res) => {
 
 export const getExpenseSummary = async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, storeUsername } = req.query;
 
     const today = new Date();
     const startOfToday = new Date(today.setHours(0, 0, 0, 0));
@@ -148,18 +148,27 @@ export const getExpenseSummary = async (req, res) => {
 
     let baseQuery = {};
 
-    // Limit to current store if not admin
+    // 🔐 Store user: limit to their own store
     if (req.store.type !== "admin") {
       baseQuery.store = req.store._id;
     }
 
-    // 1) Total Expense
-    const totalExpense = await Expense.aggregate([
+    // ✅ Admin: check if filtering by a specific store
+    if (req.store.type === "admin" && storeUsername) {
+      const targetStore = await Store.findOne({ username: storeUsername });
+      if (!targetStore) {
+        return res.status(404).json({ message: "Store not found" });
+      }
+      baseQuery.store = targetStore._id;
+    }
+
+    // ---------- TOTAL EXPENSE ----------
+    const totalExpenseAgg = await Expense.aggregate([
       { $match: baseQuery },
       { $group: { _id: null, total: { $sum: "$amount" } } }
     ]);
 
-    // 2) Monthly or Date Range Expense
+    // ---------- MONTHLY / DATE RANGE ----------
     let monthlyQuery = { ...baseQuery };
 
     if (startDate || endDate) {
@@ -177,26 +186,26 @@ export const getExpenseSummary = async (req, res) => {
       monthlyQuery.date = { $gte: startOfMonth, $lte: endOfMonth };
     }
 
-    const monthlyExpense = await Expense.aggregate([
+    const monthlyExpenseAgg = await Expense.aggregate([
       { $match: monthlyQuery },
       { $group: { _id: null, total: { $sum: "$amount" } } }
     ]);
 
-    // 3) Today's Expense
+    // ---------- TODAY'S EXPENSE ----------
     const todayQuery = {
       ...baseQuery,
       date: { $gte: startOfToday, $lte: endOfToday },
     };
 
-    const todaysExpense = await Expense.aggregate([
+    const todaysExpenseAgg = await Expense.aggregate([
       { $match: todayQuery },
       { $group: { _id: null, total: { $sum: "$amount" } } }
     ]);
 
     res.json({
-      totalExpense: totalExpense[0]?.total || 0,
-      monthlyExpense: monthlyExpense[0]?.total || 0,
-      todaysExpense: todaysExpense[0]?.total || 0,
+      totalExpense: totalExpenseAgg[0]?.total || 0,
+      monthlyExpense: monthlyExpenseAgg[0]?.total || 0,
+      todaysExpense: todaysExpenseAgg[0]?.total || 0,
     });
   } catch (error) {
     console.error("Error fetching expense summary:", error);

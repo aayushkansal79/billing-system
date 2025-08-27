@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./AddSaleReturn.css";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -6,6 +6,9 @@ import Loader from "../../components/Loader/Loader";
 import Swal from "sweetalert2";
 
 const AddSaleReturn = ({ url }) => {
+  useEffect(() => {
+        document.title = "Add Sale Return | Ajjawam";
+      }, []);
   const [invoice, setInvoice] = useState("");
   const [bill, setBill] = useState(null);
   const [returnProducts, setReturnProducts] = useState([]);

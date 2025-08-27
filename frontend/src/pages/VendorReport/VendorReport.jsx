@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 const VendorReport = ({ url }) => {
   useEffect(() => {
-    document.title = "Vendors | Ajjawam";
+    document.title = "Vendor Report | Ajjawam";
   }, []);
 
   const navigate = useNavigate();

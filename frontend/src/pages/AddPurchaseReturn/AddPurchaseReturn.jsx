@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./AddPurchaseReturn.css";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -6,6 +6,9 @@ import Loader from "../../components/Loader/Loader";
 import Swal from "sweetalert2";
 
 const AddPurchaseReturn = ({ url }) => {
+  useEffect(() => {
+      document.title = "Add Purchase Return | Ajjawam";
+    }, []);
   const [invoice, setInvoice] = useState("");
   const [purchase, setPurchase] = useState(null);
   const [returnProducts, setReturnProducts] = useState([]);

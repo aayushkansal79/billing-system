@@ -135,6 +135,9 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
 });
 
 const PurchaseReturn = ({ url }) => {
+  useEffect(() => {
+        document.title = "Purchase Return | Ajjawam";
+      }, []);
   const [returns, setReturns] = useState([]);
   const token = localStorage.getItem("token");
   const [selectedReturn, setSelectedReturn] = useState(null);

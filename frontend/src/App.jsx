@@ -6,6 +6,7 @@ import Sidebar from "./components/Sidebar/Sidebar";
 import Navbar from "./components/Navbar/Navbar";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Purchase from "./pages/Purchase/Purchase";
+import EditPurchase from "./pages/Purchase/EditPurchase";
 import Orders from "./pages/Orders/Orders";
 import BulkBarcode from "./pages/BulkBarcode/BulkBarcode";
 import PrintBarcode from "./pages/Barcode/Barcode";
@@ -70,6 +71,7 @@ function App() {
               <Route path="/login" element={<Login url={url} />} />
               <Route path="/dashboard" element={<PrivateRoute roles={["admin"]}> <Dashboard url={url} /> </PrivateRoute>} />
               <Route path="/purchase" element={<PrivateRoute roles={["admin"]}> <Purchase url={url} /> </PrivateRoute>} />
+              <Route path="/purchase/edit/:id" element={<PrivateRoute roles={["admin"]}> <EditPurchase url={url} /> </PrivateRoute>} />
               <Route path="/purchase-list" element={<PrivateRoute roles={["admin"]}> <Orders url={url} /> </PrivateRoute>} />
               <Route path="/purchase-list/print-tags/:purchaseId" element={<PrivateRoute roles={["admin"]}> <BulkBarcode url={url} /> </PrivateRoute>} />
               <Route path="/purchase-list/print-tag/:id" element={<PrivateRoute roles={["admin"]}> <PrintBarcode url={url} /> </PrivateRoute>} />

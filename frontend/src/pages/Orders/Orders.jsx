@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import "./Orders.css";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Pagination from "../../components/Pagination/Pagination";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -611,6 +611,7 @@ const Order = ({ url }) => {
               <th className="text-end">Amount</th>
               <th>Invoice</th>
               <th>Tags</th>
+              <th>Edit</th>
               <th>Purchase Date</th>
             </tr>
           </thead>
@@ -658,6 +659,22 @@ const Order = ({ url }) => {
                       <path d="M40-200v-560h80v560H40Zm120 0v-560h80v560h-80Zm120 0v-560h40v560h-40Zm120 0v-560h80v560h-80Zm120 0v-560h120v560H520Zm160 0v-560h40v560h-40Zm120 0v-560h120v560H800Z" />
                     </svg>
                   </button>
+                </td>
+                <td>
+                  <Link
+                    to={`/purchase/edit/${purchase._id}`}
+                    className="del-btn"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      height="24px"
+                      viewBox="0 -960 960 960"
+                      width="35px"
+                      fill="green"
+                    >
+                      <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h357l-80 80H200v560h560v-278l80-80v358q0 33-23.5 56.5T760-120H200Zm280-360ZM360-360v-170l367-367q12-12 27-18t30-6q16 0 30.5 6t26.5 18l56 57q11 12 17 26.5t6 29.5q0 15-5.5 29.5T897-728L530-360H360Zm481-424-56-56 56 56ZM440-440h56l232-232-28-28-29-28-231 231v57Zm260-260-29-28 29 28 28 28-28-28Z" />
+                    </svg>
+                  </Link>
                 </td>
                 <td>{new Date(purchase.date).toLocaleDateString("en-GB")}</td>
               </tr>

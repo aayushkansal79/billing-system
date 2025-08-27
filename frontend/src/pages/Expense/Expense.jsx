@@ -10,10 +10,15 @@ import Swal from "sweetalert2";
 import Pagination from "../../components/Pagination/Pagination";
 
 const Expense = ({ url }) => {
+  useEffect(() => {
+    document.title = "Expense | Ajjawam";
+  }, []);
+
   const [showModal, setShowModal] = useState(false);
   const formRef = useRef(null);
   const [expenseSummary, setExpenseSummary] = useState({});
   const [expenses, setExpenses] = useState([{ field: "", amount: "" }]);
+  const [stores, setStores] = useState([]);
   const [allExpenses, setAllExpenses] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
   const [editData, setEditData] = useState({ field: "", amount: "", date: "" });
@@ -60,6 +65,24 @@ const Expense = ({ url }) => {
       console.error(err);
     }
   };
+
+  const fetchStores = async () => {
+    try {
+      if(user?.type === "admin"){
+        const res = await axios.get(`${url}/api/stores`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setStores(res.data);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to fetch stores.");
+    }
+  };
+
+  useEffect(() => {
+    fetchStores();
+  }, [url]);
 
   const fetchExpenseSummary = async () => {
     try {
@@ -212,72 +235,8 @@ const Expense = ({ url }) => {
   return (
     <>
       <div className="bread">Expense</div>
-      {/* <form className="Expenditure g-3 my-3 rounded" onSubmit={handleSubmit}>
-        <div className="row mb-1 align-items-center gy-0 gx-2">
-          <div className="col-md-3 col-6">
-            <label className="form-label">Expense Detail</label>
-          </div>
-          <div className="col-md-3 col-6">
-            <label className="form-label">Expense Amount</label>
-          </div>
-        </div>
-        {expenses.map((exp, index) => (
-          <div key={index} className="row mb-2 align-items-center gy-0 gx-2">
-            <div className="col-md-3 col-6">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter Detail"
-                value={exp.field}
-                onChange={(e) => handleChange(index, "field", e.target.value)}
-              />
-            </div>
-            <div className="col-md-3 col-6">
-              <input
-                type="number"
-                className="form-control"
-                placeholder="Enter Amount"
-                min={0}
-                value={exp.amount}
-                onChange={(e) => handleChange(index, "amount", e.target.value)}
-              />
-            </div>
-          </div>
-        ))}
-
-        <div className="row mt-3 align-items-end">
-          <div className="col-md-3">
-            <label className="form-label">Date:</label>
-            <DatePicker
-              selected={selectedDate}
-              onChange={(date) => setSelectedDate(date)}
-              dateFormat="dd-MM-yyyy"
-              className="form-control"
-            />
-          </div>
-
-          <div className="col-4 mt-3">
-            <button type="submit" className="btn btn-success">
-              Add Expense
-            </button>
-          </div>
-        </div>
-      </form> */}
 
       <div className="search row g-2 mb-4 px-2 align-items-end">
-        {user?.type === "admin" && (
-          <div className="col-md-2">
-            <label className="form-label">Store Username:</label>
-            <input
-              className="form-control"
-              placeholder="Store Username"
-              value={filters.storeUsername}
-              onChange={(e) =>
-                setFilters({ ...filters, storeUsername: e.target.value })
-              }
-            />
-          </div>
-        )}
         <div className="col-md-2">
           <label className="form-label">Expense Field:</label>
           <input
@@ -326,7 +285,7 @@ const Expense = ({ url }) => {
           </button>
         </div>
       </div>
-      <div className="Expenditure rounded my-3">
+      <div className="Expenditure rounded mb-4">
         <div className="row text-center">
           <div className="col-4 summary">
             Total Expense <br />{" "}
@@ -339,7 +298,10 @@ const Expense = ({ url }) => {
             </b>
           </div>
           <div className="col-4 summary">
-            {filters.startDate || filters.endDate ? "Filtered Date Expense" : "Monthly Expense"} <br />{" "}
+            {filters.startDate || filters.endDate
+              ? "Filtered Date Expense"
+              : "Monthly Expense"}{" "}
+            <br />{" "}
             <b>
               ₹{" "}
               {Number(expenseSummary.monthlyExpense).toLocaleString("en-IN", {
@@ -360,7 +322,45 @@ const Expense = ({ url }) => {
           </div>
         </div>
       </div>
-      <div className="Expenditure rounded my-3">
+      {user?.type === "admin" && (
+        <ul className="nav nav-tabs">
+          <li className="nav-item">
+            <button
+              className={`nav-link ${
+                filters.storeUsername === "" ? "active" : ""
+              }`}
+              onClick={() => setFilters({ ...filters, storeUsername: "" })}
+            >
+              All
+            </button>
+          </li>
+          <li className="nav-item">
+            <button
+              className={`nav-link ${
+                filters.storeUsername === "admin" ? "active" : ""
+              }`}
+              onClick={() => setFilters({ ...filters, storeUsername: "admin" })}
+            >
+              Warehouse
+            </button>
+          </li>
+          {stores.map((store) => (
+            <li className="nav-item" key={store._id}>
+              <button
+                className={`nav-link ${
+                  filters.storeUsername === store.username ? "active" : ""
+                }`}
+                onClick={() =>
+                  setFilters({ ...filters, storeUsername: store.username })
+                }
+              >
+                {store.username}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="Expenditure rounded mb-3">
         <table className="table align-middle table-striped table-hover my-0">
           <thead className="table-success">
             <tr>
@@ -416,6 +416,7 @@ const Expense = ({ url }) => {
                       onChange={(date) => handleEditChange("date", date)}
                       dateFormat="dd-MM-yyyy"
                       className="form-control"
+                      maxDate={Date.now()}
                     />
                   ) : (
                     new Date(exp.date).toLocaleDateString("en-GB")
@@ -486,7 +487,7 @@ const Expense = ({ url }) => {
         <div className="modal-overlay">
           <div className="modal-box">
             <div>
-              <div className="fw-bold bg-secondary py-2 px-3 mb-3 text-white modal-title">
+              <div className="fw-bold bg-primary py-2 px-3 mb-3 text-white modal-title">
                 Add New Expense
               </div>
               <form ref={formRef} className="p-2" onSubmit={handleSubmit}>
@@ -537,6 +538,7 @@ const Expense = ({ url }) => {
                       onChange={(date) => setSelectedDate(date)}
                       dateFormat="dd-MM-yyyy"
                       className="form-control"
+                      maxDate={Date.now()}
                     />
                   </div>
                 </div>
