@@ -200,8 +200,9 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <td colSpan={2}>
               <strong>Grand Total</strong>
             </td>
+            <td></td>
             <th>{totalQty}</th>
-            <td colSpan={3}></td>
+            <td colSpan={2}></td>
             <td>
               <strong>
                 {form.CompanyState &&
