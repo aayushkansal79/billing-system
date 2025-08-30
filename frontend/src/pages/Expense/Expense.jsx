@@ -17,12 +17,13 @@ const Expense = ({ url }) => {
   const [showModal, setShowModal] = useState(false);
   const formRef = useRef(null);
   const [expenseSummary, setExpenseSummary] = useState({});
-  const [expenses, setExpenses] = useState([{ field: "", amount: "" }]);
+  const [expenses, setExpenses] = useState([{ field: "", subhead: "", amount: "" }]);
   const [stores, setStores] = useState([]);
   const [allExpenses, setAllExpenses] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
-  const [editData, setEditData] = useState({ field: "", amount: "", date: "" });
+  const [editData, setEditData] = useState({ field: "", subhead: "", amount: "", date: "" });
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [type, setType] = useState("debit");
 
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
@@ -68,7 +69,7 @@ const Expense = ({ url }) => {
 
   const fetchStores = async () => {
     try {
-      if(user?.type === "admin"){
+      if (user?.type === "admin") {
         const res = await axios.get(`${url}/api/stores`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -123,7 +124,7 @@ const Expense = ({ url }) => {
       newExpenses[index].field &&
       newExpenses[index].amount
     ) {
-      setExpenses([...newExpenses, { field: "", amount: "" }]);
+      setExpenses([...newExpenses, { field: "", subhead: "", amount: "" }]);
     }
   };
 
@@ -143,14 +144,14 @@ const Expense = ({ url }) => {
 
       await axios.post(
         `${url}/api/expense`,
-        { expenses: filteredExpenses, date: selectedDate },
+        { expenses: filteredExpenses, date: selectedDate, type },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Expenses added successfully");
       fetchExpenses();
       fetchExpenseSummary();
       setShowModal(false);
-      setExpenses([{ field: "", amount: "" }]);
+      setExpenses([{ field: "", subhead: "", amount: "" }]);
       setSelectedDate(new Date());
     } catch (err) {
       console.error(err);
@@ -164,6 +165,7 @@ const Expense = ({ url }) => {
     setEditIndex(index);
     setEditData({
       field: exp.field,
+      subhead: exp.subhead,
       amount: exp.amount,
       date: exp.date,
       _id: exp._id,
@@ -179,7 +181,7 @@ const Expense = ({ url }) => {
     try {
       const res = await axios.patch(
         `${url}/api/expense/${id}`,
-        { field: editData.field, amount: editData.amount, date: editData.date },
+        { field: editData.field, subhead: editData.subhead, amount: editData.amount, date: editData.date },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -367,6 +369,7 @@ const Expense = ({ url }) => {
               <th>#</th>
               {user?.type === "admin" && <th>Store</th>}
               <th>Expense Detail</th>
+              <th>Subhead</th>
               <th className="text-end">Amount</th>
               <th>Expense Date</th>
               <th>Added Date & Time</th>
@@ -392,7 +395,21 @@ const Expense = ({ url }) => {
                     exp.field
                   )}
                 </th>
-                <th className="text-danger text-end">
+                <th>
+                  {editIndex === index ? (
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editData.subhead}
+                      onChange={(e) =>
+                        handleEditChange("subhead", e.target.value)
+                      }
+                    />
+                  ) : (
+                    exp.subhead
+                  )}
+                </th>
+                <th className={`text-end ${exp.type === "debit" ? "text-danger" : "text-success"}`}>
                   {editIndex === index ? (
                     <input
                       type="number"
@@ -403,7 +420,7 @@ const Expense = ({ url }) => {
                       }
                     />
                   ) : (
-                    `₹ ${Number(exp.amount).toLocaleString("en-IN", {
+                    `${exp.type === "debit" ? "+" : "-"} ₹ ${Number(exp.amount).toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}`
@@ -487,16 +504,57 @@ const Expense = ({ url }) => {
         <div className="modal-overlay">
           <div className="modal-box">
             <div>
-              <div className="fw-bold bg-primary py-2 px-3 mb-3 text-white modal-title">
+              <div className="fw-bold bg-primary py-2 px-3 mb-2 text-white modal-title">
                 Add New Expense
               </div>
               <form ref={formRef} className="p-2" onSubmit={handleSubmit}>
+                <div className="row mb-3 align-items-center">
+                  <div className="col-md-3">
+                    <label className="form-label fw-bold">Date:</label>
+                    <DatePicker
+                      selected={selectedDate}
+                      onChange={(date) => setSelectedDate(date)}
+                      dateFormat="dd-MM-yyyy"
+                      className="form-control"
+                      maxDate={Date.now()}
+                    />
+                  </div>
+                  <div className="col-md-1 form-check mx-2">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      id="debitRadio"
+                      value="debit"
+                      checked={type === "debit"}
+                      onChange={(e) => setType(e.target.value)}
+                    />
+                    <label className="form-check-label" htmlFor="debitRadio">
+                      <b>Debit</b>
+                    </label>
+                  </div>
+                  <div className="col-md-1 form-check mx-2">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      id="creditRadio"
+                      value="credit"
+                      checked={type === "credit"}
+                      onChange={(e) => setType(e.target.value)}
+                    />
+                    <label className="form-check-label" htmlFor="creditRadio">
+                      <b>Credit</b>
+                    </label>
+                  </div>
+                </div>
                 <div className="row mb-1 align-items-center gy-0 gx-2">
                   <div className="col-md-3 col-6">
                     <label className="form-label fw-bold">Expense Detail</label>
                   </div>
                   <div className="col-md-3 col-6">
-                    <label className="form-label fw-bold">Expense Amount</label>
+                    <label className="form-label fw-bold">Subhead</label>
+                  </div>
+                  <div className="col-md-3 col-6">
+                    <label className="form-label fw-bold">Amount</label>
                   </div>
                 </div>
                 {expenses.map((exp, index) => (
@@ -504,7 +562,7 @@ const Expense = ({ url }) => {
                     key={index}
                     className="row mb-2 align-items-center gy-0 gx-2"
                   >
-                    <div className="col-md-3 col-6">
+                    <div className="col-md-3 col-4">
                       <input
                         type="text"
                         className="form-control"
@@ -515,7 +573,18 @@ const Expense = ({ url }) => {
                         }
                       />
                     </div>
-                    <div className="col-md-3 col-6">
+                    <div className="col-md-3 col-4">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Enter Subhead"
+                        value={exp.subhead}
+                        onChange={(e) =>
+                          handleChange(index, "subhead", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="col-md-3 col-4">
                       <input
                         type="number"
                         className="form-control"
@@ -529,19 +598,6 @@ const Expense = ({ url }) => {
                     </div>
                   </div>
                 ))}
-
-                <div className="row mt-3 align-items-end">
-                  <div className="col-md-3">
-                    <label className="form-label fw-bold">Date:</label>
-                    <DatePicker
-                      selected={selectedDate}
-                      onChange={(date) => setSelectedDate(date)}
-                      dateFormat="dd-MM-yyyy"
-                      className="form-control"
-                      maxDate={Date.now()}
-                    />
-                  </div>
-                </div>
               </form>
               <hr />
               <div className="justify-content-end mt-3 d-flex gap-3">

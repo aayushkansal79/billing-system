@@ -3,7 +3,7 @@ import Store from "../models/Store.js";
 
 export const addExpenses = async (req, res) => {
     try {
-        const { expenses, date } = req.body;
+        const { expenses, date, type } = req.body;
         const storeId = req.store._id;
 
         if (!Array.isArray(expenses) || expenses.length === 0) {
@@ -15,8 +15,10 @@ export const addExpenses = async (req, res) => {
         for (const exp of expenses) {
             const expenseDoc = new Expense({
                 field: exp.field,
+                subhead: exp.subhead || "",
                 amount: exp.amount,
                 store: storeId,
+                type: type,
                 date: date ? new Date(date) : new Date(),
             });
 
@@ -38,7 +40,7 @@ export const addExpenses = async (req, res) => {
 export const updateExpenditure = async (req, res) => {
   try {
     const { id } = req.params;
-    const { field, amount, date } = req.body;
+    const { field, subhead, amount, date } = req.body;
 
     const expense = await Expense.findById(id);
     if (!expense) {
@@ -46,6 +48,7 @@ export const updateExpenditure = async (req, res) => {
     }
 
     if (field) expense.field = field;
+    if (subhead) expense.subhead = subhead;
     if (amount !== undefined) expense.amount = amount;
     if (date) expense.date = new Date(date);
 
@@ -63,6 +66,8 @@ export const getAllExpenses = async (req, res) => {
       limit = 10,
       storeUsername,
       field,
+      subhead,
+      type,
       startDate,
       endDate,
     } = req.query;
@@ -92,6 +97,12 @@ export const getAllExpenses = async (req, res) => {
 
     if (field) {
       query.field = { $regex: field, $options: "i" };
+    }
+    if (subhead) {
+      query.subhead = { $regex: subhead, $options: "i" };
+    }
+    if (type) {
+      query.type = type;
     }
 
     const expenses = await Expense.find(query)
@@ -148,12 +159,10 @@ export const getExpenseSummary = async (req, res) => {
 
     let baseQuery = {};
 
-    // 🔐 Store user: limit to their own store
     if (req.store.type !== "admin") {
       baseQuery.store = req.store._id;
     }
 
-    // ✅ Admin: check if filtering by a specific store
     if (req.store.type === "admin" && storeUsername) {
       const targetStore = await Store.findOne({ username: storeUsername });
       if (!targetStore) {
@@ -162,13 +171,22 @@ export const getExpenseSummary = async (req, res) => {
       baseQuery.store = targetStore._id;
     }
 
-    // ---------- TOTAL EXPENSE ----------
+    // Aggregation for total expenses (Credit and Debit)
     const totalExpenseAgg = await Expense.aggregate([
       { $match: baseQuery },
-      { $group: { _id: null, total: { $sum: "$amount" } } }
+      {
+        $group: {
+          _id: null,
+          total: {
+            $sum: {
+              $cond: [{ $eq: ["$type", "debit"] }, "$amount", { $multiply: ["$amount", -1] }]
+            }
+          }
+        }
+      }
     ]);
 
-    // ---------- MONTHLY / DATE RANGE ----------
+    // Monthly expense aggregation
     let monthlyQuery = { ...baseQuery };
 
     if (startDate || endDate) {
@@ -188,10 +206,19 @@ export const getExpenseSummary = async (req, res) => {
 
     const monthlyExpenseAgg = await Expense.aggregate([
       { $match: monthlyQuery },
-      { $group: { _id: null, total: { $sum: "$amount" } } }
+      {
+        $group: {
+          _id: null,
+          total: {
+            $sum: {
+              $cond: [{ $eq: ["$type", "debit"] }, "$amount", { $multiply: ["$amount", -1] }]
+            }
+          }
+        }
+      }
     ]);
 
-    // ---------- TODAY'S EXPENSE ----------
+    // Today's expense aggregation
     const todayQuery = {
       ...baseQuery,
       date: { $gte: startOfToday, $lte: endOfToday },
@@ -199,7 +226,16 @@ export const getExpenseSummary = async (req, res) => {
 
     const todaysExpenseAgg = await Expense.aggregate([
       { $match: todayQuery },
-      { $group: { _id: null, total: { $sum: "$amount" } } }
+      {
+        $group: {
+          _id: null,
+          total: {
+            $sum: {
+              $cond: [{ $eq: ["$type", "debit"] }, "$amount", { $multiply: ["$amount", -1] }]
+            }
+          }
+        }
+      }
     ]);
 
     res.json({
@@ -212,3 +248,4 @@ export const getExpenseSummary = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+

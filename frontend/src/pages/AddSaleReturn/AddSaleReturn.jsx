@@ -7,12 +7,13 @@ import Swal from "sweetalert2";
 
 const AddSaleReturn = ({ url }) => {
   useEffect(() => {
-        document.title = "Add Sale Return | Ajjawam";
-      }, []);
+    document.title = "Add Sale Return | Ajjawam";
+  }, []);
   const [invoice, setInvoice] = useState("");
   const [bill, setBill] = useState(null);
   const [returnProducts, setReturnProducts] = useState([]);
   const [returnMethod, setReturnMethod] = useState("");
+  const [remarks, setRemarks] = useState("");
   const [loading, setLoading] = useState(false);
   const token = localStorage.getItem("token");
 
@@ -72,16 +73,13 @@ const AddSaleReturn = ({ url }) => {
             quantity: p.returnQty,
           })),
           returnMethod,
+          remarks,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       // toast.success("Sale return processed successfully!");
-      Swal.fire(
-        "Success",
-        "Sale return processed successfully!",
-        "success"
-      );
+      Swal.fire("Success", "Sale return processed successfully!", "success");
 
       console.log(res.data);
       setBill(null);
@@ -132,7 +130,7 @@ const AddSaleReturn = ({ url }) => {
         {bill && (
           <div className="mt-3">
             <h3>
-              Invoice No.: <b>{bill.invoiceNumber}</b>
+              Invoice No.: <b>{bill.invoiceNumber}</b> | Date & Time: <b>{new Date(bill.date).toLocaleString("en-GB")}</b>
             </h3>
             <h3>
               Customer: {bill.customer.name} | Contact: {bill.customer.mobile} |
@@ -146,9 +144,12 @@ const AddSaleReturn = ({ url }) => {
               <thead className="table-danger">
                 <tr>
                   <th>Product</th>
+                  <th>Type</th>
                   <th>Sold Qty</th>
                   <th>Return Qty</th>
                   <th className="text-end">Price</th>
+                  <th className="text-end">GST</th>
+                  <th className="text-end">Final Price</th>
                   <th className="text-end">Return Total</th>
                 </tr>
               </thead>
@@ -156,6 +157,7 @@ const AddSaleReturn = ({ url }) => {
                 {returnProducts.map((p, idx) => (
                   <tr key={p.productId}>
                     <td>{p.name}</td>
+                    <td>{p.type}</td>
                     <td>{p.soldQty}</td>
                     <td>
                       <input
@@ -167,6 +169,14 @@ const AddSaleReturn = ({ url }) => {
                         onChange={(e) => handleQtyChange(idx, e.target.value)}
                       />
                     </td>
+                    <td className="text-end">
+                      ₹
+                      {Number(p.priceAfterDiscount).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td className="text-end">{p.gstPercentage}%</td>
                     <td className="text-end">
                       ₹
                       {Number(p.price).toLocaleString("en-IN", {
@@ -185,7 +195,10 @@ const AddSaleReturn = ({ url }) => {
                 ))}
                 <tr>
                   <td colSpan={2}>Grand Total</td>
+                  <td></td>
                   <th>{totalQty}</th>
+                  <td></td>
+                  <td></td>
                   <td></td>
                   <th className="text-end">
                     ₹
@@ -214,6 +227,19 @@ const AddSaleReturn = ({ url }) => {
                   <option value="Bank Transfer">Bank Transfer</option>
                   <option value="Wallet">Add in wallet</option>
                 </select>
+              </div>
+
+              <div className="col-md-3">
+                <label className="form-label" style={{ fontWeight: "bold" }}>
+                  Remarks:
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Add Remarks"
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                />
               </div>
 
               <div className="col-md-2">

@@ -25,3 +25,29 @@ export const getNextAssignmentNumber = async () => {
 
     return `${prefix}-${paddedSeq}`;
 };
+
+export const getNextPurchaseReturnNumber = async () => {
+    const counter = await Counter.findOneAndUpdate(
+        { name: "purchasereturn" },
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+    );
+
+    const prefix = "AJJ-PR";
+    const paddedSeq = counter.seq.toString().padStart(4, "0");
+
+    return `${prefix}-${paddedSeq}`;
+};
+
+export const getNextSaleReturnNumber = async () => {
+    const counter = await Counter.findOneAndUpdate(
+        { name: "salereturn" },
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+    );
+
+    const prefix = "AJJ-SR";
+    const paddedSeq = counter.seq.toString().padStart(4, "0");
+
+    return `${prefix}-${paddedSeq}`;
+};

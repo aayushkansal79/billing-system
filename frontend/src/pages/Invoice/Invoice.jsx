@@ -195,6 +195,7 @@ const Invoice = (
           <tr>
             <th>#</th>
             <th>Product</th>
+            <th>Type</th>
             <th>HSN</th>
             <th>Qty</th>
             <th style={{ textWrap: "nowrap" }} className={showGst ? "" : "no-print"}>
@@ -207,7 +208,7 @@ const Invoice = (
               </>
             )}
             <th className={showGst ? "" : "no-print"}>GST %</th>
-            <th className={showGst ? "" : "no-print"}>GST Type</th>
+            <th className={showGst ? "" : "no-print"}>GST</th>
             <th className={showGst ? "" : "no-print"}>GST Amt.</th>
             <th style={{ textWrap: "nowrap" }}>
               Unit Price
@@ -220,6 +221,7 @@ const Invoice = (
             <tr key={idx}>
               <td>{idx + 1}.</td>
               <td>{p.productName}</td>
+              <td>{p.type}</td>
               <td>{p.hsn}</td>
               <td>{p.quantity}</td>
               <td className={showGst ? "" : "no-print"}>
@@ -318,7 +320,7 @@ const Invoice = (
         <tfoot>
           <tr>
             <td
-              colSpan={4}
+              colSpan={5}
               className="text-start"
             >
               <strong>Sub Total</strong>
@@ -383,7 +385,7 @@ const Invoice = (
               <tr className="no-print">
                 <td
                   colSpan={
-                    discountMethod === "percentage" && discount > 0 ? 11 : 9
+                    discountMethod === "percentage" && discount > 0 ? 12 : 10
                   }
                 >
                   <strong>Coins Used</strong>
@@ -397,11 +399,11 @@ const Invoice = (
                   colSpan={
                     discountMethod === "percentage" && discount > 0
                       ? showGst
-                        ? 11
-                        : 5
+                        ? 12
+                        : 6
                       : showGst
-                      ? 9
-                      : 5
+                      ? 10
+                      : 6
                   }
                 >
                   <strong>Coins Used</strong>
@@ -417,7 +419,7 @@ const Invoice = (
               <tr className="no-print">
                 <td
                   colSpan={
-                    discountMethod === "percentage" && discount > 0 ? 11 : 9
+                    discountMethod === "percentage" && discount > 0 ? 12 : 10
                   }
                 >
                   <strong>Discount</strong>
@@ -437,11 +439,11 @@ const Invoice = (
                   colSpan={
                     discountMethod === "percentage" && discount > 0
                       ? showGst
-                        ? 11
-                        : 5
+                        ? 12
+                        : 6
                       : showGst
-                      ? 9
-                      : 5
+                      ? 10
+                      : 6
                   }
                 >
                   <strong>Discount</strong>
@@ -460,7 +462,7 @@ const Invoice = (
           )}
           <tr className="no-print">
             <td
-              colSpan={discountMethod === "percentage" && discount > 0 ? 11 : 9}
+              colSpan={discountMethod === "percentage" && discount > 0 ? 12 : 10}
             >
               <strong>Grand Total</strong>
             </td>
@@ -483,11 +485,11 @@ const Invoice = (
               colSpan={
                 discountMethod === "percentage" && discount > 0
                   ? showGst
-                    ? 11
-                    : 5
+                    ? 12
+                    : 6
                   : showGst
-                  ? 9
-                  : 5
+                  ? 10
+                  : 6
               }
             >
               <strong>Grand Total</strong>

@@ -26,6 +26,7 @@ const EditPurchase = ({ url }) => {
     contactPhone: "",
     gstNumber: "",
     address: "",
+    broker: "",
   });
   const [companyDropdown, setCompanyDropdown] = useState([]);
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
@@ -37,6 +38,11 @@ const EditPurchase = ({ url }) => {
   const [invoiceNo, setInvoiceNo] = useState("");
   const [orderNo, setOrderNo] = useState("");
   const [discount, setDiscount] = useState(0);
+  const [remarks, setRemarks] = useState("");
+  const [transport, setTransport] = useState({
+    name: "",
+    city: "",
+  });
 
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
@@ -44,6 +50,7 @@ const EditPurchase = ({ url }) => {
   const [products, setProducts] = useState([
     {
       name: "",
+      type: "",
       hsn: "",
       quantity: "",
       purchasePrice: "",
@@ -103,6 +110,25 @@ const EditPurchase = ({ url }) => {
     { value: "West Bengal", label: "West Bengal" },
   ];
 
+  const [form, setForm] = useState({
+    CompanyState: "",
+  });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get(`${url}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data) setForm(res.data);
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
   const handleCompanyChange = async (value) => {
     // const value = e.target.value;
     setCompanyData((prev) => ({ ...prev, name: value }));
@@ -156,6 +182,7 @@ const EditPurchase = ({ url }) => {
       contactPhone: company.contactPhone || "",
       gstNumber: company.gstNumber || "",
       address: company.address || "",
+      broker: company.broker || "",
     });
     setSelectedCompany(company);
     setShowCompanyDropdown(false);
@@ -231,6 +258,7 @@ const EditPurchase = ({ url }) => {
   const handleProductSelect = (index, product) => {
     const newProducts = [...products];
     newProducts[index].name = product.name;
+    newProducts[index].type = product.type;
     newProducts[index].hsn = product.hsn;
     setProducts(newProducts);
 
@@ -259,6 +287,7 @@ const EditPurchase = ({ url }) => {
           contactPhone: purchase.company?.contactPhone || "",
           gstNumber: purchase.company?.gstNumber || "",
           address: purchase.company?.address || "",
+          broker: purchase.company?.broker || "",
         });
         setSelectedCompany(purchase.company);
 
@@ -267,10 +296,16 @@ const EditPurchase = ({ url }) => {
         setInvoiceNo(purchase.invoiceNumber || "");
         setOrderNo(purchase.orderNumber || "");
         setDiscount(purchase.discount || 0);
+        setRemarks(purchase.remarks || "");
+        setTransport({
+          name: purchase.transportName || "",
+          city: purchase.transportCity || "",
+        });
 
         // fill products
         const prods = purchase.products.map((p) => ({
           name: p.name,
+          type: p.type,
           hsn: p.hsn,
           quantity: p.quantity,
           purchasePrice: p.purchasePrice,
@@ -285,6 +320,7 @@ const EditPurchase = ({ url }) => {
         // add one blank row at the end
         prods.push({
           name: "",
+          type: "",
           hsn: "",
           quantity: "",
           purchasePrice: "",
@@ -401,6 +437,7 @@ const EditPurchase = ({ url }) => {
     if (
       isLast &&
       p.name.trim() &&
+      p.type.trim() &&
       p.hsn.trim() &&
       p.quantity &&
       p.purchasePrice &&
@@ -411,6 +448,7 @@ const EditPurchase = ({ url }) => {
         ...newProducts,
         {
           name: "",
+          type: "",
           hsn: "",
           quantity: "",
           purchasePrice: "",
@@ -425,6 +463,18 @@ const EditPurchase = ({ url }) => {
       setSelectedProducts([...selectedProducts, null]);
     }
   };
+
+  const totalQutantity = products.reduce((acc, p) => {
+    const qty = parseFloat(p.quantity) || 0;
+    return acc + qty;
+  }, 0);
+
+  const totalGSTAmount = products.reduce((acc, p) => {
+    const qty = parseFloat(p.quantity) || 0;
+    const gstPercentage = parseFloat(p.gstPercentage) || 0;
+    const priceAfterDiscount = parseFloat(p.purchasePriceAfterDiscount) || 0;
+    return acc + qty * ((priceAfterDiscount * gstPercentage) / 100);
+  }, 0);
 
   const totalPriceAfterDiscount = products
     .reduce((acc, p) => {
@@ -546,9 +596,13 @@ const EditPurchase = ({ url }) => {
           company = createRes.data;
         }
       } else {
-        await axios.patch(`${url}/api/company/${company._id}`, {...companyData}, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.patch(
+          `${url}/api/company/${company._id}`,
+          { ...companyData },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
       }
 
       /*if (company) {
@@ -593,6 +647,7 @@ const EditPurchase = ({ url }) => {
               `${url}/api/product`,
               {
                 name: p.name.trim(),
+                type: p.type.trim() || "",
                 hsn: p.hsn.trim() || "",
                 priceBeforeGst: p.priceBeforeGst || "0",
                 gstPercentage: p.gstPercentage || "0",
@@ -611,6 +666,7 @@ const EditPurchase = ({ url }) => {
         processedProducts.push({
           product: productInDB._id,
           name: p.name.trim(),
+          type: p.type.trim() || "",
           hsn: p.hsn.trim() || "",
           quantity: Number(p.quantity),
           purchasePrice: Number(p.purchasePrice),
@@ -630,6 +686,8 @@ const EditPurchase = ({ url }) => {
         orderNumber: orderNo,
         discount,
         products: processedProducts,
+        remarks,
+        transport,
       };
 
       await axios.put(`${url}/api/purchase/${id}`, purchaseData, {
@@ -645,11 +703,13 @@ const EditPurchase = ({ url }) => {
         contactPhone: "",
         gstNumber: "",
         address: "",
+        broker: "",
       });
       setSelectedCompany(null);
       setProducts([
         {
           name: "",
+          type: "",
           hsn: "",
           quantity: "",
           purchasePrice: "",
@@ -664,6 +724,11 @@ const EditPurchase = ({ url }) => {
       setInvoiceNo("");
       setOrderNo("");
       setDiscount(0);
+      setRemarks("");
+      setTransport({
+        name: "",
+        city: "",
+      });
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.error || "Error saving purchase.");
@@ -720,31 +785,7 @@ const EditPurchase = ({ url }) => {
                   ))}
                 </ul>
               )}
-              {/* <Select
-                options={companyDropdown.map((company) => ({
-                  value: company.name,
-                  label: company.name,
-                  _id: company._id,
-                }))}
-                value={companyDropdown.find(
-                  (option) => option.value === companyData.name
-                )}
-                onChange={(selectedOption) => {
-                  const selectedCompany = companyDropdown.find(
-                    (company) => company.name === selectedOption.value
-                  );
-                  handleCompanySelect(selectedCompany);
-                }}
-                onInputChange={(newValue) => {
-                  handleCompanyChange(newValue);
-                }}
-                className="basic-single-select"
-                classNamePrefix="select"
-                onMenuClose={() => setShowCompanyDropdown(false)}
-                onMenuOpen={() => setShowCompanyDropdown(true)}
-              /> */}
             </div>
-
             <div className="col-md-4">
               <label className="form-label">Vendor Short Name*</label>
               <input
@@ -759,37 +800,6 @@ const EditPurchase = ({ url }) => {
                   }))
                 }
                 required
-              />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Contact No.</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter Contact No."
-                value={companyData.contactPhone}
-                onChange={(e) =>
-                  setCompanyData((prev) => ({
-                    ...prev,
-                    contactPhone: e.target.value,
-                  }))
-                }
-                required
-              />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Address</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter Vendor Address"
-                value={companyData.address}
-                onChange={(e) =>
-                  setCompanyData((prev) => ({
-                    ...prev,
-                    address: e.target.value,
-                  }))
-                }
               />
             </div>
             <div className="col-md-4">
@@ -810,7 +820,38 @@ const EditPurchase = ({ url }) => {
                 required
               />
             </div>
-            <div className="col-md-4">
+            <div className="col-md-3">
+              <label className="form-label">Address</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Enter Vendor Address"
+                value={companyData.address}
+                onChange={(e) =>
+                  setCompanyData((prev) => ({
+                    ...prev,
+                    address: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="col-md-3">
+              <label className="form-label">Contact No.</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Enter Contact No."
+                value={companyData.contactPhone}
+                onChange={(e) =>
+                  setCompanyData((prev) => ({
+                    ...prev,
+                    contactPhone: e.target.value,
+                  }))
+                }
+                required
+              />
+            </div>
+            <div className="col-md-3">
               <label className="form-label">GST Number</label>
               <input
                 type="text"
@@ -821,6 +862,21 @@ const EditPurchase = ({ url }) => {
                   setCompanyData((prev) => ({
                     ...prev,
                     gstNumber: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="col-md-3">
+              <label className="form-label">Broker Name</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Enter Broker Name"
+                value={companyData.broker}
+                onChange={(e) =>
+                  setCompanyData((prev) => ({
+                    ...prev,
+                    broker: e.target.value,
                   }))
                 }
               />
@@ -838,6 +894,7 @@ const EditPurchase = ({ url }) => {
           <form className="row g-3">
             <div className="col-md-4">
               <label className="form-label">Date*</label>
+              <br />
               <DatePicker
                 selected={selectedDate}
                 onChange={(date) => setSelectedDate(date)}
@@ -892,17 +949,20 @@ const EditPurchase = ({ url }) => {
             <label className="form-label">Product Name</label>
           </div>
           <div className="col-md-1">
+            <label className="form-label">Product Type</label>
+          </div>
+          <div className="col-md-1">
             <label className="form-label">HSN Code</label>
           </div>
           <div className="col-md-1">
             <label className="form-label">Quantity</label>
           </div>
           <div className="col-md-1">
-            <label className="form-label">Purchase Price (₹)</label>
+            <label className="form-label">Purc. Price (₹)</label>
           </div>
-          <div className="col-md-2">
+          <div className="col-md-1">
             <label className="form-label">
-              Purchase Price After Discount ({discount}%)
+              After Disc. <span>({discount}%)</span>
             </label>
           </div>
           <div className="col-md-1">
@@ -967,6 +1027,17 @@ const EditPurchase = ({ url }) => {
               </div>
               <div className="col-md-1">
                 <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Product Type"
+                  value={product.type}
+                  onChange={(e) =>
+                    handleChangeProd(index, "type", e.target.value)
+                  }
+                />
+              </div>
+              <div className="col-md-1">
+                <input
                   type="number"
                   className="form-control"
                   placeholder="HSN Code"
@@ -1003,7 +1074,7 @@ const EditPurchase = ({ url }) => {
                   // required
                 />
               </div>
-              <div className="col-md-2">
+              <div className="col-md-1">
                 <input
                   type="number"
                   className="form-control"
@@ -1100,21 +1171,105 @@ const EditPurchase = ({ url }) => {
             <div className="col-md-2">
               <h6 className="text-danger fw-bold">Grand Total</h6>
             </div>
-            <div className="col-md-5"></div>
+            <div className="col-md-2"></div>
+            <div className="col-md-1">
+              <h6 className="text-danger fw-bold">{totalQutantity}</h6>
+            </div>
+            <div className="col-md-2"></div>
             <div className="col-md-2">
               <h6 className="text-danger fw-bold">
                 ₹ {totalPriceAfterDiscount}
               </h6>
             </div>
-            {/* <div className="col-md-2"></div>
-            <div className="col-md-2">
-              <h6 className="text-danger fw-bold">₹ {totalSellingPrice}</h6>
-            </div> */}
           </div>
-          <div className="col-md-2">
-            <button type="submit" className="btn btn-success">
-              Save Purchase
-            </button>
+          <div className="row mt-3 gx-2 justify-content-between">
+            <div className="d-flex col-md-8 gap-2">
+              <div className="col-md-4">
+                <label className="form-label">Remarks:</label>
+                <input
+                  className="form-control"
+                  placeholder="Add Remarks"
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                />
+              </div>
+              <div className="col-md-3">
+                <label className="form-label">Transport:</label>
+                <input
+                  className="form-control"
+                  placeholder="Enter Transport"
+                  value={transport.name}
+                  onChange={(e) =>
+                    setTransport((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="col-md-2">
+                <label className="form-label">City:</label>
+                <input
+                  className="form-control"
+                  placeholder="Enter Transport City"
+                  value={transport.city}
+                  onChange={(e) =>
+                    setTransport((prev) => ({
+                      ...prev,
+                      city: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="col-md-3">
+                <table className="table table-warning">
+                  <tbody className="text-end">
+                    <tr>
+                      <th>SGST</th>
+                      <th>
+                        {companyData.state === form.CompanyState
+                          ? `₹
+                        ${Number(totalGSTAmount / 2).toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}`
+                          : "₹0.00"}
+                      </th>
+                    </tr>
+                    <tr>
+                      <th>CGST</th>
+                      <th>
+                        {companyData.state === form.CompanyState
+                          ? `₹
+                        ${Number(totalGSTAmount / 2).toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}`
+                          : "₹0.00"}
+                      </th>
+                    </tr>
+                    <tr>
+                      <th>IGST</th>
+                      <th>
+                        {companyData.state !== form.CompanyState
+                          ? `₹
+                        ${Number(totalGSTAmount).toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}`
+                          : "₹0.00"}
+                      </th>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="col-md-2">
+              <button type="submit" className="btn btn-success">
+                Save Purchase
+              </button>
+            </div>
           </div>
         </form>
       </div>

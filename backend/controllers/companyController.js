@@ -20,7 +20,7 @@ export const getCompany = async (req, res) => {
 // Create company
 export const createCompany = async (req, res) => {
     try {
-        const { name, shortName, state, contactPhone, gstNumber, address } = req.body;
+        const { name, shortName, state, contactPhone, gstNumber, address, broker } = req.body;
 
         if (!name || name.trim() === "") {
             return res.status(400).json({ error: "Company name is required." });
@@ -58,6 +58,7 @@ export const createCompany = async (req, res) => {
             contactPhone: contactPhone?.trim(),
             gstNumber: gstNumber?.trim(),
             address: address?.trim(),
+            broker: broker?.trim(),
         });
 
         const savedCompany = await company.save();
@@ -122,6 +123,7 @@ export const getAllCompanies = async (req, res) => {
       contactPhone,
       gstNumber,
       address,
+      broker,
       page = 1,
       limit = 10,
     } = req.query;
@@ -135,6 +137,7 @@ export const getAllCompanies = async (req, res) => {
     if (contactPhone) query.contactPhone = { $regex: contactPhone, $options: "i" };
     if (gstNumber) query.gstNumber = { $regex: gstNumber, $options: "i" };
     if (address) query.address = { $regex: address, $options: "i" };
+    if (broker) query.broker = { $regex: broker, $options: "i" };
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -171,6 +174,7 @@ export const updateACompany = async (req, res) => {
         company.state = req.body.state || company.state;
         company.contactPhone = req.body.contactPhone || company.contactPhone;
         company.gstNumber = req.body.gstNumber || company.gstNumber;
+        company.broker = req.body.broker || company.broker;
 
         await company.save();
         res.json({ message: "Company updated successfully", company });

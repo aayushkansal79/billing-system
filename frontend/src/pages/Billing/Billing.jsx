@@ -22,6 +22,7 @@ const Billing = ({ url, setSidebarOpen }) => {
     {
       product: null,
       productName: "",
+      type: "",
       hsn: "",
       quantity: "",
       priceBeforeGst: "",
@@ -266,6 +267,7 @@ const Billing = ({ url, setSidebarOpen }) => {
       ...newProducts[index],
       product: product._id,
       productName: product.name,
+      type: product.type,
       hsn: product.hsn,
       // priceBeforeGst: product.priceBeforeGst,
       priceBeforeGst: (
@@ -356,6 +358,7 @@ const Billing = ({ url, setSidebarOpen }) => {
                 ...updatedProducts[index],
                 product: sp.product._id,
                 productName: sp.product.name,
+                type: sp.product.type,
                 hsn: sp.product.hsn,
                 // priceBeforeGst: sp.product.priceBeforeGst,
                 priceBeforeGst: (
@@ -414,6 +417,7 @@ const Billing = ({ url, setSidebarOpen }) => {
         {
           product: null,
           productName: "",
+          type: "",
           hsn: "",
           quantity: "",
           priceBeforeGst: "",
@@ -620,6 +624,7 @@ const Billing = ({ url, setSidebarOpen }) => {
         products: filteredProducts.map((p) => ({
           product: p.product,
           productName: p.productName.trim(),
+          type: p.type,
           hsn: p.hsn,
           quantity: parseFloat(p.quantity),
           priceBeforeGst: parseFloat(p.priceBeforeGst),
@@ -653,6 +658,7 @@ const Billing = ({ url, setSidebarOpen }) => {
         {
           product: null,
           productName: "",
+          type: "",
           hsn: "",
           quantity: "",
           priceBeforeGst: "",
@@ -876,7 +882,7 @@ const Billing = ({ url, setSidebarOpen }) => {
             </div>
           </div>
 
-          <div className="col-md-9">
+          <div className="col-md-10">
             <div className="row g-1">
               <div
                 className="head p-2 mb-2"
@@ -886,25 +892,31 @@ const Billing = ({ url, setSidebarOpen }) => {
               </div>
 
               <div className="col-md-2">
-                <label className="form-label">Product Name*</label>
+                <label className="form-label">Product Name</label>
               </div>
               <div className="col-md-1">
-                <label className="form-label">Quantity*</label>
+                <label className="form-label">Type</label>
+              </div>
+              <div className="col-md-1">
+                <label className="form-label">HSN</label>
+              </div>
+              <div className="col-md-1">
+                <label className="form-label">Quantity</label>
+              </div>
+              <div className="col-md-1">
+                <label className="form-label">Price(₹)</label>
               </div>
               <div className="col-md-2">
-                <label className="form-label">Price(₹)*</label>
-              </div>
-              <div className="col-md-2">
-                <label className="form-label">Price After Disc (₹)*</label>
+                <label className="form-label">Price After Disc (₹)</label>
               </div>
               <div className="col-md-1">
                 <label className="form-label">GST %</label>
               </div>
-              <div className="col-md-2">
-                <label className="form-label">Final Price(₹)*</label>
+              <div className="col-md-1">
+                <label className="form-label">Final Price(₹)</label>
               </div>
               <div className="col-md-2">
-                <label className="form-label">Total*</label>
+                <label className="form-label">Total</label>
               </div>
             </div>
             {products.map((p, index) => (
@@ -913,17 +925,20 @@ const Billing = ({ url, setSidebarOpen }) => {
                   className="col-md-2 mt-1 position-relative"
                   ref={(el) => (productRefs.current[index] = el)}
                 >
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Product Name"
-                    value={p.productName}
-                    onChange={(e) =>
-                      handleChangeProd(index, "productName", e.target.value)
-                    }
-                    onKeyDown={(e) => handleKeyDown(e, index)}
-                    // required
-                  />
+                  <div className="d-flex align-items-center gap-2">
+                    <b>{index + 1}.</b>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Product Name"
+                      value={p.productName}
+                      onChange={(e) =>
+                        handleChangeProd(index, "productName", e.target.value)
+                      }
+                      onKeyDown={(e) => handleKeyDown(e, index)}
+                      // required
+                    />
+                  </div>
                   {productDropdowns[index] &&
                     productDropdowns[index].length > 0 && (
                       <ul
@@ -948,6 +963,22 @@ const Billing = ({ url, setSidebarOpen }) => {
                 </div>
                 <div className="col-md-1 mt-1">
                   <input
+                    className="form-control"
+                    placeholder="Type"
+                    value={p.type}
+                    disabled
+                  />
+                </div>
+                <div className="col-md-1 mt-1">
+                  <input
+                    className="form-control"
+                    placeholder="HSN"
+                    value={p.hsn}
+                    disabled
+                  />
+                </div>
+                <div className="col-md-1 mt-1">
+                  <input
                     type="number"
                     className="form-control"
                     placeholder="Qty"
@@ -960,7 +991,7 @@ const Billing = ({ url, setSidebarOpen }) => {
                     min={1}
                   />
                 </div>
-                <div className="col-md-2 mt-1">
+                <div className="col-md-1 mt-1">
                   <input
                     type="number"
                     className="form-control"
@@ -987,7 +1018,7 @@ const Billing = ({ url, setSidebarOpen }) => {
                     disabled
                   />
                 </div>
-                <div className="col-md-2 mt-1">
+                <div className="col-md-1 mt-1">
                   <input
                     type="number"
                     className="form-control"
@@ -1067,7 +1098,7 @@ const Billing = ({ url, setSidebarOpen }) => {
                 )}
                 {parseFloat(customer?.pendingAmount) > 0 && (
                   <h6 className="text-success fw-bold">
-                    Outstanding Amounts (-)
+                    Wallet Amounts (-)
                   </h6>
                 )}
                 {usedCoins > 0 && (
@@ -1119,14 +1150,14 @@ const Billing = ({ url, setSidebarOpen }) => {
             </div>
           </div>
 
-          <div className="col-md-3">
+          <div className="col-md-2">
             <div
               className="head p-2 mb-2"
               style={{ background: "#fbd3d3ff", color: "#6D0616" }}
             >
               Outstanding Amounts
             </div>
-            {transactions.length > 0 ? (
+            {transactions.length > 0 && customer.pendingAmount < 0 ? (
               <div className="col-md-12">
                 <table className="table align-middle table-striped my-0">
                   <thead className="table-danger">

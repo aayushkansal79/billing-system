@@ -7,6 +7,7 @@ const CompanySchema = new mongoose.Schema({
     contactPhone: { type: String, unique: true },
     gstNumber: { type: String, unique: true },
     address: { type: String },
+    broker: { type: String },
     status: { type: Boolean, default: true },
 }, { timestamps: true });
 

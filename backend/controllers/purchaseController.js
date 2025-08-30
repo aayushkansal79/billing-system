@@ -11,6 +11,8 @@ export const createPurchase = async (req, res) => {
             orderNumber,
             discount,
             products,
+            remarks,
+            transport,
         } = req.body;
 
         if (!companyId || !date || !products || products.length === 0) {
@@ -48,6 +50,7 @@ export const createPurchase = async (req, res) => {
                 // Create new product
                 product = new Product({
                     name: p.name.trim(),
+                    type: p.type.trim() || "",
                     hsn: p.hsn.trim() || "",
                     unit: 0,
                     priceBeforeGst: p.priceBeforeGst,
@@ -56,6 +59,9 @@ export const createPurchase = async (req, res) => {
                     printPrice: p.printPrice,
                     lastPurchaseDate: date,
                 });
+            }
+            if (p.type) {
+                product.type = p.type.trim();
             }
             if (p.hsn) {
                 product.hsn = p.hsn.trim();
@@ -81,6 +87,7 @@ export const createPurchase = async (req, res) => {
             processedProducts.push({
                 product: product._id,
                 name: product.name,
+                type: product.type,
                 hsn: product.hsn,
                 quantity: p.quantity,
                 purchasePrice: p.purchasePrice,
@@ -100,6 +107,9 @@ export const createPurchase = async (req, res) => {
             orderNumber,
             discount,
             products: processedProducts,
+            remarks,
+            transportName: transport.name,
+            transportCity: transport.city,
         });
 
         const savedPurchase = await purchase.save();
@@ -193,7 +203,7 @@ export const getAllPurchases = async (req, res) => {
     const purchases = await Purchase.find(query)
       .populate({
         path: "company",
-        select: "name shortName state contactPhone gstNumber address",
+        select: "name shortName state contactPhone gstNumber address broker",
         match: Object.keys(companyFilter).length > 0 ? companyFilter : undefined,
       })
       .populate("products.product", "name price barcode")
@@ -258,6 +268,9 @@ export const getPurchaseById = async (req, res) => {
       discount: purchase.discount,
       company: purchase.company,
       products,
+      remarks: purchase.remarks,
+      transportName: purchase.transportName,
+      transportCity: purchase.transportCity,
     });
   } catch (err) {
     console.error(err);
@@ -278,7 +291,7 @@ export const searchPurchasesByProductName = async (req, res) => {
     const purchases = await Purchase.find({
       "products.name": { $regex: name, $options: "i" }
     })
-      .populate("company", "name shortName state contactPhone gstNumber address")
+      .populate("company", "name shortName state contactPhone gstNumber address broker")
       .populate("products.product", "name barcode");
 
     const results = [];
@@ -319,6 +332,8 @@ export const updatePurchase = async (req, res) => {
       orderNumber,
       discount,
       products,
+      remarks,
+      transport,
     } = req.body;
 
     if (!companyId || !date || !products || products.length === 0) {
@@ -368,6 +383,7 @@ export const updatePurchase = async (req, res) => {
         isNew = true;
         product = new Product({
           name,
+          type: p.type?.trim() || "",
           hsn: p.hsn?.trim() || "",
           unit: 0,
           priceBeforeGst: p.priceBeforeGst,
@@ -391,6 +407,7 @@ export const updatePurchase = async (req, res) => {
       product.unit += diff;
       if (product.unit < 0) product.unit = 0;
 
+      if (p.type) product.type = p.type.trim();
       if (p.hsn) product.hsn = p.hsn.trim();
       if (p.priceBeforeGst) product.priceBeforeGst = Number(p.priceBeforeGst);
       if (p.gstPercentage) product.gstPercentage = Number(p.gstPercentage);
@@ -403,6 +420,7 @@ export const updatePurchase = async (req, res) => {
       processedProducts.push({
         product: product._id,
         name: product.name,
+        type: product.type,
         hsn: product.hsn,
         quantity: newQty,
         purchasePrice: p.purchasePrice,
@@ -425,6 +443,9 @@ export const updatePurchase = async (req, res) => {
     existingPurchase.orderNumber = orderNumber;
     existingPurchase.discount = discount;
     existingPurchase.products = processedProducts;
+    existingPurchase.remarks = remarks;
+    existingPurchase.transportName = transport.name;
+    existingPurchase.transportCity = transport.city;
 
     const updated = await existingPurchase.save();
 

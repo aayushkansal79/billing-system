@@ -4,6 +4,8 @@ import Transaction from "../models/Transaction.js";
 import StoreProduct from "../models/StoreProduct.js";
 import { getNextInvoiceNumber } from "../controllers/counterController.js";
 import Store from "../models/Store.js";
+import Purchase from "../models/Purchase.js";
+import mongoose from "mongoose";
 
 //create bill
 export const createBill = async (req, res) => {
@@ -483,5 +485,99 @@ export const getStoreWiseBillStats = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const getBillsReport = async (req, res) => {
+  try {
+    const { search, page = 1, limit = 10, startDate, endDate } = req.query;
+
+    const query = {};
+
+    // 🔍 Apply search filters
+    if (search) {
+      const regex = new RegExp(search, "i");
+      query.$or = [
+        { invoiceNumber: regex },
+      ];
+    }
+
+    // 📅 Apply date filter
+    if (startDate && endDate) {
+      query.date = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
+
+    // 📑 Pagination setup
+    const skip = (Number(page) - 1) * Number(limit);
+
+    // 🧾 Fetch bills
+    const bills = await Bill.find(query)
+      .sort({ date: 1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean();
+
+    const total = await Bill.countDocuments(query);
+
+    // 📌 Collect all productIds from bills
+    const allProductIds = [
+      ...new Set(
+        bills.flatMap((bill) =>
+          bill.products.map((p) => new mongoose.Types.ObjectId(p.product))
+        )
+      ),
+    ];
+
+    // 📦 Find latest purchase for each product (sorted by date desc)
+    const latestPurchases = await Purchase.aggregate([
+      { $unwind: "$products" },
+      { $match: { "products.product": { $in: allProductIds } } },
+      { $sort: { date: -1 } },
+      {
+        $group: {
+          _id: "$products.product",
+          latestPurchasePrice: { $first: "$products.purchasePriceAfterDiscount" },
+          lastVendor: { $first: "$company" },
+          lastPurchaseDate: { $first: "$date" },
+        },
+      },
+    ]);
+
+    // Map for quick lookup
+    const purchaseMap = {};
+    latestPurchases.forEach((p) => {
+      purchaseMap[p._id.toString()] = {
+        purchasePrice: p.latestPurchasePrice,
+        lastVendor: p.lastVendor,
+        lastPurchaseDate: p.lastPurchaseDate,
+      };
+    });
+
+    // 📝 Attach latest purchase price to each bill product
+    const report = bills.map((bill) => ({
+      ...bill,
+      products: bill.products.map((p) => {
+        const purchaseInfo = purchaseMap[p.product.toString()] || {};
+        return {
+          ...p,
+          latestPurchasePrice: purchaseInfo.purchasePrice || null,
+          lastVendor: purchaseInfo.lastVendor || null,
+          lastPurchaseDate: purchaseInfo.lastPurchaseDate || null,
+        };
+      }),
+    }));
+
+    res.json({
+      bills: report,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (err) {
+    console.error("Error in getBillsReport:", err);
+    res.status(500).json({ error: "Server error" });
   }
 };

@@ -3,6 +3,7 @@ import SaleReturn from "../models/SaleReturn.js";
 import StoreProduct from "../models/StoreProduct.js";
 import Customer from "../models/Customer.js";
 import Transaction from "../models/Transaction.js";
+import { getNextSaleReturnNumber } from "./counterController.js";
 
 export const getBillByInvoice = async (req, res) => {
   try {
@@ -20,12 +21,16 @@ export const getBillByInvoice = async (req, res) => {
     const products = bill.products.map(p => ({
       productId: p.product._id,
       name: p.product.name,
+      type: p.type,
       soldQty: p.quantity,
+      priceAfterDiscount: p.priceAfterDiscount,
+      gstPercentage: p.gstPercentage,
       price: p.finalPrice,
     }));
 
     res.json({
       invoiceNumber: bill.invoiceNumber,
+      date: bill.date,
       customer: bill.customer,
       products
     });
@@ -38,7 +43,7 @@ export const getBillByInvoice = async (req, res) => {
 
 export const createSaleReturn = async (req, res) => {
   try {
-    const { invoiceNumber, products, returnMethod } = req.body;
+    const { invoiceNumber, products, returnMethod, remarks } = req.body;
     const storeId = req.store._id;
 
     if (!invoiceNumber || !products || products.length === 0 || !returnMethod) {
@@ -82,7 +87,10 @@ export const createSaleReturn = async (req, res) => {
       returnProducts.push({
         product: billItem.product._id,
         name: billItem.product.name,
+        type: billItem.type || "",
         quantity: item.quantity,
+        priceAfterDiscount: billItem.priceAfterDiscount,
+        gstPercentage: billItem.gstPercentage,
         price: billItem.finalPrice,
         total: itemTotal,
       });
@@ -111,12 +119,16 @@ export const createSaleReturn = async (req, res) => {
       await customerDoc.save();
     }
 
+    const saleReturnNo = await getNextSaleReturnNumber();
+
     const saleReturn = new SaleReturn({
+      saleReturnNo,
       invoiceNumber,
       customer: bill.customer || null,
       products: returnProducts,
       returnTotal,
       returnMethod,
+      remarks,
       store: storeId,
     });
     await saleReturn.save();

@@ -10,7 +10,17 @@ import "react-datepicker/dist/react-datepicker.css";
 import Loader from "../../components/Loader/Loader";
 
 const InvoiceContent = React.forwardRef(function InvoiceContent(
-  { url, company, products, date },
+  {
+    url,
+    invoiceNumber,
+    orderNumber,
+    company,
+    products,
+    date,
+    remarks,
+    transportName,
+    transportCity,
+  },
   ref
 ) {
   const navigate = useNavigate();
@@ -72,11 +82,17 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
   return (
     <div ref={ref} style={{ padding: "20px" }}>
       <div className="d-flex justify-content-between">
-        <h2>INVOICE</h2>
+        <div>
+          <h2>INVOICE</h2>
+          <b>Invoice No.:</b> {invoiceNumber || "-"}
+          <br />
+          <b>Order No.:</b> {orderNumber || "-"}
+        </div>
         <p>
           <b>Purchase Date:</b> {new Date(date).toLocaleDateString("en-GB")}
         </p>
       </div>
+      <br />
       <div className="d-flex justify-content-between">
         <div>
           <b>SELLER INFORMATION</b>
@@ -111,7 +127,8 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
           <tr>
             <th>#</th>
             <th>Product</th>
-            <th>HSN Code</th>
+            <th>Type</th>
+            <th>HSN</th>
             <th>Qty</th>
             <th>Purchase Price</th>
             <th>Price After Discount</th>
@@ -126,6 +143,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <tr key={idx}>
               <td>{idx + 1}.</td>
               <td>{p.name}</td>
+              <td>{p.type}</td>
               <td>{p.hsn}</td>
               <td>{p.quantity}</td>
               <td>
@@ -201,19 +219,16 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               <strong>Grand Total</strong>
             </td>
             <td></td>
+            <td></td>
             <th>{totalQty}</th>
             <td colSpan={2}></td>
             <td>
               <strong>
-                {form.CompanyState &&
-                company.state &&
-                form.CompanyState === company.state ? (
-                  <>
-                    <span>CGST</span> <br /> <span>SGST</span>
-                  </>
-                ) : (
-                  "IGST"
-                )}
+                <span>SGST</span>
+                <br />
+                <span>CGST</span>
+                <br />
+                <span>IGST</span>
               </strong>
             </td>
             <td>
@@ -232,10 +247,15 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
+                    <br />
+                    ₹0.00
                   </>
                 ) : (
                   <>
-                    ₹
+                    ₹0.00
+                    <br />
+                    ₹0.00
+                    <br />₹
                     {Number(totalGST).toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -268,52 +288,21 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
               </strong>
             </td>
           </tr>
-          {/* <tr>
-            <td colSpan={2}>
-              <strong>
-                {form.CompanyState &&
-                company.state &&
-                form.CompanyState === company.state ? (
-                  <>
-                    <span>CGST</span> <br /> <span>SGST</span>
-                  </>
-                ) : (
-                  "IGST"
-                )}
-              </strong>
-            </td>
-            <td>
-              <strong>
-                {form.CompanyState &&
-                company.state &&
-                form.CompanyState === company.state ? (
-                  <>
-                    ₹
-                    {Number(totalGST/2).toLocaleString("en-IN", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                    <br />
-                    ₹{Number(totalGST/2).toLocaleString("en-IN", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-
-                  </>
-                ) : (
-                  <>
-                    ₹
-                    {Number(totalGST).toLocaleString("en-IN", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </>
-                )}
-              </strong>
-            </td>
-          </tr> */}
         </tfoot>
       </table>
+      <div className="d-flex justify-content-between">
+        <div>
+          <b>Remarks: </b>
+          {remarks || "-"}
+        </div>
+        <div className="text-end">
+          <b>Transport Name: </b>
+          {transportName || "-"}
+          <br />
+          <b>City: </b>
+          {transportCity || "-"}
+        </div>
+      </div>
     </div>
   );
 });
@@ -704,8 +693,13 @@ const Order = ({ url }) => {
                   <InvoiceContent
                     url={url}
                     ref={componentRef}
+                    invoiceNumber={selectedPurchase.invoiceNumber}
+                    orderNumber={selectedPurchase.orderNumber}
                     company={selectedPurchase.company}
                     products={selectedPurchase.products}
+                    remarks={selectedPurchase.remarks}
+                    transportName={selectedPurchase.transportName}
+                    transportCity={selectedPurchase.transportCity}
                     date={selectedPurchase.date}
                   />
                 </div>

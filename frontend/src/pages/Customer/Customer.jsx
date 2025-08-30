@@ -367,7 +367,7 @@ const Customer = ({ url }) => {
                   })}
                 </th>
                 <th
-                  className="text-danger text-end"
+                  className={`text-end ${customer.pendingAmount >= 0 ? "text-success" : "text-danger"}`}
                   style={{ textWrap: "nowrap" }}
                 >
                   ₹{" "}

@@ -152,7 +152,6 @@ export const getStoreProducts = async (req, res) => {
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Prepare quantity condition in main query
     const query = { store: storeId };
 
     if (quantity && quantityCondition) {
@@ -162,53 +161,54 @@ export const getStoreProducts = async (req, res) => {
       else if (quantityCondition === "equal") query.quantity = q;
     }
 
-    const storeProducts = await StoreProduct.find(query)
-      .populate({
-        path: "product",
-        match: {
-          ...(productName && {
-            name: { $regex: productName, $options: "i" },
-          }),
-          ...(barcode && {
-            barcode: { $regex: barcode, $options: "i" },
-          }),
-        },
-      })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
+    const productQuery = {};
+    if (productName) {
+      productQuery.name = { $regex: productName, $options: "i" };
+    }
+    if (barcode) {
+      productQuery.barcode = { $regex: barcode, $options: "i" };
+    }
 
-    const filteredStoreProducts = storeProducts.filter((sp) => sp.product !== null);
+    let productIds = null;
+    if (productName || barcode) {
+      const products = await Product.find(productQuery).select("_id");
+      productIds = products.map(p => p._id);
 
-    // Get total count
-    const allStoreProducts = await StoreProduct.find(query)
-      .populate({
-        path: "product",
-        match: {
-          ...(productName && {
-            name: { $regex: productName, $options: "i" },
-          }),
-          ...(barcode && {
-            barcode: { $regex: barcode, $options: "i" },
-          }),
-        },
-      });
+      if (productIds.length === 0) {
+        return res.json({
+          storeProducts: [],
+          total: 0,
+          currentPage: parseInt(page),
+          totalPages: 0,
+        });
+      }
 
-    const total = allStoreProducts.filter((sp) => sp.product !== null).length;
+      query.product = { $in: productIds };
+    }
+
+    const [storeProducts, total] = await Promise.all([
+      StoreProduct.find(query)
+        .populate("product")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      StoreProduct.countDocuments(query),
+    ]);
 
     res.json({
-      storeProducts: filteredStoreProducts,
+      storeProducts,
       total,
       currentPage: parseInt(page),
       totalPages: Math.ceil(total / parseInt(limit)),
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching store products:", error);
     res.status(500).json({
       message: "Server error while fetching store products.",
     });
   }
 };
+
 
 
 //Get store product by barcode

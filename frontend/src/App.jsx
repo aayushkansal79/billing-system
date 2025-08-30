@@ -40,6 +40,7 @@ import Expense from "./pages/Expense/Expense";
 import ProductReport from "./pages/ProductReport/ProductReport";
 import ProductHistory from "./pages/ProductHistory/ProductHistory";
 import VendorReport from "./pages/VendorReport/VendorReport";
+import BillReport from "./pages/BillReport/BillReport";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -101,6 +102,7 @@ function App() {
               <Route path="/product-report/:productId/history" element={<PrivateRoute roles={["admin"]}> <ProductHistory url={url} /> </PrivateRoute>} />
               <Route path="/vendor-report" element={<PrivateRoute roles={["admin"]}> <VendorReport url={url} /> </PrivateRoute>} />
               <Route path="/vendors/:companyId/products" element={<PrivateRoute roles={["admin"]}> <VendorProducts url={url} /> </PrivateRoute>} />
+              <Route path="/bill-report" element={<PrivateRoute roles={["admin"]}> <BillReport url={url} /> </PrivateRoute>} />
               <Route path="/profile" element={<PrivateRoute roles={["admin"]}> <Profile url={url} /> </PrivateRoute>} />
               <Route path="/change-password" element={<PrivateRoute roles={["admin", "store"]}> <ChangePass url={url} /> </PrivateRoute>} />
             </Routes>

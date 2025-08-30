@@ -14,6 +14,7 @@ const PurchaseSchema = new mongoose.Schema({
         {
             product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
             name: { type: String, required: true },
+            type: { type: String },
             hsn: { type: String, required: true },
             quantity: { type: Number, required: true },
             purchasePrice: { type: Number, required: true },
@@ -25,6 +26,9 @@ const PurchaseSchema = new mongoose.Schema({
             printPrice: { type: Number },
         },
     ],
+    remarks: { type: String },
+    transportName: { type: String },
+    transportCity: { type: String },
     status: { type: Boolean, default: true },
 }, { timestamps: true });
 

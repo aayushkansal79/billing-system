@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const ProductSchema = new mongoose.Schema({
     name: { type: String, required: true, unique: true },
+    type: { type: String },
     hsn: { type: String, required: true },
     barcode: { type: String, unique: true, required: true },
     unit: { type: Number, default: 0 },

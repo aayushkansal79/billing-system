@@ -5,7 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 
 const InvoiceContent = React.forwardRef(function InvoiceContent(
-  { url, invoiceNumber, customer, store, products, returnMethod, date },
+  { url, saleReturnNo, invoiceNumber, customer, store, products, returnMethod, remarks, date },
   ref
 ) {
 
@@ -22,6 +22,8 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
         </p>
       </div>
       <div>
+        Sale Return No: <b>{saleReturnNo}</b>
+        <br />
         Invoice No: <b>{invoiceNumber}</b>
       </div>
       <br />
@@ -51,8 +53,11 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
           <tr>
             <th>#</th>
             <th>Product</th>
+            <th>Type</th>
             <th>Qty</th>
             <th>Price</th>
+            <th>GST</th>
+            <th>Final Price</th>
             <th>Return Total</th>
           </tr>
         </thead>
@@ -61,7 +66,16 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <tr key={idx}>
               <td>{idx + 1}.</td>
               <td>{p.name}</td>
+              <td>{p.type}</td>
               <td>{p.quantity}</td>
+              <td>
+                ₹
+                {Number(p.priceAfterDiscount).toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </td>
+              <td>{p.gstPercentage}%</td>
               <td>
                 ₹
                 {Number(p.price).toLocaleString("en-IN", {
@@ -84,7 +98,10 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <td colSpan={2} className="text-start">
               <strong>Grand Total</strong>
             </td>
+            <td></td>
             <th>{totalQty}</th>
+            <td></td>
+            <td></td>
             <td></td>
             <th>₹
                 {Number(totalAmount).toLocaleString("en-IN", {
@@ -97,6 +114,8 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
 
       <div>
         Return by: <b>{returnMethod}</b>
+        <br />
+        Remarks: {remarks}
       </div>
     </div>
   );
@@ -287,6 +306,7 @@ const SaleReturn = ({ url }) => {
           <thead className="table-info">
             <tr>
               <th>#</th>
+              <th>Sale Return No.</th>
               <th>Invoice No.</th>
               <th>Customer Name</th>
               <th>Mobile No.</th>
@@ -299,6 +319,9 @@ const SaleReturn = ({ url }) => {
             {returns.map((returnItem, idx) => (
               <tr key={returnItem._id}>
                 <th>{(filters.page - 1) * filters.limit + (idx + 1)}.</th>
+                <th style={{ whiteSpace: "nowrap" }}>
+                  {returnItem.saleReturnNo}
+                </th>
                 <th style={{ whiteSpace: "nowrap" }}>
                   {returnItem.invoiceNumber}
                 </th>
@@ -354,11 +377,13 @@ const SaleReturn = ({ url }) => {
                   <InvoiceContent
                     url={url}
                     ref={componentRef}
+                    saleReturnNo={selectedReturn.saleReturnNo}
                     invoiceNumber={selectedReturn.invoiceNumber}
                     customer={selectedReturn.customer}
                     store={selectedReturn.store}
                     products={selectedReturn.products}
                     returnMethod={selectedReturn.returnMethod}
+                    remarks={selectedReturn.remarks}
                     date={selectedReturn.date}
                   />
                 </div>
