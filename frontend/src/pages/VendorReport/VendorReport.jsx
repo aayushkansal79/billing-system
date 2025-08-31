@@ -20,13 +20,8 @@ const VendorReport = ({ url }) => {
 
   const [filters, setFilters] = useState({
     name: "",
-    shortName: "",
+    mobile: "",
     state: "",
-    contactPhone: "",
-    gstNumber: "",
-    address: "",
-    // startDate: "",
-    // endDate: "",
     page: 1,
     limit: 10,
   });
@@ -46,7 +41,7 @@ const VendorReport = ({ url }) => {
       params.set("page", filters.page || currentPage);
 
       const res = await axios.get(
-        `${url}/api/company/all?${params.toString()}`,
+        `${url}/api/company/report?${params.toString()}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -94,24 +89,13 @@ const VendorReport = ({ url }) => {
           />
         </div>
         <div className="col-md-2">
-          <label className="form-label">Vendor Short Name:</label>
+          <label className="form-label">Mobile:</label>
           <input
             className="form-control"
             placeholder="Vendor Name"
-            value={filters.shortName}
+            value={filters.mobile}
             onChange={(e) =>
-              setFilters({ ...filters, shortName: e.target.value })
-            }
-          />
-        </div>
-        <div className="col-md-2">
-          <label className="form-label">Address:</label>
-          <input
-            className="form-control"
-            placeholder="Vendor Address"
-            value={filters.address}
-            onChange={(e) =>
-              setFilters({ ...filters, address: e.target.value })
+              setFilters({ ...filters, mobile: e.target.value })
             }
           />
         </div>
@@ -119,56 +103,13 @@ const VendorReport = ({ url }) => {
           <label className="form-label">State:</label>
           <input
             className="form-control"
-            placeholder="Vendor State"
+            placeholder="Vendor Address"
             value={filters.state}
-            onChange={(e) => setFilters({ ...filters, state: e.target.value })}
-          />
-        </div>
-        <div className="col-md-2">
-          <label className="form-label">Contact Number:</label>
-          <input
-            type="number"
-            className="form-control"
-            placeholder="Contact Number"
-            value={filters.contactNumber}
             onChange={(e) =>
-              setFilters({ ...filters, contactNumber: e.target.value })
+              setFilters({ ...filters, state: e.target.value })
             }
           />
         </div>
-        <div className="col-md-2">
-          <label className="form-label">GST No.:</label>
-          <input
-            className="form-control"
-            placeholder="Vendor GST"
-            value={filters.gstNumber}
-            onChange={(e) =>
-              setFilters({ ...filters, gstNumber: e.target.value })
-            }
-          />
-        </div>
-        {/* <div className="col-md-2">
-          <label className="form-label">Start Date:</label>
-          <input
-            className="form-control"
-            type="date"
-            value={filters.startDate}
-            onChange={(e) =>
-              setFilters({ ...filters, startDate: e.target.value })
-            }
-          />
-        </div>
-        <div className="col-md-2">
-          <label className="form-label">End Date:</label>
-          <input
-            className="form-control"
-            type="date"
-            value={filters.endDate}
-            onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-          />
-        </div> */}
-
-        {/* <button onClick={fetchFilteredData}>Search</button> */}
       </div>
 
       <div className="company row rounded mb-3">
@@ -177,29 +118,35 @@ const VendorReport = ({ url }) => {
             <tr>
               <th>#</th>
               <th scope="col">Vendor Name</th>
-              <th scope="col">Short Name</th>
-              <th scope="col">State</th>
-              <th scope="col">Address</th>
-              <th scope="col">Contact No.</th>
-              <th scope="col">GST Number</th>
-              <th scope="col">Date & Time</th>
+              <th scope="col">Total Purchase</th>
+              <th scope="col">Total Sale</th>
+              <th scope="col">Total Warehouse Stock</th>
+              <th scope="col">Total Store Stock</th>
+              <th scope="col">Total Closing Stock</th>
+              <th scope="col">Total Closing Amount</th>
             </tr>
           </thead>
           <tbody className="table-group-divider">
             {allCompanies.map((company, index) => (
               <tr
                 key={company._id}
-                onClick={() => handleVendorClick(company._id)}
+                onClick={() => handleVendorClick(company.companyId)}
                 style={{ cursor: "pointer" }}
               >
                 <th>{(filters.page - 1) * filters.limit + (index + 1)}.</th>
-                <th>{company.name}</th>
-                <th>{company.shortName}</th>
-                <th>{company.state}</th>
-                <td>{company.address}</td>
-                <td>{company.contactPhone}</td>
-                <td>{company.gstNumber}</td>
-                <td>{new Date(company.updatedAt).toLocaleString("en-GB")}</td>
+                <th>{company.companyName}</th>
+                <th className="text-primary">{company.totalPurchase}</th>
+                <th className="text-success">{company.totalSale}</th>
+                <th>{company.totalWarehouseStock}</th>
+                <th>{company.totalStoreStock}</th>
+                <th className="text-danger">{company.totalClosingStock}</th>
+                <th className="text-success">
+                  ₹{" "}
+                  {Number(company.totalClosingAmount).toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </th>
               </tr>
             ))}
           </tbody>

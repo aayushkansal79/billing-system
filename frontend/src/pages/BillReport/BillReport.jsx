@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Pagination from "../../components/Pagination/Pagination";
+import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 const BillReport = ({ url }) => {
@@ -12,6 +13,8 @@ const BillReport = ({ url }) => {
 
   const [filters, setFilters] = useState({
     search: "",
+    startDate: "",
+    endDate: "",
     page: 1,
     limit: 10,
   });
@@ -23,6 +26,7 @@ const BillReport = ({ url }) => {
     sessionStorage.getItem("token") || localStorage.getItem("token");
   const navigate = useNavigate();
   const [bills, setBills] = useState([]);
+  const [todayProfit, setTodayProfit] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,6 +51,18 @@ const BillReport = ({ url }) => {
     };
     fetchData();
   }, [filters, url]);
+
+  useEffect(() => {
+    const fetchProfit = async () => {
+      const res = await axios.get(`${url}/api/bill/get-todays-profit`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setTodayProfit(res.data.netProfit);
+    };
+    fetchProfit();
+  }, [url]);
 
   // Handle pagination change
   const handlePageChange = (page) => {
@@ -75,16 +91,55 @@ const BillReport = ({ url }) => {
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
           />
         </div>
-      </div>
+        <div className="col-md-2">
+          <label className="form-label">Bill Date (from):</label>
+          <DatePicker
+            className="form-control"
+            selectsStart
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            selected={filters.startDate}
+            onChange={(date) => setFilters({ ...filters, startDate: date })}
+            maxDate={filters.endDate}
+            placeholderText="Start Date"
+            dateFormat="dd/MM/yyyy"
+          />
+        </div>
 
+        <div className="col-md-2">
+          <label className="form-label">Bill Date (to):</label>
+          <DatePicker
+            className="form-control"
+            selectsEnd
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            selected={filters.endDate}
+            onChange={(date) => setFilters({ ...filters, endDate: date })}
+            minDate={filters.startDate}
+            placeholderText="End Date"
+            dateFormat="dd/MM/yyyy"
+          />
+        </div>
+        <div className="col-2 Expenditure summary text-center">
+          Today's Profit <br />{" "}
+          <b>
+            ₹{" "}
+            {Number(todayProfit).toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </b>
+        </div>
+      </div>
       <div className="transac mt-3 mb-3 rounded">
         <div className="table-responsive">
           <table className="table align-middle table-hover my-0">
-            <thead className="table-info">
+            <thead className="table-warning">
               <tr>
                 <th>#</th>
                 <th>Invoice No.</th>
                 <th>Product Name</th>
+                <th>Type</th>
                 <th>Quantity</th>
                 <th className="text-end">Price</th>
                 <th className="text-end">Net Price</th>
@@ -104,6 +159,7 @@ const BillReport = ({ url }) => {
                   {b.products.map((p, prodIdx) => (
                     <tr key={prodIdx}>
                       <td>{p.productName}</td>
+                      <td>{p.type}</td>
                       <td>{p.quantity}</td>
                       <td className="text-end">
                         ₹{" "}
@@ -131,8 +187,9 @@ const BillReport = ({ url }) => {
                       <td className="text-end">
                         ₹{" "}
                         {Number(
-                          p.finalPrice / (1 + 0.01 * p.gstPercentage) -
-                            p.latestPurchasePrice
+                          p.quantity *
+                            (p.finalPrice / (1 + 0.01 * p.gstPercentage) -
+                              p.latestPurchasePrice)
                         ).toLocaleString("en-IN", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,

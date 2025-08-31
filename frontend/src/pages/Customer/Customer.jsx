@@ -522,7 +522,7 @@ const Customer = ({ url }) => {
                 ></button>
               </div>
               <div className="modal-body">
-                {pendingBills.length === 0 ? (
+                {pendingBills.length === 0 || modalCustomer.pendingAmount >=0 ? (
                   <p className="text-center">
                     No pending bills for this customer!
                   </p>

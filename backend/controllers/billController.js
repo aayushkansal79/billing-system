@@ -494,7 +494,6 @@ export const getBillsReport = async (req, res) => {
 
     const query = {};
 
-    // 🔍 Apply search filters
     if (search) {
       const regex = new RegExp(search, "i");
       query.$or = [
@@ -502,18 +501,26 @@ export const getBillsReport = async (req, res) => {
       ];
     }
 
-    // 📅 Apply date filter
-    if (startDate && endDate) {
-      query.date = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate),
-      };
+    if (startDate || endDate) {
+      query.date = {};
+
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const istStart = new Date(start.getTime());
+        query.date.$gte = istStart;
+      }
+
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        const istEnd = new Date(end.getTime());
+        query.date.$lte = istEnd;
+      }
     }
 
-    // 📑 Pagination setup
     const skip = (Number(page) - 1) * Number(limit);
 
-    // 🧾 Fetch bills
     const bills = await Bill.find(query)
       .sort({ date: 1 })
       .skip(skip)
@@ -522,7 +529,6 @@ export const getBillsReport = async (req, res) => {
 
     const total = await Bill.countDocuments(query);
 
-    // 📌 Collect all productIds from bills
     const allProductIds = [
       ...new Set(
         bills.flatMap((bill) =>
@@ -531,7 +537,6 @@ export const getBillsReport = async (req, res) => {
       ),
     ];
 
-    // 📦 Find latest purchase for each product (sorted by date desc)
     const latestPurchases = await Purchase.aggregate([
       { $unwind: "$products" },
       { $match: { "products.product": { $in: allProductIds } } },
@@ -546,7 +551,6 @@ export const getBillsReport = async (req, res) => {
       },
     ]);
 
-    // Map for quick lookup
     const purchaseMap = {};
     latestPurchases.forEach((p) => {
       purchaseMap[p._id.toString()] = {
@@ -556,7 +560,6 @@ export const getBillsReport = async (req, res) => {
       };
     });
 
-    // 📝 Attach latest purchase price to each bill product
     const report = bills.map((bill) => ({
       ...bill,
       products: bill.products.map((p) => {
@@ -579,5 +582,67 @@ export const getBillsReport = async (req, res) => {
   } catch (err) {
     console.error("Error in getBillsReport:", err);
     res.status(500).json({ error: "Server error" });
+  }
+};
+
+export const getTodaysProfit = async (req, res) => {
+  try {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const bills = await Bill.find({
+      date: { $gte: startOfToday, $lte: endOfToday },
+    }).lean();
+
+    const allProductIds = [
+      ...new Set(
+        bills.flatMap((bill) =>
+          bill.products.map((p) => new mongoose.Types.ObjectId(p.product))
+        )
+      ),
+    ];
+
+    const latestPurchases = await Purchase.aggregate([
+      { $unwind: "$products" },
+      { $match: { "products.product": { $in: allProductIds } } },
+      { $sort: { date: -1 } },
+      {
+        $group: {
+          _id: "$products.product",
+          latestPurchasePrice: {
+            $first: "$products.purchasePriceAfterDiscount",
+          },
+        },
+      },
+    ]);
+
+    const purchaseMap = {};
+    latestPurchases.forEach((p) => {
+      purchaseMap[p._id.toString()] = p.latestPurchasePrice || 0;
+    });
+
+    let netProfit = 0;
+    for (const bill of bills) {
+      for (const p of bill.products) {
+        const finalPrice = Number(p.finalPrice || 0);
+        const quantity = Number(p.quantity || 0);
+        const gstPerc = Number(p.gstPercentage || 0);
+        const purchasePrice = Number(purchaseMap[p.product?.toString()] || 0);
+
+        const priceBeforeGst = finalPrice / (1 + gstPerc / 100);
+        const profitPerUnit = priceBeforeGst - purchasePrice;
+        netProfit += profitPerUnit * quantity;
+      }
+    }
+
+    res.json({
+      date: startOfToday.toISOString().split("T")[0],
+      netProfit: Number(netProfit.toFixed(2)),
+    });
+  } catch (error) {
+    console.error("Error in getTodaysProfit:", error);
+    res.status(500).json({ error: "Server error calculating today's profit" });
   }
 };
