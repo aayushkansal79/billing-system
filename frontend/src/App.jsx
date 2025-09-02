@@ -41,6 +41,7 @@ import ProductReport from "./pages/ProductReport/ProductReport";
 import ProductHistory from "./pages/ProductHistory/ProductHistory";
 import VendorReport from "./pages/VendorReport/VendorReport";
 import BillReport from "./pages/BillReport/BillReport";
+import EditBilling from "./pages/Billing/EditBilling";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -88,6 +89,7 @@ function App() {
               <Route path="/all-stores" element={<PrivateRoute roles={["admin"]}> <AllStores url={url} /> </PrivateRoute>} />
               <Route path="/login-as-store" element={<PrivateRoute roles={["admin"]}> <LoginAsStore url={url} /> </PrivateRoute>} />
               <Route path="/billing" element={<PrivateRoute roles={["store"]}> <Billing url={url} setSidebarOpen={setSidebarOpen} /> </PrivateRoute>} />
+              <Route path="/billing/edit/:id" element={<PrivateRoute roles={["store"]}> <EditBilling url={url} setSidebarOpen={setSidebarOpen} /> </PrivateRoute>} />
               <Route path="/all-bill" element={<PrivateRoute roles={["admin", "store"]}> <AllBill url={url} /> </PrivateRoute>} />
               <Route path="/sales-return" element={<PrivateRoute roles={["admin", "store"]}> <AddSaleReturn url={url} /> </PrivateRoute>} />
               <Route path="/sales-return-list" element={<PrivateRoute roles={["admin", "store"]}> <SaleReturn url={url} /> </PrivateRoute>} />

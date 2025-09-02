@@ -5,7 +5,15 @@ import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 
 const InvoiceContent = React.forwardRef(function InvoiceContent(
-  { url, invoiceNumber, company, products, totalReturnAmount, date },
+  {
+    url,
+    purchaseReturnNo,
+    company,
+    products,
+    totalReturnAmount,
+    remarks,
+    date,
+  },
   ref
 ) {
   const token =
@@ -48,7 +56,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
         </p>
       </div>
       <div>
-        Invoice No: <b>{invoiceNumber}</b>
+        Purchase Return No: <b>{purchaseReturnNo}</b>
       </div>
       <br />
       <div className="d-flex justify-content-between">
@@ -87,6 +95,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <th>Product</th>
             <th>Qty</th>
             <th>Purchase Price</th>
+            <th>GST %</th>
             <th>Return Total</th>
           </tr>
         </thead>
@@ -103,6 +112,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
                   maximumFractionDigits: 2,
                 })}
               </td>
+              <td>{p.gstPercentage}%</td>
               <td>
                 ₹
                 {Number(p.total).toLocaleString("en-IN", {
@@ -120,6 +130,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             </td>
             <th>{totalQty}</th>
             <td></td>
+            <td></td>
             <th>
               ₹
               {Number(totalReturnAmount).toLocaleString("en-IN", {
@@ -130,14 +141,18 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
           </tr>
         </tfoot>
       </table>
+
+      <div>
+        <b>Remarks:</b> {remarks}
+      </div>
     </div>
   );
 });
 
 const PurchaseReturn = ({ url }) => {
   useEffect(() => {
-        document.title = "Purchase Return | Ajjawam";
-      }, []);
+    document.title = "Purchase Return | Ajjawam";
+  }, []);
   const [returns, setReturns] = useState([]);
   const token = localStorage.getItem("token");
   const [selectedReturn, setSelectedReturn] = useState(null);
@@ -329,7 +344,7 @@ const PurchaseReturn = ({ url }) => {
           <thead className="table-info">
             <tr>
               <th>#</th>
-              <th>Invoice No.</th>
+              <th>Purchase Return No.</th>
               <th>Vendor Name</th>
               <th>Mobile No.</th>
               <th>Address</th>
@@ -344,7 +359,7 @@ const PurchaseReturn = ({ url }) => {
               <tr key={returnItem._id}>
                 <th>{(filters.page - 1) * filters.limit + (idx + 1)}.</th>
                 <th style={{ whiteSpace: "nowrap" }}>
-                  {returnItem.invoiceNumber}
+                  {returnItem.purchaseReturnNo}
                 </th>
                 <td>{returnItem.company.name}</td>
                 <td>{returnItem.company.contactPhone}</td>
@@ -397,10 +412,11 @@ const PurchaseReturn = ({ url }) => {
                   <InvoiceContent
                     url={url}
                     ref={componentRef}
-                    invoiceNumber={selectedReturn.invoiceNumber}
+                    purchaseReturnNo={selectedReturn.purchaseReturnNo}
                     company={selectedReturn.company}
                     products={selectedReturn.products}
                     totalReturnAmount={selectedReturn.totalReturnAmount}
+                    remarks={selectedReturn.remarks}
                     date={selectedReturn.date}
                   />
                 </div>

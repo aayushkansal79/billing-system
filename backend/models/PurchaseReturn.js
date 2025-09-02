@@ -2,9 +2,8 @@ import mongoose from "mongoose";
 
 const purchaseReturnSchema = new mongoose.Schema(
   {
-    purchaseId: { type: mongoose.Schema.Types.ObjectId, ref: "Purchase", required: true, },
+    purchaseReturnNo: { type: String, unique: true, required: true },
     company: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true, },
-    invoiceNumber: { type: String, required: true, },
     date: { type: Date, default: Date.now, },
     products: [
       {
@@ -18,6 +17,7 @@ const purchaseReturnSchema = new mongoose.Schema(
       },
     ],
     totalReturnAmount: { type: Number, required: true, },
+    remarks: { type: String },
     status: { type: Boolean, default: true },
   },
   { timestamps: true }

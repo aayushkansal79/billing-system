@@ -2,54 +2,141 @@ import Purchase from "../models/Purchase.js";
 import Product from "../models/Product.js";
 import PurchaseReturn from "../models/PurchaseReturn.js";
 import Company from "../models/Company.js";
+import { getNextPurchaseReturnNumber } from "./counterController.js";
 
-export const getPurchaseByInvoice = async (req, res) => {
-  try {
-    const { invoiceNumber } = req.params;
-    if (!invoiceNumber) {
-      return res.status(400).json({ error: "Invoice number required" });
-    }
+// export const getPurchaseByInvoice = async (req, res) => {
+//   try {
+//     const { invoiceNumber } = req.params;
+//     if (!invoiceNumber) {
+//       return res.status(400).json({ error: "Invoice number required" });
+//     }
 
-    const purchase = await Purchase.findOne({ invoiceNumber })
-      .populate("company")
-      .populate("products.product", "name");
+//     const purchase = await Purchase.findOne({ invoiceNumber })
+//       .populate("company")
+//       .populate("products.product", "name");
 
-    if (!purchase) {
-      return res.status(404).json({ error: "Purchase not found" });
-    }
+//     if (!purchase) {
+//       return res.status(404).json({ error: "Purchase not found" });
+//     }
 
-    const products = purchase.products.map(p => ({
-      productId: p.product._id,
-      name: p.name,
-      purchasedQty: p.quantity,
-      purchasePriceAfterDiscount: p.purchasePriceAfterDiscount,
-      gstPercentage: p.gstPercentage,
-    }));
+//     const products = purchase.products.map(p => ({
+//       productId: p.product._id,
+//       name: p.name,
+//       purchasedQty: p.quantity,
+//       purchasePriceAfterDiscount: p.purchasePriceAfterDiscount,
+//       gstPercentage: p.gstPercentage,
+//     }));
 
-    res.json({
-      invoiceNumber: purchase.invoiceNumber,
-      company: purchase.company,
-      date: purchase.date,
-      products
-    });
+//     res.json({
+//       invoiceNumber: purchase.invoiceNumber,
+//       company: purchase.company,
+//       date: purchase.date,
+//       products
+//     });
 
-  } catch (err) {
-    console.error("Error fetching purchase:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-};
+//   } catch (err) {
+//     console.error("Error fetching purchase:", err);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// };
+
+// export const createPurchaseReturn = async (req, res) => {
+//   try {
+//     const { invoiceNumber, products } = req.body;
+
+//     if (!invoiceNumber || !products || products.length === 0) {
+//       return res.status(400).json({ error: "Invoice number and products are required" });
+//     }
+
+//     const purchase = await Purchase.findOne({ invoiceNumber }).populate("company");
+//     if (!purchase) {
+//       return res.status(404).json({ error: "Purchase not found" });
+//     }
+
+//     let returnProducts = [];
+//     let totalReturnAmount = 0;
+
+//     for (let p of products) {
+//       const { productId, returnQty } = p;
+
+//       if (!returnQty || returnQty <= 0) {
+//         return res.status(400).json({ error: `Invalid return quantity for product: ${productId}` });
+//       }
+
+//       const productDoc = await Product.findById(productId);
+//       if (!productDoc) {
+//         return res.status(400).json({ error: `Product not found: ${productId}` });
+//       }
+
+//       if (productDoc.unit < returnQty) {
+//         return res.status(400).json({ error: `Not enough stock in warehouse for product: ${productDoc.name}` });
+//       }
+
+//       const originalProduct = purchase.products.find(
+//         x => x.product.toString() === productId
+//       );
+//       if (!originalProduct) {
+//         return res.status(400).json({ error: `Product ${productDoc.name} not found in purchase invoice` });
+//       }
+
+//       if (returnQty > originalProduct.quantity) {
+//         return res.status(400).json({
+//           error: `Return qty (${returnQty}) exceeds purchased qty (${originalProduct.quantity}) for ${productDoc.name}`
+//         });
+//       }
+
+//       const purchasePriceAfterDiscount = originalProduct.purchasePriceAfterDiscount;
+//       const total = returnQty * purchasePriceAfterDiscount;
+
+//       returnProducts.push({
+//         product: productDoc._id,
+//         name: productDoc.name,
+//         purchasedQty: originalProduct.quantity,
+//         returnQty,
+//         purchasePriceAfterDiscount: originalProduct.purchasePriceAfterDiscount,
+//         gstPercentage: originalProduct.gstPercentage,
+//         total
+//       });
+
+//       totalReturnAmount += total;
+//     }
+
+//     for (let item of returnProducts) {
+//       await Product.findByIdAndUpdate(
+//         item.product,
+//         { $inc: { unit: -item.returnQty } }
+//       );
+//     }
+
+//     const purchaseReturn = new PurchaseReturn({
+//       purchaseId: purchase._id,
+//       company: purchase.company._id,
+//       invoiceNumber: purchase.invoiceNumber,
+//       products: returnProducts,
+//       totalReturnAmount,
+//     });
+
+//     await purchaseReturn.save();
+
+//     res.json({ message: "Purchase return created successfully", purchaseReturn });
+
+//   } catch (err) {
+//     console.error("Error creating purchase return:", err);
+//     res.status(500).json({ error: err.message });
+//   }
+// };
 
 export const createPurchaseReturn = async (req, res) => {
   try {
-    const { invoiceNumber, products } = req.body;
+    const { companyId, products, remarks } = req.body;
 
-    if (!invoiceNumber || !products || products.length === 0) {
-      return res.status(400).json({ error: "Invoice number and products are required" });
+    if (!companyId || !products || products.length === 0) {
+      return res.status(400).json({ error: "Company and products are required" });
     }
 
-    const purchase = await Purchase.findOne({ invoiceNumber }).populate("company");
-    if (!purchase) {
-      return res.status(404).json({ error: "Purchase not found" });
+    const company = await Company.findById(companyId);
+    if (!company) {
+      return res.status(404).json({ error: "Company not found" });
     }
 
     let returnProducts = [];
@@ -71,29 +158,39 @@ export const createPurchaseReturn = async (req, res) => {
         return res.status(400).json({ error: `Not enough stock in warehouse for product: ${productDoc.name}` });
       }
 
-      const originalProduct = purchase.products.find(
-        x => x.product.toString() === productId
-      );
-      if (!originalProduct) {
-        return res.status(400).json({ error: `Product ${productDoc.name} not found in purchase invoice` });
-      }
+      const purchases = await Purchase.find({
+        company: companyId,
+        "products.product": productId,
+      });
 
-      if (returnQty > originalProduct.quantity) {
+      const totalPurchasedQty = purchases.reduce((sum, purchase) => {
+        const item = purchase.products.find((x) => x.product.toString() === productId);
+        return item ? sum + item.quantity : sum;
+      }, 0);
+
+      if (returnQty > totalPurchasedQty) {
         return res.status(400).json({
-          error: `Return qty (${returnQty}) exceeds purchased qty (${originalProduct.quantity}) for ${productDoc.name}`
+          error: `Return qty (${returnQty}) exceeds total purchased qty (${totalPurchasedQty}) from vendor for ${productDoc.name}`
         });
       }
 
-      const purchasePriceAfterDiscount = originalProduct.purchasePriceAfterDiscount;
+      //pick from the first match
+      const firstMatch = purchases.find(p =>
+        p.products.some(prod => prod.product.toString() === productId)
+      );
+
+      const matchedProduct = firstMatch.products.find(prod => prod.product.toString() === productId);
+      const purchasePriceAfterDiscount = matchedProduct.purchasePriceAfterDiscount;
+      const gstPercentage = matchedProduct.gstPercentage;
       const total = returnQty * purchasePriceAfterDiscount;
 
       returnProducts.push({
-        product: productDoc._id,
+        product: productId,
         name: productDoc.name,
-        purchasedQty: originalProduct.quantity,
+        purchasedQty: totalPurchasedQty,
         returnQty,
-        purchasePriceAfterDiscount: originalProduct.purchasePriceAfterDiscount,
-        gstPercentage: originalProduct.gstPercentage,
+        purchasePriceAfterDiscount,
+        gstPercentage,
         total
       });
 
@@ -107,23 +204,30 @@ export const createPurchaseReturn = async (req, res) => {
       );
     }
 
+    const purchaseReturnNo = await getNextPurchaseReturnNumber();
+
     const purchaseReturn = new PurchaseReturn({
-      purchaseId: purchase._id,
-      company: purchase.company._id,
-      invoiceNumber: purchase.invoiceNumber,
+      purchaseReturnNo,
+      company: companyId,
       products: returnProducts,
       totalReturnAmount,
+      date: new Date(),
+      remarks
     });
 
     await purchaseReturn.save();
 
-    res.json({ message: "Purchase return created successfully", purchaseReturn });
+    res.json({
+      message: "Purchase return created successfully",
+      purchaseReturn,
+    });
 
   } catch (err) {
     console.error("Error creating purchase return:", err);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 export const getAllPurchaseReturns = async (req, res) => {
   try {
@@ -197,5 +301,37 @@ export const getAllPurchaseReturns = async (req, res) => {
   } catch (err) {
     console.error("Error fetching purchase returns:", err);
     res.status(500).json({ message: "Failed to fetch purchase returns" });
+  }
+};
+
+export const productByCompany = async (req, res) => {
+  const { companyId, name } = req.query;
+
+  if (!companyId || !name) {
+    return res.status(400).json({ message: "Missing parameters" });
+  }
+
+  try {
+    const purchases = await Purchase.find({ company: companyId })
+      .select("products")
+      .lean();
+
+    const products = purchases
+      .flatMap((p) => p.products || [])
+      .filter((prod) =>
+        prod.name.toLowerCase().includes(name.toLowerCase())
+      );
+
+    const seen = new Set();
+    const uniqueProducts = products.filter((prod) => {
+      if (seen.has(prod.product.toString())) return false;
+      seen.add(prod.product.toString());
+      return true;
+    });
+
+    res.json(uniqueProducts);
+  } catch (err) {
+    console.error("Error fetching products:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };

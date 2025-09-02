@@ -1,19 +1,18 @@
 import React, { useEffect, useState } from "react";
-import "./AddSaleReturn.css";
+import "./AddPurchaseReturn.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Loader from "../../components/Loader/Loader";
 import Swal from "sweetalert2";
 
-const AddSaleReturn = ({ url }) => {
+const AddPurchaseReturn = ({ url }) => {
   useEffect(() => {
-    document.title = "Add Sale Return | Ajjawam";
-  }, []);
+      document.title = "Add Purchase Return | Ajjawam";
+    }, []);
   const [invoice, setInvoice] = useState("");
-  const [bill, setBill] = useState(null);
+  const [purchase, setPurchase] = useState(null);
   const [returnProducts, setReturnProducts] = useState([]);
-  const [returnMethod, setReturnMethod] = useState("");
-  const [remarks, setRemarks] = useState("");
+  
   const [loading, setLoading] = useState(false);
   const token = localStorage.getItem("token");
 
@@ -26,15 +25,17 @@ const AddSaleReturn = ({ url }) => {
         return;
       }
 
-      const res = await axios.get(`${url}/api/sale-return/${invoice}`, {
+      const res = await axios.get(`${url}/api/purchase-return/${invoice}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setBill(res.data);
+      setPurchase(res.data);
       setReturnProducts(res.data.products.map((p) => ({ ...p, returnQty: 0 })));
-      toast.success("Bill fetched successfully");
+      toast.success("Purchase bill fetched successfully");
     } catch (err) {
       console.error("Error fetching bill:", err);
-      toast.error("Failed to fetch bill. Please check the invoice number.");
+      toast.error(
+        "Failed to fetch purchase bill. Please check the invoice number."
+      );
     } finally {
       setLoading(false);
     }
@@ -44,7 +45,7 @@ const AddSaleReturn = ({ url }) => {
     setReturnProducts((prev) =>
       prev.map((p, i) =>
         i === index
-          ? { ...p, returnQty: Math.min(Number(value), p.soldQty) }
+          ? { ...p, returnQty: Math.min(Number(value), p.purchasedQty) }
           : p
       )
     );
@@ -54,41 +55,32 @@ const AddSaleReturn = ({ url }) => {
     const selected = returnProducts.filter((p) => p.returnQty > 0);
 
     if (selected.length === 0) {
-      alert("Please enter return qty for at least one product");
-      return;
-    }
-
-    if (!returnMethod) {
-      toast.error("Please select a return method");
+      toast.error("Please enter return qty for at least one product");
       return;
     }
 
     try {
       const res = await axios.post(
-        `${url}/api/sale-return`,
+        `${url}/api/purchase-return`,
         {
-          invoiceNumber: bill.invoiceNumber,
+          invoiceNumber: purchase.invoiceNumber,
           products: selected.map((p) => ({
             productId: p.productId,
-            quantity: p.returnQty,
+            returnQty: p.returnQty,
           })),
-          returnMethod,
-          remarks,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // toast.success("Sale return processed successfully!");
-      Swal.fire("Success", "Sale return processed successfully!", "success");
-
-      console.log(res.data);
-      setBill(null);
+      // toast.success("Purchase return processed successfully!");
+      Swal.fire("Success", "Purchase return processed successfully!", "success");
+      setPurchase(null);
       setReturnProducts([]);
-      setReturnMethod("");
+      setInvoice("");
     } catch (err) {
       console.error("Error submitting return:", err);
       toast.error(
-        err.response?.data?.error || "Failed to process sale return."
+        err.response?.data?.error || "Failed to process purchase return."
       );
     }
   };
@@ -96,13 +88,13 @@ const AddSaleReturn = ({ url }) => {
   const totalQty = returnProducts.reduce((sum, p) => sum + p.returnQty, 0);
 
   const totalAmount = returnProducts.reduce(
-    (sum, p) => sum + p.price * p.returnQty,
+    (sum, p) => sum + p.purchasePriceAfterDiscount * p.returnQty,
     0
   );
 
   return (
     <>
-      <div className="bread">Add Sales Return</div>
+      <div className="bread">Add Purchase Return</div>
       <div className="addreturn rounded mt-3 mb-3 pb-4">
         <div className="search row align-items-end">
           <div className="col-md-3">
@@ -122,45 +114,37 @@ const AddSaleReturn = ({ url }) => {
           </div>
           <div className="col-md-2">
             <button className="btn btn-primary" onClick={fetchBill}>
-              Fetch Bill
+              Fetch Purchase
             </button>
           </div>
         </div>
 
-        {bill && (
+        {purchase && (
           <div className="mt-3">
             <h3>
-              Invoice No.: <b>{bill.invoiceNumber}</b> | Date & Time: <b>{new Date(bill.date).toLocaleString("en-GB")}</b>
+              Invoice No.: <b>{purchase.invoiceNumber}</b>
             </h3>
             <h3>
-              Customer: {bill.customer.name} | Contact: {bill.customer.mobile} |
-              Wallet: ₹
-              {Number(bill.customer.pendingAmount).toLocaleString("en-IN", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              Vendor: {purchase.company.name} | Address:{" "}
+              {purchase.company.address} | State: {purchase.company.state} |
+              Contact: {purchase.company.contactPhone} | GST:{" "}
+              {purchase.company.gstNumber}
             </h3>
             <table className="table align-middle table-striped table-hover my-0">
               <thead className="table-danger">
                 <tr>
-                  <th>#</th>
                   <th>Product</th>
-                  <th>Type</th>
-                  <th>Sold Qty</th>
+                  <th>Purchased Qty</th>
                   <th>Return Qty</th>
-                  <th className="text-end">Price</th>
-                  <th className="text-end">GST</th>
-                  <th className="text-end">Final Price</th>
+                  <th className="text-end">Purchase Price</th>
                   <th className="text-end">Return Total</th>
                 </tr>
               </thead>
               <tbody>
                 {returnProducts.map((p, idx) => (
                   <tr key={p.productId}>
-                    <th>{idx +1}.</th>
                     <td>{p.name}</td>
-                    <td>{p.type}</td>
-                    <td>{p.soldQty}</td>
+                    <td>{p.purchasedQty}</td>
                     <td>
                       <input
                         className="form-control w-50"
@@ -173,22 +157,19 @@ const AddSaleReturn = ({ url }) => {
                     </td>
                     <td className="text-end">
                       ₹
-                      {Number(p.priceAfterDiscount).toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </td>
-                    <td className="text-end">{p.gstPercentage}%</td>
-                    <td className="text-end">
-                      ₹
-                      {Number(p.price).toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
+                      {Number(p.purchasePriceAfterDiscount).toLocaleString(
+                        "en-IN",
+                        {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }
+                      )}
                     </td>
                     <td className="text-end">
                       ₹
-                      {Number(p.price * p.returnQty).toLocaleString("en-IN", {
+                      {Number(
+                        p.purchasePriceAfterDiscount * p.returnQty
+                      ).toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
@@ -196,10 +177,8 @@ const AddSaleReturn = ({ url }) => {
                   </tr>
                 ))}
                 <tr>
-                  <td colSpan={4}>Grand Total</td>
+                  <td colSpan={2}>Grand Total</td>
                   <th>{totalQty}</th>
-                  <td></td>
-                  <td></td>
                   <td></td>
                   <th className="text-end">
                     ₹
@@ -211,43 +190,11 @@ const AddSaleReturn = ({ url }) => {
                 </tr>
               </tbody>
             </table>
-            <div className="row align-items-end mt-3">
-              <div className="col-md-2">
-                <label className="form-label" style={{ fontWeight: "bold" }}>
-                  Return by:
-                </label>
-                <select
-                  className="form-select"
-                  value={returnMethod}
-                  onChange={(e) => setReturnMethod(e.target.value)}
-                  required
-                >
-                  <option value="">Select</option>
-                  <option value="Cash">Cash</option>
-                  <option value="UPI">UPI</option>
-                  <option value="Bank Transfer">Bank Transfer</option>
-                  <option value="Wallet">Add in wallet</option>
-                </select>
-              </div>
 
-              <div className="col-md-3">
-                <label className="form-label" style={{ fontWeight: "bold" }}>
-                  Remarks:
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Add Remarks"
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                />
-              </div>
-
-              <div className="col-md-2">
-                <button className="btn btn-success" onClick={handleSubmit}>
-                  Submit Return
-                </button>
-              </div>
+            <div className="col-md-2 mt-3">
+              <button className="btn btn-success" onClick={handleSubmit}>
+                Submit Return
+              </button>
             </div>
           </div>
         )}
@@ -258,4 +205,4 @@ const AddSaleReturn = ({ url }) => {
   );
 };
 
-export default AddSaleReturn;
+export default AddPurchaseReturn;

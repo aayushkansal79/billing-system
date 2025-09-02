@@ -322,6 +322,144 @@ export const searchPurchasesByProductName = async (req, res) => {
 
 
 // UPDATE purchase
+// export const updatePurchase = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const {
+//       companyId,
+//       date,
+//       invoiceNumber,
+//       orderNumber,
+//       discount,
+//       products,
+//       remarks,
+//       transport,
+//     } = req.body;
+
+//     if (!companyId || !date || !products || products.length === 0) {
+//       return res.status(400).json({ error: "Required fields are missing." });
+//     }
+
+//     const company = await Company.findById(companyId);
+//     if (!company) {
+//       return res.status(404).json({ error: "Company not found." });
+//     }
+
+//     const existingPurchase = await Purchase.findById(id);
+//     if (!existingPurchase) {
+//       return res.status(404).json({ error: "Purchase not found." });
+//     }
+
+//     for (const p of products) {
+//       const existingProduct = await Product.findOne({ name: p.name.trim() });
+//       if (existingProduct) {
+//         const otherPurchase = await Purchase.findOne({
+//           "products.product": existingProduct._id,
+//           company: { $ne: companyId },
+//         }).populate("company", "name");
+
+//         if (otherPurchase) {
+//           return res.status(400).json({
+//             error: `Product "${p.name}" already purchased from ${otherPurchase.company.name}.`,
+//           });
+//         }
+//       }
+//     }
+
+//     const oldQuantities = {};
+//     for (const oldItem of existingPurchase.products) {
+//       oldQuantities[String(oldItem.product)] = oldItem.quantity;
+//     }
+
+//     const productUpdates = [];
+//     const processedProducts = [];
+
+//     for (const p of products) {
+//       const name = p.name.trim();
+//       let product = await Product.findOne({ name });
+//       let isNew = false;
+
+//       if (!product) {
+//         isNew = true;
+//         product = new Product({
+//           name,
+//           type: p.type?.trim() || "",
+//           hsn: p.hsn?.trim() || "",
+//           unit: 0,
+//           priceBeforeGst: p.priceBeforeGst,
+//           gstPercentage: p.gstPercentage,
+//           price: p.sellingPrice,
+//           printPrice: p.printPrice,
+//           lastPurchaseDate: date,
+//         });
+//       }
+
+//       const oldQty = oldQuantities[product._id?.toString()] || 0;
+//       const newQty = Number(p.quantity);
+//       const diff = newQty - oldQty;
+
+//       if (diff < 0 && product.unit < Math.abs(diff)) {
+//         return res.status(400).json({
+//           error: `Not enough stock to reduce for product "${name}". Available: ${product.unit}, Difference: ${diff}`,
+//         });
+//       }
+
+//       product.unit += diff;
+//       if (product.unit < 0) product.unit = 0;
+
+//       if (p.type) product.type = p.type.trim();
+//       if (p.hsn) product.hsn = p.hsn.trim();
+//       if (p.priceBeforeGst) product.priceBeforeGst = Number(p.priceBeforeGst);
+//       if (p.gstPercentage) product.gstPercentage = Number(p.gstPercentage);
+//       if (p.sellingPrice) product.price = Number(p.sellingPrice);
+//       if (p.printPrice) product.printPrice = Number(p.printPrice);
+//       product.lastPurchaseDate = date;
+
+//       productUpdates.push({ product, isNew });
+
+//       processedProducts.push({
+//         product: product._id,
+//         name: product.name,
+//         type: product.type,
+//         hsn: product.hsn,
+//         quantity: newQty,
+//         purchasePrice: p.purchasePrice,
+//         purchasePriceAfterDiscount: p.purchasePriceAfterDiscount,
+//         profitPercentage: p.profitPercentage,
+//         priceBeforeGst: p.priceBeforeGst,
+//         gstPercentage: p.gstPercentage,
+//         sellingPrice: p.sellingPrice,
+//         printPrice: p.printPrice,
+//       });
+//     }
+
+//     for (const { product, isNew } of productUpdates) {
+//       await product.save();
+//     }
+
+//     existingPurchase.company = company._id;
+//     existingPurchase.date = date;
+//     existingPurchase.invoiceNumber = invoiceNumber;
+//     existingPurchase.orderNumber = orderNumber;
+//     existingPurchase.discount = discount;
+//     existingPurchase.products = processedProducts;
+//     existingPurchase.remarks = remarks;
+//     existingPurchase.transportName = transport.name;
+//     existingPurchase.transportCity = transport.city;
+
+//     const updated = await existingPurchase.save();
+
+//     res.json(updated);
+//   } catch (err) {
+//     console.error("Error updating purchase:", err);
+//     res.status(500).json({ error: "Server error while updating purchase." });
+//   }
+// };
+
+export const generateBarcode = async () => {
+  return Math.floor(10000 + Math.random() * 90000).toString();
+};
+
 export const updatePurchase = async (req, res) => {
   try {
     const { id } = req.params;
@@ -350,8 +488,21 @@ export const updatePurchase = async (req, res) => {
       return res.status(404).json({ error: "Purchase not found." });
     }
 
+    const oldProductsMap = new Map();
+    for (const item of existingPurchase.products) {
+      oldProductsMap.set(item.product.toString(), {
+        quantity: item.quantity,
+        name: item.name
+      });
+    }
+
     for (const p of products) {
-      const existingProduct = await Product.findOne({ name: p.name.trim() });
+      const name = p.name.trim();
+      const newQty = Number(p.quantity);
+
+      let existingProduct = await Product.findOne({ name });
+
+      // Check for company conflict
       if (existingProduct) {
         const otherPurchase = await Purchase.findOne({
           "products.product": existingProduct._id,
@@ -364,23 +515,49 @@ export const updatePurchase = async (req, res) => {
           });
         }
       }
+
+      const productId = existingProduct?._id?.toString();
+      const oldEntry = productId ? oldProductsMap.get(productId) : null;
+      const oldQty = oldEntry ? oldEntry.quantity : 0;
+
+      const diff = newQty - oldQty;
+      if (diff < 0 && existingProduct && existingProduct.unit < Math.abs(diff)) {
+        return res.status(400).json({
+          error: `Not enough stock to reduce for product "${name}". Available: ${existingProduct.unit}, Required: ${Math.abs(diff)}`
+        });
+      }
     }
 
-    const oldQuantities = {};
-    for (const oldItem of existingPurchase.products) {
-      oldQuantities[String(oldItem.product)] = oldItem.quantity;
+    for (const [productId, { quantity, name }] of oldProductsMap.entries()) {
+      const oldProduct = await Product.findById(productId);
+      if (oldProduct) {
+        oldProduct.unit = Math.max(0, oldProduct.unit - quantity);
+        await oldProduct.save();
+      }
     }
 
-    const productUpdates = [];
     const processedProducts = [];
-
     for (const p of products) {
       const name = p.name.trim();
       let product = await Product.findOne({ name });
-      let isNew = false;
 
       if (!product) {
-        isNew = true;
+        let barcode;
+        let isUnique = false;
+        let attempts = 0;
+        while (!isUnique && attempts < 10) {
+          barcode = await generateBarcode();
+          const existingBarcode = await Product.findOne({ barcode });
+          if (!existingBarcode) {
+            isUnique = true;
+          }
+          attempts++;
+        }
+
+        if (!isUnique) {
+          return res.status(500).json({ error: "Failed to generate a unique barcode, try again." });
+        }
+
         product = new Product({
           name,
           type: p.type?.trim() || "",
@@ -390,22 +567,13 @@ export const updatePurchase = async (req, res) => {
           gstPercentage: p.gstPercentage,
           price: p.sellingPrice,
           printPrice: p.printPrice,
+          barcode,
           lastPurchaseDate: date,
         });
       }
 
-      const oldQty = oldQuantities[product._id?.toString()] || 0;
       const newQty = Number(p.quantity);
-      const diff = newQty - oldQty;
-
-      if (diff < 0 && product.unit < Math.abs(diff)) {
-        return res.status(400).json({
-          error: `Not enough stock to reduce for product "${name}". Available: ${product.unit}, Difference: ${diff}`,
-        });
-      }
-
-      product.unit += diff;
-      if (product.unit < 0) product.unit = 0;
+      product.unit += newQty;
 
       if (p.type) product.type = p.type.trim();
       if (p.hsn) product.hsn = p.hsn.trim();
@@ -415,7 +583,7 @@ export const updatePurchase = async (req, res) => {
       if (p.printPrice) product.printPrice = Number(p.printPrice);
       product.lastPurchaseDate = date;
 
-      productUpdates.push({ product, isNew });
+      await product.save();
 
       processedProducts.push({
         product: product._id,
@@ -433,10 +601,6 @@ export const updatePurchase = async (req, res) => {
       });
     }
 
-    for (const { product, isNew } of productUpdates) {
-      await product.save();
-    }
-
     existingPurchase.company = company._id;
     existingPurchase.date = date;
     existingPurchase.invoiceNumber = invoiceNumber;
@@ -448,8 +612,8 @@ export const updatePurchase = async (req, res) => {
     existingPurchase.transportCity = transport.city;
 
     const updated = await existingPurchase.save();
+    return res.json(updated);
 
-    res.json(updated);
   } catch (err) {
     console.error("Error updating purchase:", err);
     res.status(500).json({ error: "Server error while updating purchase." });

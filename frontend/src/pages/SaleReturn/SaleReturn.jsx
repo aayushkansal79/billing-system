@@ -5,10 +5,19 @@ import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 
 const InvoiceContent = React.forwardRef(function InvoiceContent(
-  { url, saleReturnNo, invoiceNumber, customer, store, products, returnMethod, remarks, date },
+  {
+    url,
+    saleReturnNo,
+    invoiceNumber,
+    customer,
+    store,
+    products,
+    returnMethod,
+    remarks,
+    date,
+  },
   ref
 ) {
-
   const totalQty = products.reduce((sum, item) => sum + item.quantity, 0);
 
   const totalAmount = products.reduce((sum, item) => sum + item.total, 0);
@@ -33,16 +42,16 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
           <br />
           {customer?.name}
           <br />
-          {customer?.mobile}{", "}
-          {customer?.state}{", "}
+          {customer?.mobile}
+          {", "}
+          {customer?.state}
+          {", "}
           {customer?.gstNumber || "N/A"}
         </div>
         <div className="text-end">
           <b>STORE INFORMATION</b>
           <br />
-          {store.address} {" "}
-          {store.city} {" "}
-          {store.state} - {store.zipCode}
+          {store.address} {store.city} {store.state} - {store.zipCode}
           <br />
           Contact: {store.contactNumber}
         </div>
@@ -103,19 +112,21 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <td></td>
             <td></td>
             <td></td>
-            <th>₹
-                {Number(totalAmount).toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}</th>
+            <th>
+              ₹
+              {Number(totalAmount).toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </th>
           </tr>
         </tfoot>
       </table>
 
       <div>
-        Return by: <b>{returnMethod}</b>
+        <b>Return by:</b> {returnMethod}
         <br />
-        Remarks: {remarks}
+        <b>Remarks:</b> {remarks}
       </div>
     </div>
   );
@@ -123,8 +134,8 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
 
 const SaleReturn = ({ url }) => {
   useEffect(() => {
-      document.title = "Sale Return | Ajjawam";
-    }, []);
+    document.title = "Sale Return | Ajjawam";
+  }, []);
   const [returns, setReturns] = useState([]);
   const token = localStorage.getItem("token");
   const [selectedReturn, setSelectedReturn] = useState(null);
@@ -348,9 +359,7 @@ const SaleReturn = ({ url }) => {
                     👁️
                   </button>
                 </td>
-                <td>
-                  {new Date(returnItem.date).toLocaleString("en-GB")}
-                </td>
+                <td>{new Date(returnItem.date).toLocaleString("en-GB")}</td>
               </tr>
             ))}
           </tbody>

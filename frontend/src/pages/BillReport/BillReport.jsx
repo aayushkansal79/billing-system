@@ -150,17 +150,22 @@ const BillReport = ({ url }) => {
             <tbody>
               {bills.map((b, billIdx) => (
                 <>
-                  <tr key={billIdx}>
+                  <tr key={billIdx} className="border">
                     <td rowSpan={b.products.length + 1}>
                       {(filters.page - 1) * filters.limit + (billIdx + 1)}.
                     </td>
-                    <td rowSpan={b.products.length + 1}>{b.invoiceNumber}</td>
+                    <th
+                      className="align-content-start"
+                      rowSpan={b.products.length + 1}
+                    >
+                      {b.invoiceNumber}
+                    </th>
                   </tr>
                   {b.products.map((p, prodIdx) => (
-                    <tr key={prodIdx}>
-                      <td>{p.productName}</td>
+                    <tr key={prodIdx} className="border-light">
+                      <th>{p.productName}</th>
                       <td>{p.type}</td>
-                      <td>{p.quantity}</td>
+                      <th>{p.quantity}</th>
                       <td className="text-end">
                         ₹{" "}
                         {Number(
@@ -184,7 +189,7 @@ const BillReport = ({ url }) => {
                           maximumFractionDigits: 2,
                         })}
                       </td>
-                      <td className="text-end">
+                      <th className="text-end">
                         ₹{" "}
                         {Number(
                           p.quantity *
@@ -194,7 +199,7 @@ const BillReport = ({ url }) => {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
-                      </td>
+                      </th>
                     </tr>
                   ))}
                 </>
