@@ -4,6 +4,10 @@ import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 
 const PurchaseReturn = ({ url }) => {
+  useEffect(() => {
+    document.title = "Add Purchase Return | Ajjawam";
+  }, []);
+
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
 
@@ -181,6 +185,12 @@ const PurchaseReturn = ({ url }) => {
     if (updated[idx].productId && val && !returnProducts[idx + 1]) {
       addRow();
     }
+  };
+
+  const handleFieldChange = (idx, field, value) => {
+    const updated = [...returnProducts];
+    updated[idx][field] = value;
+    setReturnProducts(updated);
   };
 
   const addRow = () =>
@@ -414,20 +424,28 @@ const PurchaseReturn = ({ url }) => {
                   </div>
                   <div className="col-md-1">
                     <input
-                      type="text"
+                      type="number"
                       className="form-control"
                       placeholder="Purchase Price"
                       value={row.purchasePrice}
-                      disabled
+                      onChange={(e) =>
+                        handleFieldChange(idx, "purchasePrice", e.target.value)
+                      }
                     />
                   </div>
                   <div className="col-md-2">
                     <input
-                      type="text"
+                      type="number"
                       className="form-control"
                       placeholder="Purchase Price After Disc."
                       value={row.purchasePriceAfterDiscount}
-                      disabled
+                      onChange={(e) =>
+                        handleFieldChange(
+                          idx,
+                          "purchasePriceAfterDiscount",
+                          e.target.value
+                        )
+                      }
                     />
                   </div>
                   <div className="col-md-1">

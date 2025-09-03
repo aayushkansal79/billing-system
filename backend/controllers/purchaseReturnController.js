@@ -143,7 +143,12 @@ export const createPurchaseReturn = async (req, res) => {
     let totalReturnAmount = 0;
 
     for (let p of products) {
-      const { productId, returnQty } = p;
+      const {
+        productId,
+        returnQty,
+        purchasePriceAfterDiscount,
+        gstPercentage,
+      } = p;
 
       if (!returnQty || returnQty <= 0) {
         return res.status(400).json({ error: `Invalid return quantity for product: ${productId}` });
@@ -155,13 +160,13 @@ export const createPurchaseReturn = async (req, res) => {
       }
 
       if (productDoc.unit < returnQty) {
-        return res.status(400).json({ error: `Not enough stock in warehouse for product: ${productDoc.name}` });
+        return res.status(400).json({ error: `Not enough stock in warehouse for product: ${productDoc.name}, Available: ${productDoc.unit}` });
       }
 
       const purchases = await Purchase.find({
         company: companyId,
         "products.product": productId,
-      });
+      }).sort({ date: -1 });
 
       const totalPurchasedQty = purchases.reduce((sum, purchase) => {
         const item = purchase.products.find((x) => x.product.toString() === productId);
@@ -174,23 +179,32 @@ export const createPurchaseReturn = async (req, res) => {
         });
       }
 
-      //pick from the first match
-      const firstMatch = purchases.find(p =>
-        p.products.some(prod => prod.product.toString() === productId)
-      );
+      let usedPrice = purchasePriceAfterDiscount;
+      let usedGst = gstPercentage;
 
-      const matchedProduct = firstMatch.products.find(prod => prod.product.toString() === productId);
-      const purchasePriceAfterDiscount = matchedProduct.purchasePriceAfterDiscount;
-      const gstPercentage = matchedProduct.gstPercentage;
-      const total = returnQty * purchasePriceAfterDiscount;
+      if (usedPrice == null || usedGst == null) {
+        let latestEntry;
+        for (const purchase of purchases) {
+          const entry = purchase.products.find(prod => prod.product.toString() === productId);
+          if (entry) {
+            latestEntry = entry;
+            break;
+          }
+        }
+
+        usedPrice = usedPrice ?? latestEntry?.purchasePriceAfterDiscount ?? 0;
+        usedGst = usedGst ?? latestEntry?.gstPercentage ?? 0;
+      }
+
+      const total = returnQty * usedPrice;
 
       returnProducts.push({
         product: productId,
         name: productDoc.name,
         purchasedQty: totalPurchasedQty,
         returnQty,
-        purchasePriceAfterDiscount,
-        gstPercentage,
+        purchasePriceAfterDiscount: usedPrice,
+        gstPercentage: usedGst,
         total
       });
 
@@ -227,6 +241,7 @@ export const createPurchaseReturn = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 export const getAllPurchaseReturns = async (req, res) => {
@@ -304,6 +319,38 @@ export const getAllPurchaseReturns = async (req, res) => {
   }
 };
 
+// export const productByCompany = async (req, res) => {
+//   const { companyId, name } = req.query;
+
+//   if (!companyId || !name) {
+//     return res.status(400).json({ message: "Missing parameters" });
+//   }
+
+//   try {
+//     const purchases = await Purchase.find({ company: companyId })
+//       .select("products")
+//       .lean();
+
+//     const products = purchases
+//       .flatMap((p) => p.products || [])
+//       .filter((prod) =>
+//         prod.name.toLowerCase().includes(name.toLowerCase())
+//       );
+
+//     const seen = new Set();
+//     const uniqueProducts = products.filter((prod) => {
+//       if (seen.has(prod.product.toString())) return false;
+//       seen.add(prod.product.toString());
+//       return true;
+//     });
+
+//     res.json(uniqueProducts);
+//   } catch (err) {
+//     console.error("Error fetching products:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
 export const productByCompany = async (req, res) => {
   const { companyId, name } = req.query;
 
@@ -312,24 +359,44 @@ export const productByCompany = async (req, res) => {
   }
 
   try {
+    // Step 1: Get all purchases for the company, include products and date
     const purchases = await Purchase.find({ company: companyId })
-      .select("products")
+      .select("products date")
       .lean();
 
-    const products = purchases
-      .flatMap((p) => p.products || [])
-      .filter((prod) =>
-        prod.name.toLowerCase().includes(name.toLowerCase())
-      );
+    // Step 2: Flatten and filter products by name
+    const allMatchingProducts = [];
 
-    const seen = new Set();
-    const uniqueProducts = products.filter((prod) => {
-      if (seen.has(prod.product.toString())) return false;
-      seen.add(prod.product.toString());
-      return true;
-    });
+    for (const purchase of purchases) {
+      for (const prod of purchase.products || []) {
+        if (prod.name.toLowerCase().includes(name.toLowerCase())) {
+          allMatchingProducts.push({
+            ...prod,
+            purchaseDate: purchase.date,
+          });
+        }
+      }
+    }
 
-    res.json(uniqueProducts);
+    // Step 3: Group by product ID and pick latest by date
+    const productMap = new Map();
+
+    for (const prod of allMatchingProducts) {
+      const prodId = prod.product.toString();
+
+      if (!productMap.has(prodId)) {
+        productMap.set(prodId, prod);
+      } else {
+        const existing = productMap.get(prodId);
+        if (new Date(prod.purchaseDate) > new Date(existing.purchaseDate)) {
+          productMap.set(prodId, prod);
+        }
+      }
+    }
+
+    const latestProducts = Array.from(productMap.values());
+
+    res.json(latestProducts);
   } catch (err) {
     console.error("Error fetching products:", err);
     res.status(500).json({ message: "Server error" });
