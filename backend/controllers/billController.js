@@ -6,6 +6,7 @@ import { getNextInvoiceNumber } from "../controllers/counterController.js";
 import Store from "../models/Store.js";
 import Purchase from "../models/Purchase.js";
 import mongoose from "mongoose";
+import ExcelJS from "exceljs";
 
 //create bill
 export const createBill = async (req, res) => {
@@ -215,6 +216,7 @@ const convertISTToUTC = (dateStr, endOfDay = false) => {
 };
 
 
+
 export const getAllBills = async (req, res) => {
   try {
     const {
@@ -227,11 +229,12 @@ export const getAllBills = async (req, res) => {
       endDate,
       page = 1,
       limit = 10,
+      exportExcel,
     } = req.query;
 
     const query = {};
 
-    // Access scope
+    // Access Scope
     if (req.store.type !== "admin") {
       query.store = req.store._id;
     } else if (storeUsername) {
@@ -242,71 +245,129 @@ export const getAllBills = async (req, res) => {
       if (storeIds.length > 0) {
         query.store = { $in: storeIds };
       } else {
-        // No store matched — return empty
-        return res.json({
-          bills: [],
-          totalBills: 0,
-          currentPage: parseInt(page),
-          totalPages: 0,
-        });
+        // No matching store
+        if (exportExcel === "true") {
+          return res.status(204).end(); // No content
+        } else {
+          return res.json({
+            bills: [],
+            totalBills: 0,
+            currentPage: parseInt(page),
+            totalPages: 0,
+          });
+        }
       }
     }
 
-    // Text filters
-    if (invoiceNumber) {
-      query.invoiceNumber = { $regex: invoiceNumber, $options: "i" };
-    }
-    if (customerName) {
-      query.customerName = { $regex: customerName, $options: "i" };
-    }
-    if (mobileNo) {
-      query.mobileNo = { $regex: mobileNo, $options: "i" };
-    }
-    if (paymentStatus) {
-      query.paymentStatus = paymentStatus;
-    }
+    // Text Filters
+    if (invoiceNumber) query.invoiceNumber = { $regex: invoiceNumber, $options: "i" };
+    if (customerName) query.customerName = { $regex: customerName, $options: "i" };
+    if (mobileNo) query.mobileNo = { $regex: mobileNo, $options: "i" };
+    if (paymentStatus) query.paymentStatus = paymentStatus;
 
-    // Date filters (convert IST to UTC)
+    // Date Range
     if (startDate || endDate) {
       query.createdAt = {};
-
       if (startDate) {
-        // Convert IST midnight to UTC
         const start = new Date(startDate);
         start.setHours(0, 0, 0, 0);
-        const istStart = new Date(start.getTime());
-        query.createdAt.$gte = istStart;
+        query.createdAt.$gte = new Date(start.getTime());
       }
-
       if (endDate) {
-        // Convert IST end of day to UTC
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
-        const istEnd = new Date(end.getTime());
-        query.createdAt.$lte = istEnd;
+        query.createdAt.$lte = new Date(end.getTime());
       }
     }
 
-    
+    let bills;
 
-    // Pagination logic
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    if (exportExcel === "true") {
+      bills = await Bill.find(query)
+        .populate("store")
+        .sort({ createdAt: -1 });
+    } else {
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      bills = await Bill.find(query)
+        .populate("store")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit));
+    }
+
+    // === Export to Excel ===
+    if (exportExcel === "true") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Bills");
+
+      worksheet.columns = [
+        { header: "S No.", key: "index", width: 6 },
+        { header: "Invoice No", key: "invoiceNumber", width: 20 },
+        { header: "Customer Name", key: "customerName", width: 25 },
+        { header: "Mobile No", key: "mobileNo", width: 15 },
+        { header: "Store", key: "store", width: 20 },
+        { header: "Amount", key: "totalAmount", width: 15 },
+        { header: "Payment Status", key: "paymentStatus", width: 15 },
+        { header: "Date", key: "date", width: 18 },
+      ];
+
+      worksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "4F81BD" } };
+        cell.alignment = { vertical: "middle", horizontal: "center" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+
+      bills.forEach((bill, index) => {
+        worksheet.addRow({
+          index: index + 1,
+          invoiceNumber: bill.invoiceNumber || "",
+          customerName: bill.customerName || "",
+          mobileNo: bill.mobileNo || "",
+          store: bill.store?.username || "",
+          totalAmount: `₹${(bill.totalAmount || 0).toLocaleString("en-IN")}` || 0,
+          paymentStatus: bill.paymentStatus || "",
+          date: bill.createdAt ? new Date(bill.createdAt).toLocaleDateString("en-IN") : "",
+        });
+      });
+
+      worksheet.columns.forEach((col) => {
+        col.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+        if (col.key === "totalAmount") {
+          col.numFmt = '₹ #,##,##0.00';
+          col.alignment = { vertical: "middle", horizontal: "right" };
+        }
+      });
+
+      worksheet.getRow(1).height = 28;
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=Bills_${new Date().toISOString().slice(0, 10)}.xlsx`
+      );
+
+      await workbook.xlsx.write(res);
+      return res.end();
+    }
+
+    // === Normal JSON Response ===
     const totalBills = await Bill.countDocuments(query);
-
-    const bills = await Bill.find(query)
-      .populate("store")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
+    const totalPages = Math.ceil(totalBills / parseInt(limit));
 
     res.json({
       bills,
       totalBills,
       currentPage: parseInt(page),
-      totalPages: Math.ceil(totalBills / parseInt(limit)),
+      totalPages,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error in getAllBills:", err);
     res.status(500).json({ error: "Server Error" });
   }
 };

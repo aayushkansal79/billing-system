@@ -3,6 +3,7 @@ import Product from "../models/Product.js";
 import PurchaseReturn from "../models/PurchaseReturn.js";
 import Company from "../models/Company.js";
 import { getNextPurchaseReturnNumber } from "./counterController.js";
+import ExcelJS from "exceljs";
 
 // export const getPurchaseByInvoice = async (req, res) => {
 //   try {
@@ -246,72 +247,148 @@ export const createPurchaseReturn = async (req, res) => {
 
 export const getAllPurchaseReturns = async (req, res) => {
   try {
-    let {
-      invoiceNumber,
+    const {
+      purchaseReturnNo,
       companyName,
       mobile,
       state,
       startDate,
       endDate,
       page = 1,
-      limit = 20,
+      limit = 10,
+      exportExcel,
     } = req.query;
 
     const query = {};
 
-    if (invoiceNumber) {
-      query.invoiceNumber = { $regex: invoiceNumber, $options: "i" };
+    // === Apply Purchase Return Filters ===
+    if (purchaseReturnNo) {
+      query.purchaseReturnNo = { $regex: purchaseReturnNo, $options: "i" };
     }
 
+    // === Apply Date Range Filter ===
     if (startDate || endDate) {
-      const istStart = startDate
-        ? new Date(new Date(startDate).setHours(0, 0, 0, 0))
-        : null;
-      const istEnd = endDate
-        ? new Date(new Date(endDate).setHours(23, 59, 59, 999))
-        : null;
-
+      const istStart = startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : null;
+      const istEnd = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
       query.createdAt = {};
       if (istStart) query.createdAt.$gte = istStart;
       if (istEnd) query.createdAt.$lte = istEnd;
     }
 
+    // === Build Company Filter ===
     const companyFilters = {};
-
-    if (companyName) {
-      companyFilters.name = { $regex: companyName, $options: "i" };
-    }
-    if (mobile) {
-      companyFilters.contactPhone = { $regex: mobile, $options: "i" };
-    }
-    if (state) {
-      companyFilters.state = { $regex: state, $options: "i" };
-    }
+    if (companyName) companyFilters.name = { $regex: companyName, $options: "i" };
+    if (mobile) companyFilters.contactPhone = { $regex: mobile, $options: "i" };
+    if (state) companyFilters.state = { $regex: state, $options: "i" };
 
     if (Object.keys(companyFilters).length > 0) {
-      const companies = await Company.find(companyFilters).select("_id");
-      const companyIds = companies.map((c) => c._id);
+      const matchingCompanies = await Company.find(companyFilters).select("_id");
+      const companyIds = matchingCompanies.map(c => c._id);
       query.company = { $in: companyIds };
     }
 
-    const skip = (page - 1) * limit;
+    let purchaseReturns;
+    let totalCount;
 
-    const [results, total] = await Promise.all([
-      PurchaseReturn.find(query)
+    if (exportExcel === "true") {
+      purchaseReturns = await PurchaseReturn.find(query)
+        .populate("company", "name shortName city contactPhone gstNumber state address")
+        .populate("products.product", "name price barcode")
+        .sort({ date: -1 });
+    } else {
+      const parsedLimit = Number(limit) > 0 ? parseInt(limit) : 10;
+      const skip = (parseInt(page) - 1) * parsedLimit;
+
+      purchaseReturns = await PurchaseReturn.find(query)
         .populate("company", "name shortName city contactPhone gstNumber state address")
         .populate("products.product", "name price barcode")
         .sort({ date: -1 })
         .skip(skip)
-        .limit(Number(limit)),
-      PurchaseReturn.countDocuments(query),
-    ]);
+        .limit(parsedLimit);
+
+      totalCount = await PurchaseReturn.countDocuments(query);
+    }
+
+    // === Export to Excel ===
+    if (exportExcel === "true") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Purchase Returns");
+
+      worksheet.columns = [
+        { header: "S No.", key: "index", width: 6 },
+        { header: "Return No", key: "purchaseReturnNo", width: 20 },
+        { header: "Company Name", key: "companyName", width: 30 },
+        { header: "Mobile", key: "mobile", width: 15 },
+        { header: "State", key: "state", width: 15 },
+        { header: "GST No", key: "gstNumber", width: 25 },
+        { header: "Date", key: "date", width: 15 },
+        { header: "Products", key: "products", width: 50 },
+        { header: "Total", key: "total", width: 15 },
+      ];
+
+      worksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "4F81BD" },
+        };
+        cell.alignment = { vertical: "middle", horizontal: "center" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+
+      purchaseReturns.forEach((entry, index) => {
+        const company = entry.company || {};
+        const productsText = entry.products
+          .map((p) => {
+            const product = p.product || {};
+            return `${product.name || ""} (${product.barcode || ""}) - ₹${(p.purchasePriceAfterDiscount || 0).toLocaleString("en-IN")} x ${p.returnQty}`;
+          })
+          .join("\n");
+
+        worksheet.addRow({
+          index: index + 1,
+          purchaseReturnNo: entry.purchaseReturnNo || "",
+          companyName: company.name || "",
+          mobile: company.contactPhone || "",
+          state: company.state || "",
+          gstNumber: company.gstNumber || "",
+          date: entry.date ? new Date(entry.date).toLocaleDateString("en-IN") : "",
+          products: productsText,
+          total: `₹${(entry.totalReturnAmount || 0).toLocaleString("en-IN")}` || 0,
+        });
+      });
+
+      worksheet.columns.forEach((col) => {
+        col.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+      });
+
+      worksheet.getRow(1).height = 28;
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=Purchase_Returns_${new Date().toISOString().slice(0, 10)}.xlsx`
+      );
+
+      await workbook.xlsx.write(res);
+      return res.end();
+    }
 
     res.status(200).json({
-      total,
-      page: Number(page),
-      limit: Number(limit),
-      totalPages: Math.ceil(total / limit),
-      results,
+      total: totalCount,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(totalCount / limit),
+      results: purchaseReturns,
     });
   } catch (err) {
     console.error("Error fetching purchase returns:", err);

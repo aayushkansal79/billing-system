@@ -5,6 +5,8 @@ import Store from "../models/Store.js"
 import { getNextAssignmentNumber } from "./counterController.js";
 import Purchase from "../models/Purchase.js";
 import mongoose from "mongoose";
+import ExcelJS from "exceljs";
+
 
 export const searchProductByName = async (req, res) => {
   const { name } = req.query;
@@ -82,46 +84,117 @@ export const getAllProducts = async (req, res) => {
       endDate,
       page = 1,
       limit = 10,
+      exportExcel,
     } = req.query;
 
     const query = {};
 
-    // Text filters
     if (name) query.name = { $regex: name, $options: "i" };
     if (barcode) query.barcode = { $regex: barcode, $options: "i" };
 
-    // Number filters
     if (unit && unitCon === "equal") {
       query.unit = Number(unit);
-    }
-
-    if (unit && unitCon === "less") {
+    } else if (unit && unitCon === "less") {
       query.unit = { $lte: Number(unit) };
-    }
-
-    if (unit && unitCon === "more") {
+    } else if (unit && unitCon === "more") {
       query.unit = { $gte: Number(unit) };
     }
-    // Date filtering (convert IST to UTC)
+
     if (startDate || endDate) {
-      const istStart = startDate
-        ? new Date(new Date(startDate).setHours(0, 0, 0, 0))
-        : null;
-      const istEnd = endDate
-        ? new Date(new Date(endDate).setHours(23, 59, 59, 999))
-        : null;
+      const istStart = startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : null;
+      const istEnd = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
 
       query.lastPurchaseDate = {};
       if (istStart) query.lastPurchaseDate.$gte = istStart;
       if (istEnd) query.lastPurchaseDate.$lte = istEnd;
     }
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    let products;
+    let total;
 
-    const [products, total] = await Promise.all([
-      Product.find(query).sort({ updatedAt: -1 }).skip(skip).limit(parseInt(limit)),
-      Product.countDocuments(query),
-    ]);
+    if (exportExcel === "true") {
+      products = await Product.find(query).sort({ updatedAt: -1 });
+    } else {
+      const parsedLimit = Number(limit) > 0 ? parseInt(limit) : 10;
+      const skip = (parseInt(page) - 1) * parsedLimit;
+
+      [products, total] = await Promise.all([
+        Product.find(query).sort({ updatedAt: -1 }).skip(skip).limit(parsedLimit),
+        Product.countDocuments(query),
+      ]);
+    }
+
+    if (exportExcel === "true") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Products");
+
+      worksheet.columns = [
+        { header: "S No.", key: "index", width: 6 },
+        { header: "Name", key: "name", width: 30 },
+        { header: "Type", key: "type", width: 15 },
+        { header: "HSN", key: "hsn", width: 10 },
+        { header: "Barcode", key: "barcode", width: 15 },
+        { header: "Quantity", key: "unit", width: 10 },
+        { header: "Price Befor GST", key: "pricebefgst", width: 25 },
+        { header: "GST %", key: "gst", width: 10 },
+        { header: "Selling Price", key: "price", width: 25 },
+        { header: "Last Purchase Date", key: "lastPurchaseDate", width: 20 },
+      ];
+
+      worksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "4F81BD" },
+        };
+        cell.alignment = { vertical: "middle", horizontal: "center" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+
+      products.forEach((product, index) => {
+        worksheet.addRow({
+          index: index + 1,
+          name: product.name || "",
+          type: product.type || "",
+          hsn: product.hsn || "",
+          barcode: product.barcode || "",
+          unit: product.unit || "0",
+          pricebefgst: `₹${(product.printPrice / (1 + 0.01 * product.gstPercentage)).toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}` || 0,
+          gst: `${(product.gstPercentage || 0)}%`,
+          price: `₹${(product.printPrice || 0).toLocaleString("en-IN")}` || 0,
+          lastPurchaseDate: product.lastPurchaseDate
+            ? new Date(product.lastPurchaseDate).toLocaleDateString("en-IN")
+            : "",
+        });
+      });
+
+      worksheet.columns.forEach((col) => {
+        col.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+      });
+
+      worksheet.getRow(1).height = 28;
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=Products_${new Date().toISOString().slice(0, 10)}.xlsx`
+      );
+
+      await workbook.xlsx.write(res);
+      return res.end();
+    }
 
     res.status(200).json({
       data: products,
@@ -131,7 +204,7 @@ export const getAllProducts = async (req, res) => {
     });
   } catch (err) {
     console.error("Error fetching products:", err);
-    res.status(500).json({ message: "Server error fetching products." });
+    res.status(500).json({ message: "Server error while fetching products." });
   }
 };
 
@@ -332,13 +405,14 @@ export const assignProducts = async (req, res) => {
 
 export const getAllProductsWithVendors = async (req, res) => {
   try {
-    const { search, page = 1, limit = 10 } = req.query;
+    const { search, page = 1, limit = 10, exportExcel } = req.query;
 
     const purchases = await Purchase.find()
       .sort({ createdAt: -1 })
-      .populate("company", "name shortName city contactPhone gstNumber"); // populate vendor info
+      .populate("company", "name shortName city contactPhone gstNumber");
 
     const productMap = {};
+
     purchases.forEach(purchase => {
       purchase.products.forEach(p => {
         if (!productMap[p.product]) {
@@ -349,18 +423,16 @@ export const getAllProductsWithVendors = async (req, res) => {
             purchasePrice: p.purchasePriceAfterDiscount,
             sellingPrice: p.printPrice,
             lastPurchaseDate: purchase.date,
-            company: purchase.company, // vendor info
+            company: purchase.company,
           };
         } else {
-          // accumulate quantity
           productMap[p.product].purchasedQty += p.quantity;
 
-          // update if this purchase is newer
           if (new Date(purchase.date) > new Date(productMap[p.product].lastPurchaseDate)) {
             productMap[p.product].purchasePrice = p.purchasePriceAfterDiscount;
             productMap[p.product].sellingPrice = p.printPrice;
             productMap[p.product].lastPurchaseDate = purchase.date;
-            productMap[p.product].company = purchase.company; // latest vendor
+            productMap[p.product].company = purchase.company;
           }
         }
       });
@@ -396,13 +468,82 @@ export const getAllProductsWithVendors = async (req, res) => {
         currentStock,
         soldQty,
         lastPurchaseDate: productMap[id].lastPurchaseDate,
-        lastVendor: productMap[id].company, // latest vendor info
+        lastVendor: productMap[id].company,
       };
     });
 
     if (search && search.trim() !== "") {
       const regex = new RegExp(search.trim(), "i");
       result = result.filter(item => regex.test(item.name));
+    }
+
+    if (exportExcel === "true") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Products With Vendors");
+
+      worksheet.columns = [
+        { header: "S.No", key: "index", width: 6 },
+        { header: "Product Name", key: "name", width: 25 },
+        { header: "Purchase Price", key: "purchasePrice", width: 15 },
+        { header: "Purchased Qty", key: "purchasedQty", width: 15 },
+        { header: "Selling Price", key: "sellingPrice", width: 15 },
+        { header: "Sold Qty", key: "soldQty", width: 12 },
+        { header: "Warehouse Stock", key: "warehouseStock", width: 15 },
+        { header: "Store Stock", key: "storeStock", width: 15 },
+        { header: "Closing Stock", key: "currentStock", width: 15 },
+        { header: "Closing Stock Amount", key: "currentStockAmt", width: 15 },
+      ];
+
+      worksheet.getRow(1).eachCell(cell => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "4F81BD" },
+        };
+        cell.alignment = { vertical: "middle", horizontal: "center" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+
+      result.forEach((item, index) => {
+        worksheet.addRow({
+          index: index + 1,
+          name: item.name || "",
+          purchasePrice: `₹${(item.purchasePrice || 0).toLocaleString("en-IN")}` || 0,
+          purchasedQty: item.purchasedQty || 0,
+          sellingPrice: `₹${(item.sellingPrice || 0).toLocaleString("en-IN")}` || 0,
+          soldQty: item.soldQty || 0,
+          warehouseStock: item.warehouseStock || 0,
+          storeStock: item.storeStock || 0,
+          currentStock: item.currentStock || 0,
+          currentStockAmt: `₹${(item.currentStock * item.purchasePrice|| 0).toLocaleString("en-IN")}` || 0,
+        });
+      });
+
+      worksheet.columns.forEach(col => {
+        col.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+      });
+
+      worksheet.getRow(1).height = 28;
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=ProductsWithVendors_${new Date()
+          .toISOString()
+          .slice(0, 10)}.xlsx`
+      );
+
+      await workbook.xlsx.write(res);
+      return res.end();
     }
 
     const total = result.length;

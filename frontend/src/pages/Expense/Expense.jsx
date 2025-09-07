@@ -17,11 +17,18 @@ const Expense = ({ url }) => {
   const [showModal, setShowModal] = useState(false);
   const formRef = useRef(null);
   const [expenseSummary, setExpenseSummary] = useState({});
-  const [expenses, setExpenses] = useState([{ field: "", subhead: "", amount: "" }]);
+  const [expenses, setExpenses] = useState([
+    { field: "", subhead: "", amount: "" },
+  ]);
   const [stores, setStores] = useState([]);
   const [allExpenses, setAllExpenses] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
-  const [editData, setEditData] = useState({ field: "", subhead: "", amount: "", date: "" });
+  const [editData, setEditData] = useState({
+    field: "",
+    subhead: "",
+    amount: "",
+    date: "",
+  });
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [type, setType] = useState("debit");
 
@@ -181,7 +188,12 @@ const Expense = ({ url }) => {
     try {
       const res = await axios.patch(
         `${url}/api/expense/${id}`,
-        { field: editData.field, subhead: editData.subhead, amount: editData.amount, date: editData.date },
+        {
+          field: editData.field,
+          subhead: editData.subhead,
+          amount: editData.amount,
+          date: editData.date,
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -234,6 +246,41 @@ const Expense = ({ url }) => {
     }
   };
 
+  const handleDownloadExcel = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          params.append(key, String(value).trim());
+        }
+      });
+
+      params.append("exportExcel", "true");
+
+      const res = await axios.get(
+        `${url}/api/expense?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob",
+        }
+      );
+
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.download = `Expenses.xlsx`;
+      link.click();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to download Excel");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="bread">Expense</div>
@@ -278,9 +325,17 @@ const Expense = ({ url }) => {
           />
         </div>
 
+        <div className="col-md-1">
+          <label className="form-label">Download Excel:</label>
+          <br />
+          <button className="btn btn-primary d-flex gap-1 align-items-center" onClick={handleDownloadExcel}>
+            <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="white"><path d="m480-320 160-160-56-56-64 64v-168h-80v168l-64-64-56 56 160 160Zm0 240q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
+            Download</button>
+        </div>
+
         <div className="col-md-2">
           <button
-            className="btn btn-primary"
+            className="btn btn-success"
             onClick={() => setShowModal(true)}
           >
             Add New Expense
@@ -409,7 +464,11 @@ const Expense = ({ url }) => {
                     exp.subhead
                   )}
                 </th>
-                <th className={`text-end ${exp.type === "debit" ? "text-danger" : "text-success"}`}>
+                <th
+                  className={`text-end ${
+                    exp.type === "debit" ? "text-danger" : "text-success"
+                  }`}
+                >
                   {editIndex === index ? (
                     <input
                       type="number"
@@ -420,7 +479,9 @@ const Expense = ({ url }) => {
                       }
                     />
                   ) : (
-                    `${exp.type === "debit" ? "+" : "-"} ₹ ${Number(exp.amount).toLocaleString("en-IN", {
+                    `${exp.type === "debit" ? "+" : "-"} ₹ ${Number(
+                      exp.amount
+                    ).toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}`

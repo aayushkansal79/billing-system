@@ -1,5 +1,6 @@
 import Expense from "../models/Expense.js";
 import Store from "../models/Store.js";
+import ExcelJS from "exceljs";
 
 export const addExpenses = async (req, res) => {
     try {
@@ -59,6 +60,8 @@ export const updateExpenditure = async (req, res) => {
   }
 };
 
+
+
 export const getAllExpenses = async (req, res) => {
   try {
     let {
@@ -70,6 +73,7 @@ export const getAllExpenses = async (req, res) => {
       type,
       startDate,
       endDate,
+      exportExcel,
     } = req.query;
 
     page = parseInt(page);
@@ -95,23 +99,88 @@ export const getAllExpenses = async (req, res) => {
       if (istEnd) query.date.$lte = istEnd;
     }
 
-    if (field) {
-      query.field = { $regex: field, $options: "i" };
-    }
-    if (subhead) {
-      query.subhead = { $regex: subhead, $options: "i" };
-    }
-    if (type) {
-      query.type = type;
+    if (field) query.field = { $regex: field, $options: "i" };
+    if (subhead) query.subhead = { $regex: subhead, $options: "i" };
+    if (type) query.type = type;
+
+    let expenses;
+    let total;
+
+    if (exportExcel === "true") {
+      expenses = await Expense.find(query).populate("store").sort({ date: -1 });
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Expenses");
+
+      worksheet.columns = [
+        { header: "S No.", key: "index", width: 6 },
+        { header: "Store", key: "store", width: 20 },
+        { header: "Field", key: "field", width: 20 },
+        { header: "Subhead", key: "subhead", width: 20 },
+        { header: "Type", key: "type", width: 10 },
+        { header: "Amount", key: "amount", width: 15 },
+        { header: "Date", key: "date", width: 15 },
+      ];
+
+      worksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "4F81BD" },
+        };
+        cell.alignment = { vertical: "middle", horizontal: "center" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+
+      expenses.forEach((exp, index) => {
+        worksheet.addRow({
+          index: index + 1,
+          store: exp.store?.username || "",
+          field: exp.field || "",
+          subhead: exp.subhead || "",
+          type: exp.type || "",
+          amount: exp.amount || 0,
+          date: exp.date ? new Date(exp.date).toLocaleDateString("en-IN") : "",
+        });
+      });
+
+      worksheet.columns.forEach((col) => {
+        if (col.key === "amount") {
+          col.numFmt = '₹ #,##,##0';
+          col.alignment = { vertical: "middle", horizontal: "right" };
+        } else {
+          col.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+        }
+      });
+
+      worksheet.getRow(1).height = 28;
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=Expenses_${new Date().toISOString().slice(0, 10)}.xlsx`
+      );
+
+      await workbook.xlsx.write(res);
+      return res.end();
     }
 
-    const expenses = await Expense.find(query)
+    expenses = await Expense.find(query)
       .populate("store")
       .sort({ date: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
 
-    const total = await Expense.countDocuments(query);
+    total = await Expense.countDocuments(query);
 
     res.json({
       page,
@@ -125,6 +194,7 @@ export const getAllExpenses = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 

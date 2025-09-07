@@ -3,6 +3,7 @@ import Purchase from "../models/Purchase.js";
 import Product from "../models/Product.js";
 import StoreProduct from "../models/StoreProduct.js";
 import mongoose from "mongoose";
+import ExcelJS from "exceljs";
 
 // Get company details
 export const getCompany = async (req, res) => {
@@ -126,11 +127,11 @@ export const getAllCompanies = async (req, res) => {
       broker,
       page = 1,
       limit = 10,
+      exportExcel,
     } = req.query;
 
     const query = {};
 
-    // Partial match filters
     if (name) query.name = { $regex: name, $options: "i" };
     if (shortName) query.shortName = { $regex: shortName, $options: "i" };
     if (state) query.state = { $regex: state, $options: "i" };
@@ -139,15 +140,84 @@ export const getAllCompanies = async (req, res) => {
     if (address) query.address = { $regex: address, $options: "i" };
     if (broker) query.broker = { $regex: broker, $options: "i" };
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    let companies;
+    let totalCount;
 
-    const [companies, totalCount] = await Promise.all([
-      Company.find(query)
+    if (exportExcel === "true") {
+      companies = await Company.find(query).sort({ createdAt: -1 });
+    } else {
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+
+      companies = await Company.find(query)
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit)),
-      Company.countDocuments(query),
-    ]);
+        .limit(parseInt(limit));
+
+      totalCount = await Company.countDocuments(query);
+    }
+
+    if (exportExcel === "true") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Companies");
+
+      worksheet.columns = [
+        { header: "S No.", key: "index", width: 6 },
+        { header: "Name", key: "name", width: 30 },
+        { header: "Short Name", key: "shortName", width: 20 },
+        { header: "State", key: "state", width: 20 },
+        { header: "Contact Phone", key: "contactPhone", width: 20 },
+        { header: "GST Number", key: "gstNumber", width: 25 },
+        { header: "Address", key: "address", width: 40 },
+        { header: "Broker", key: "broker", width: 20 },
+      ];
+
+      worksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "4F81BD" },
+        };
+        cell.alignment = { vertical: "middle", horizontal: "center" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+
+      companies.forEach((company, index) => {
+        worksheet.addRow({
+          index: index + 1,
+          name: company.name || "",
+          shortName: company.shortName || "",
+          state: company.state || "",
+          contactPhone: company.contactPhone || "",
+          gstNumber: company.gstNumber || "",
+          address: company.address || "",
+          broker: company.broker || "",
+        });
+      });
+
+      worksheet.getRow(1).height = 28;
+
+      worksheet.columns.forEach((col) => {
+        col.alignment = { vertical: "middle", horizontal: "center" };
+      });
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=Companies_${new Date().toISOString().slice(0, 10)}.xlsx`
+      );
+
+      await workbook.xlsx.write(res);
+      return res.end();
+    }
 
     res.json({
       data: companies,
@@ -160,6 +230,7 @@ export const getAllCompanies = async (req, res) => {
     res.status(500).json({ message: "Server error while fetching companies." });
   }
 };
+
 
 
 export const updateACompany = async (req, res) => {
@@ -282,17 +353,14 @@ export const updateACompany = async (req, res) => {
 
 export const getCompanyWiseReport = async (req, res) => {
   try {
-    const { name, mobile, state, page = 1, limit = 10 } = req.query;
+    const { name, mobile, state, page = 1, limit = 10, exportExcel } = req.query;
 
-    // Fetch all purchases with company populated
-    const purchases = await Purchase.find()
-      .populate("company", "name contactPhone state");
+    const purchases = await Purchase.find().populate("company", "name contactPhone state");
 
-    // Group purchases by company
     const companyMap = {};
 
     purchases.forEach(purchase => {
-      if (!purchase.company) return; // in case company is deleted
+      if (!purchase.company) return;
 
       const compId = purchase.company._id.toString();
 
@@ -302,7 +370,7 @@ export const getCompanyWiseReport = async (req, res) => {
           companyName: purchase.company.name,
           companyMobile: purchase.company.contactPhone,
           companyState: purchase.company.state,
-          productMap: {}
+          productMap: {},
         };
       }
 
@@ -320,31 +388,25 @@ export const getCompanyWiseReport = async (req, res) => {
             new Date(purchase.date) >
             new Date(companyMap[compId].productMap[p.product].lastPurchaseDate)
           ) {
-            companyMap[compId].productMap[p.product].purchasePrice =
-              p.purchasePriceAfterDiscount;
-            companyMap[compId].productMap[p.product].lastPurchaseDate =
-              purchase.date;
+            companyMap[compId].productMap[p.product].purchasePrice = p.purchasePriceAfterDiscount;
+            companyMap[compId].productMap[p.product].lastPurchaseDate = purchase.date;
           }
         }
       });
     });
 
-    // Convert map → array
     let companyReports = [];
 
     for (const compId in companyMap) {
-      const { companyName, companyMobile, companyState, productMap } =
-        companyMap[compId];
+      const { companyName, companyMobile, companyState, productMap } = companyMap[compId];
       const productIds = Object.keys(productMap);
 
-      const warehouseStocks = await Product.find({
-        _id: { $in: productIds },
-      }).select("_id unit");
+      const warehouseStocks = await Product.find({ _id: { $in: productIds } }).select("_id unit");
 
       const storeStocks = await StoreProduct.aggregate([
         {
           $match: {
-            product: { $in: productIds.map((id) => new mongoose.Types.ObjectId(id)) },
+            product: { $in: productIds.map(id => new mongoose.Types.ObjectId(id)) },
           },
         },
         { $group: { _id: "$product", total: { $sum: "$quantity" } } },
@@ -360,10 +422,8 @@ export const getCompanyWiseReport = async (req, res) => {
       productIds.forEach((id) => {
         const purchased = productMap[id].purchasedQty || 0;
         const purchasePrice = productMap[id].purchasePrice || 0;
-        const warehouseStock =
-          warehouseStocks.find((p) => p._id.toString() === id)?.unit || 0;
-        const storeStock =
-          storeStocks.find((s) => s._id.toString() === id)?.total || 0;
+        const warehouseStock = warehouseStocks.find((p) => p._id.toString() === id)?.unit || 0;
+        const storeStock = storeStocks.find((s) => s._id.toString() === id)?.total || 0;
         const currentStock = warehouseStock + storeStock;
         const soldQty = purchased - currentStock;
 
@@ -389,28 +449,87 @@ export const getCompanyWiseReport = async (req, res) => {
       });
     }
 
-    // ✅ Apply search filters
     if (name) {
-      companyReports = companyReports.filter((c) =>
+      companyReports = companyReports.filter(c =>
         c.companyName.toLowerCase().includes(name.toLowerCase())
       );
     }
     if (mobile) {
-      companyReports = companyReports.filter((c) =>
+      companyReports = companyReports.filter(c =>
         c.companyMobile?.toLowerCase().includes(mobile.toLowerCase())
       );
     }
     if (state) {
-      companyReports = companyReports.filter((c) =>
+      companyReports = companyReports.filter(c =>
         c.companyState?.toLowerCase().includes(state.toLowerCase())
       );
     }
 
-    // ✅ Pagination
+    if (exportExcel === "true") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Company Wise Report");
+
+      worksheet.columns = [
+        { header: "S.No", key: "index", width: 6 },
+        { header: "Company Name", key: "companyName", width: 25 },
+        { header: "Mobile", key: "companyMobile", width: 15 },
+        { header: "State", key: "companyState", width: 15 },
+        { header: "Total Purchased Qty", key: "totalPurchase", width: 20 },
+        { header: "Total Sold Qty", key: "totalSale", width: 18 },
+        { header: "Warehouse Stock", key: "totalWarehouseStock", width: 18 },
+        { header: "Store Stock", key: "totalStoreStock", width: 15 },
+        { header: "Closing Stock", key: "totalClosingStock", width: 15 },
+        { header: "Closing Stock Value (₹)", key: "totalClosingAmount", width: 22 },
+      ];
+
+      worksheet.getRow(1).eachCell(cell => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "4F81BD" },
+        };
+        cell.alignment = { vertical: "middle", horizontal: "center" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+
+      companyReports.forEach((item, index) => {
+        worksheet.addRow({
+          index: index + 1,
+          ...item,
+        });
+      });
+
+      worksheet.columns.forEach(col => {
+        col.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+      });
+
+      worksheet.getRow(1).height = 28;
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=CompanyWiseReport_${new Date()
+          .toISOString()
+          .slice(0, 10)}.xlsx`
+      );
+
+      await workbook.xlsx.write(res);
+      return res.end();
+    }
+
+    // ✅ Pagination for API response
     const totalCount = companyReports.length;
     const startIndex = (parseInt(page) - 1) * parseInt(limit);
     const endIndex = startIndex + parseInt(limit);
-
     const paginatedReports = companyReports.slice(startIndex, endIndex);
 
     res.json({
@@ -424,6 +543,7 @@ export const getCompanyWiseReport = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+
 
 export const getVendorProducts = async (req, res) => {
   try {

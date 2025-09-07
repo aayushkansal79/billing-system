@@ -4,6 +4,7 @@ import StoreProduct from "../models/StoreProduct.js";
 import Customer from "../models/Customer.js";
 import Transaction from "../models/Transaction.js";
 import { getNextSaleReturnNumber } from "./counterController.js";
+import ExcelJS from "exceljs";
 
 export const getBillByInvoice = async (req, res) => {
   try {
@@ -164,30 +165,39 @@ export const createSaleReturn = async (req, res) => {
 
 export const getAllSaleReturns = async (req, res) => {
   try {
-    let { page = 1, limit = 10, invoiceNumber, customerName, mobile, startDate, endDate } = req.query;
+    let {
+      page = 1,
+      limit = 10,
+      saleReturnNo,
+      invoiceNumber,
+      customerName,
+      mobile,
+      startDate,
+      endDate,
+      exportExcel,
+    } = req.query;
+
     page = parseInt(page);
     limit = parseInt(limit);
 
     let query = {};
 
+    if (saleReturnNo) {
+      query.saleReturnNo = { $regex: saleReturnNo, $options: "i" };
+    }
     if (invoiceNumber) {
       query.invoiceNumber = { $regex: invoiceNumber, $options: "i" };
     }
 
     if (startDate || endDate) {
-      const istStart = startDate
-        ? new Date(new Date(startDate).setHours(0, 0, 0, 0))
-        : null;
-      const istEnd = endDate
-        ? new Date(new Date(endDate).setHours(23, 59, 59, 999))
-        : null;
+      const istStart = startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : null;
+      const istEnd = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
 
       query.createdAt = {};
       if (istStart) query.createdAt.$gte = istStart;
       if (istEnd) query.createdAt.$lte = istEnd;
     }
 
-    let customerIds = [];
     if (customerName || mobile) {
       let customerQuery = {};
       if (customerName) {
@@ -198,17 +208,103 @@ export const getAllSaleReturns = async (req, res) => {
       }
 
       const customers = await Customer.find(customerQuery).select("_id");
-      customerIds = customers.map(c => c._id);
+      const customerIds = customers.map((c) => c._id);
       query.customer = { $in: customerIds };
     }
 
-    const saleReturns = await SaleReturn.find(query)
-      .populate("customer", "name mobile state gst")
-      .populate("store")
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
+    let saleReturns;
 
+    const queryBuilder = SaleReturn.find(query)
+      .populate("customer", "name mobile state gst")
+      .populate("store", "username")
+      .populate("products.product", "name")
+      .sort({ createdAt: -1 });
+
+    if (exportExcel === "true") {
+      saleReturns = await queryBuilder;
+    } else {
+      saleReturns = await queryBuilder.skip((page - 1) * limit).limit(limit);
+    }
+
+    const saleReturnsWithTotals = saleReturns.map((ret) => {
+      const totalAmount = (ret.products || [])
+        .map((p) => p.total || 0)
+        .reduce((acc, curr) => acc + curr, 0);
+
+      return {
+        ...ret._doc,
+        totalReturnAmount: totalAmount,
+      };
+    });
+
+    if (exportExcel === "true") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Sale Returns");
+
+      worksheet.columns = [
+        { header: "S No.", key: "index", width: 6 },
+        { header: "Return No", key: "saleReturnNo", width: 20 },
+        { header: "Invoice No", key: "invoiceNo", width: 20 },
+        { header: "Customer Name", key: "customerName", width: 25 },
+        { header: "Mobile", key: "mobile", width: 15 },
+        { header: "Store", key: "store", width: 20 },
+        { header: "Return Amount (₹)", key: "totalReturnAmount", width: 20 },
+        { header: "Date", key: "createdAt", width: 18 },
+      ];
+
+      worksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "4F81BD" },
+        };
+        cell.alignment = { vertical: "middle", horizontal: "center" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+
+      saleReturnsWithTotals.forEach((ret, index) => {
+        worksheet.addRow({
+          index: index + 1,
+          saleReturnNo: ret.saleReturnNo || "",
+          invoiceNo: ret.invoiceNumber || "",
+          customerName: ret.customer?.name || "",
+          mobile: ret.customer?.mobile || "",
+          store: ret.store?.username || "",
+          totalReturnAmount: `₹${Number(ret.totalReturnAmount || 0).toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`,
+          createdAt: ret.createdAt
+            ? new Date(ret.createdAt).toLocaleDateString("en-IN")
+            : "",
+        });
+      });
+
+      worksheet.columns.forEach((col) => {
+        col.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+      });
+
+      worksheet.getRow(1).height = 28;
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=SaleReturns_${new Date().toISOString().slice(0, 10)}.xlsx`
+      );
+
+      await workbook.xlsx.write(res);
+      return res.end();
+    }
+
+    // ====================
+    // === JSON Response ==
+    // ====================
     const total = await SaleReturn.countDocuments(query);
 
     res.json({
@@ -216,11 +312,13 @@ export const getAllSaleReturns = async (req, res) => {
       limit,
       total,
       totalPages: Math.ceil(total / limit),
-      saleReturns
+      saleReturns: saleReturnsWithTotals,
     });
   } catch (err) {
     console.error("Error in getAllSaleReturns:", err);
     res.status(500).json({ error: "Server error" });
   }
 };
+
+
 

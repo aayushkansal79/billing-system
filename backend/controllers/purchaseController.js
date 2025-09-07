@@ -1,6 +1,7 @@
 import Product from "../models/Product.js";
 import Purchase from "../models/Purchase.js";
 import Company from "../models/Company.js";
+import ExcelJS from "exceljs";
 
 export const createPurchase = async (req, res) => {
     try {
@@ -157,67 +158,60 @@ export const getAllPurchases = async (req, res) => {
       gstNumber,
       state,
       address,
+      broker,
       startDate,
       endDate,
       page = 1,
       limit = 10,
+      exportExcel,
     } = req.query;
 
     const query = {};
 
-    // Search invoice and order number
-    if (invoiceNumber) {
-      query.invoiceNumber = { $regex: invoiceNumber, $options: "i" };
-    }
-    if (orderNumber) {
-      query.orderNumber = { $regex: orderNumber, $options: "i" };
-    }
+    // === Invoice and Order filters ===
+    if (invoiceNumber) query.invoiceNumber = { $regex: invoiceNumber, $options: "i" };
+    if (orderNumber) query.orderNumber = { $regex: orderNumber, $options: "i" };
 
-    // Date filtering (convert IST to UTC)
-    const start = startDate
-      ? new Date(new Date(startDate).setHours(0, 0, 0, 0))
-      : null;
-    const end = endDate
-      ? new Date(new Date(endDate).setHours(23, 59, 59, 999))
-      : null;
+    // === Date filter ===
+    const start = startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : null;
+    const end = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
 
-    if (start && end) {
-      query.date = { $gte: start, $lte: end };
-    } else if (start) {
-      query.date = { $gte: start };
-    } else if (end) {
-      query.date = { $lte: end };
-    }
+    if (start && end) query.date = { $gte: start, $lte: end };
+    else if (start) query.date = { $gte: start };
+    else if (end) query.date = { $lte: end };
 
-    // Company nested search (filter later)
+    // === Company filters ===
     const companyFilter = {
       ...(companyName && { name: { $regex: companyName, $options: "i" } }),
       ...(contactPhone && { contactPhone: { $regex: contactPhone, $options: "i" } }),
       ...(gstNumber && { gstNumber: { $regex: gstNumber, $options: "i" } }),
       ...(state && { state: { $regex: state, $options: "i" } }),
       ...(address && { address: { $regex: address, $options: "i" } }),
+      ...(broker && { broker: { $regex: broker, $options: "i" } }),
     };
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    const purchases = await Purchase.find(query)
+    const baseQuery = Purchase.find(query)
       .populate({
         path: "company",
         select: "name shortName state contactPhone gstNumber address broker",
         match: Object.keys(companyFilter).length > 0 ? companyFilter : undefined,
       })
       .populate("products.product", "name price barcode")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
+      .sort({ createdAt: -1 });
 
-    // Filter out null company matches
+    let purchases;
+
+    if (exportExcel === "true") {
+      purchases = await baseQuery;
+    } else {
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      purchases = await baseQuery.skip(skip).limit(parseInt(limit));
+    }
+
+    // Remove unmatched company populated results
     const filteredPurchases = purchases.filter((purchase) => purchase.company);
 
-    // Total count (after applying all filters including company match)
-    const totalCount = await Purchase.countDocuments(query);
-    const totalPages = Math.ceil(totalCount / limit);
-
+    // Map with total price after discount
     const purchasesWithTotal = filteredPurchases.map((purchase) => {
       const totalPriceAfterDiscount = purchase.products.reduce((sum, prod) => {
         return sum + (prod.purchasePriceAfterDiscount || 0) * (prod.quantity || 0);
@@ -229,15 +223,88 @@ export const getAllPurchases = async (req, res) => {
       };
     });
 
+    // === Export to Excel if required ===
+    if (exportExcel === "true") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Purchases");
+
+      worksheet.columns = [
+        { header: "S No.", key: "index", width: 6 },
+        { header: "Invoice No", key: "invoiceNumber", width: 15 },
+        { header: "Order No", key: "orderNumber", width: 15 },
+        { header: "Company Name", key: "companyName", width: 25 },
+        { header: "Phone", key: "contactPhone", width: 15 },
+        { header: "GST No", key: "gstNumber", width: 20 },
+        { header: "Address", key: "address", width: 30 },
+        { header: "State", key: "state", width: 15 },
+        { header: "Broker", key: "broker", width: 20 },
+        { header: "Total (After Discount)", key: "totalPriceAfterDiscount", width: 20 },
+        { header: "Date", key: "date", width: 15 },
+      ];
+
+      worksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "4F81BD" } };
+        cell.alignment = { vertical: "middle", horizontal: "center" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+
+      purchasesWithTotal.forEach((purchase, index) => {
+        const { company } = purchase;
+
+        worksheet.addRow({
+          index: index + 1,
+          invoiceNumber: purchase.invoiceNumber || "",
+          orderNumber: purchase.orderNumber || "",
+          companyName: company?.name || "",
+          contactPhone: company?.contactPhone || "",
+          gstNumber: company?.gstNumber || "",
+          address: company?.address || "",
+          state: company?.state || "",
+          broker: company?.broker || "",
+          totalPriceAfterDiscount: `₹${(purchase.totalPriceAfterDiscount || 0).toLocaleString("en-IN")}` || 0,
+          date: purchase.date ? new Date(purchase.date).toLocaleDateString("en-IN") : "",
+        });
+      });
+
+      worksheet.columns.forEach((col) => {
+        col.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+        if (col.key === "totalPriceAfterDiscount") {
+          col.numFmt = '₹ #,##,##0.00';
+          col.alignment = { vertical: "middle", horizontal: "right" };
+        }
+      });
+
+      worksheet.getRow(1).height = 28;
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename=Purchases_${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+      await workbook.xlsx.write(res);
+      return res.end();
+    }
+
+    // === Normal JSON Response ===
+    const totalCount = await Purchase.countDocuments(query); // Approximate count
+    const totalPages = Math.ceil(totalCount / limit);
+
     res.status(200).json({
       data: purchasesWithTotal,
       totalPages,
+      currentPage: parseInt(page),
+      totalCount,
     });
   } catch (err) {
     console.error("Error in getAllPurchases:", err);
     res.status(500).json({ message: "Failed to fetch purchases." });
   }
 };
+
 
 export const getPurchaseById = async (req, res) => {
   try {
