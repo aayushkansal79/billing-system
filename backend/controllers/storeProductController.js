@@ -254,7 +254,6 @@ export const searchStoreProducts = async (req, res) => {
           status: true,
         },
       })
-      .limit(5);
 
     const filtered = storeProducts.filter((sp) => sp.product !== null);
 

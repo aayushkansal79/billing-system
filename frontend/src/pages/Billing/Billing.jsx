@@ -41,6 +41,7 @@ const Billing = ({ url, setSidebarOpen }) => {
   const [customer, setCustomer] = useState({
     customerId: "",
     state: "",
+    city: "",
     customerName: "",
     mobileNo: "",
     gstNumber: "",
@@ -145,6 +146,7 @@ const Billing = ({ url, setSidebarOpen }) => {
           customerName: data.name || "",
           gstNumber: data.gst || "",
           state: data.state || prev.state || "",
+          city: data.city || prev.city || "",
           coins: data.coins || 0,
           pendingAmount: data.pendingAmount || 0,
         }));
@@ -620,6 +622,7 @@ const Billing = ({ url, setSidebarOpen }) => {
           mobile: customer.mobileNo,
           gst: customer.gstNumber,
           state: customer.state,
+          city: customer.city,
         },
         products: filteredProducts.map((p) => ({
           product: p.product,
@@ -674,6 +677,7 @@ const Billing = ({ url, setSidebarOpen }) => {
       setCustomer({
         customerId: "",
         state: "",
+        city: "",
         customerName: "",
         mobileNo: "",
         gstNumber: "",
@@ -774,7 +778,7 @@ const Billing = ({ url, setSidebarOpen }) => {
         </div>
         <form className="row gy-3 gx-3" onSubmit={handleSubmit}>
           <div className="col-md-12">
-            <div className="row g-3">
+            <div className="row g-1">
               <div className="col-md-2">
                 <label className="form-label">Mobile No.</label>
                 <input
@@ -801,6 +805,18 @@ const Billing = ({ url, setSidebarOpen }) => {
                   }
                   className="basic-single-select"
                   classNamePrefix="select"
+                />
+              </div>
+              <div className="col-md-1">
+                <label className="form-label">City</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter City"
+                  value={customer.city}
+                  onChange={(e) =>
+                    setCustomer({ ...customer, city: e.target.value })
+                  }
                 />
               </div>
               <div className="col-md-2">
@@ -833,15 +849,15 @@ const Billing = ({ url, setSidebarOpen }) => {
                 <label className="form-label">Coins</label>
                 <div
                   className="d-flex bg-dark align-items-center p-2 rounded"
-                  style={{ height: "32px" }}
+                  // style={{ height: "32px" }}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    height="20px"
+                    height="18px"
                     viewBox="0 -960 960 960"
-                    width="20px"
+                    width="18px"
                     fill="#ff9000"
-                    className="mx-2"
+                    className="mx-1"
                   >
                     <path d="M531-260h96v-3L462-438l1-3h10q54 0 89.5-33t43.5-77h40v-47h-41q-3-15-10.5-28.5T576-653h70v-47H314v57h156q26 0 42.5 13t22.5 32H314v47h222q-6 20-23 34.5T467-502H367v64l164 178ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
                   </svg>
@@ -864,15 +880,15 @@ const Billing = ({ url, setSidebarOpen }) => {
                 <label className="form-label">Wallet</label>
                 <div
                   className="d-flex bg-dark align-items-center py-2 rounded"
-                  style={{ height: "32px", width: "110px" }}
+                  // style={{ height: "32px", width: "110px" }}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    height="20px"
+                    height="18px"
                     viewBox="0 -960 960 960"
-                    width="20px"
+                    width="18px"
                     fill="#ff9000"
-                    className="mx-2"
+                    className="mx-1"
                   >
                     <path d="M200-200v-560 560Zm0 80q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v100h-80v-100H200v560h560v-100h80v100q0 33-23.5 56.5T760-120H200Zm320-160q-33 0-56.5-23.5T440-360v-240q0-33 23.5-56.5T520-680h280q33 0 56.5 23.5T880-600v240q0 33-23.5 56.5T800-280H520Zm280-80v-240H520v240h280Zm-160-60q25 0 42.5-17.5T700-480q0-25-17.5-42.5T640-540q-25 0-42.5 17.5T580-480q0 25 17.5 42.5T640-420Z" />
                   </svg>
@@ -1386,6 +1402,7 @@ const Billing = ({ url, setSidebarOpen }) => {
                   mobileNo={billInvoice.mobileNo}
                   gstNumber={billInvoice.gstNumber}
                   state={billInvoice.state}
+                  city={billInvoice.city}
                   discount={billInvoice.discount}
                   discountMethod={billInvoice.discountMethod}
                   products={billInvoice.products}

@@ -484,6 +484,7 @@ export const getAllProductsWithVendors = async (req, res) => {
       worksheet.columns = [
         { header: "S.No", key: "index", width: 6 },
         { header: "Product Name", key: "name", width: 25 },
+        { header: "Vendor", key: "vendor", width: 25 },
         { header: "Purchase Price", key: "purchasePrice", width: 15 },
         { header: "Purchased Qty", key: "purchasedQty", width: 15 },
         { header: "Selling Price", key: "sellingPrice", width: 15 },
@@ -514,6 +515,7 @@ export const getAllProductsWithVendors = async (req, res) => {
         worksheet.addRow({
           index: index + 1,
           name: item.name || "",
+          vendor: item.lastVendor.name || "",
           purchasePrice: `₹${(item.purchasePrice || 0).toLocaleString("en-IN")}` || 0,
           purchasedQty: item.purchasedQty || 0,
           sellingPrice: `₹${(item.sellingPrice || 0).toLocaleString("en-IN")}` || 0,

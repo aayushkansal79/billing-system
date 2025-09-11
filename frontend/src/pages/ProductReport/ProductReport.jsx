@@ -140,6 +140,7 @@ const ProductReport = ({ url }) => {
               <tr>
                 <th>#</th>
                 <th>Product Name</th>
+                <th>Vendor</th>
                 <th className="text-end">Purchased Price</th>
                 <th>Purchase</th>
                 <th className="text-end">Selling Price</th>
@@ -159,6 +160,7 @@ const ProductReport = ({ url }) => {
                 >
                   <th>{(filters.page - 1) * filters.limit + (idx + 1)}.</th>
                   <th>{t.name}</th>
+                  <th>{t.lastVendor.name}</th>
                   <th className="text-primary text-end">
                     ₹{" "}
                     {Number(t.purchasePrice).toLocaleString("en-IN", {

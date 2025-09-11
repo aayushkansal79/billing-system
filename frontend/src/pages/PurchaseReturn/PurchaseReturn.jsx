@@ -48,6 +48,14 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
   }, []);
   const totalQty = products.reduce((sum, item) => sum + item.returnQty, 0);
 
+  const totalGST = products.reduce(
+    (sum, item) =>
+      sum +
+      item.returnQty *
+        (item.purchasePriceAfterDiscount * (item.gstPercentage / 100)),
+    0
+  );
+
   return (
     <div ref={ref} style={{ padding: "20px" }}>
       <div className="d-flex justify-content-between">
@@ -94,6 +102,8 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
           <tr>
             <th>#</th>
             <th>Product</th>
+            <th>Type</th>
+            <th>HSN</th>
             <th>Qty</th>
             <th>Purchase Price</th>
             <th>GST %</th>
@@ -105,6 +115,8 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
             <tr key={idx}>
               <td>{idx + 1}.</td>
               <td>{p.name}</td>
+              <td>{p.product.type}</td>
+              <td>{p.product.hsn}</td>
               <td>{p.returnQty}</td>
               <td>
                 ₹
@@ -126,7 +138,7 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
         </tbody>
         <tfoot>
           <tr>
-            <td colSpan={2} className="text-start">
+            <td colSpan={4} className="text-start">
               <strong>Grand Total</strong>
             </td>
             <th>{totalQty}</th>
@@ -145,6 +157,86 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
 
       <div>
         <b>Remarks:</b> {remarks}
+      </div>
+
+      <br />
+
+      <div className="d-flex justify-content-between">
+        <div>
+          <b>Terms & Conditions: </b>
+          <div className="refund-note">
+            1. Payment to be made by A/c. Payee's Cheque for demand draft only.{" "}
+            <br />
+            2. We are not responsible for any loss or damage in trasit. <br />
+            3. Subject to SURAT Jurisdiction Only.
+          </div>
+        </div>
+        <div>
+          <table className="table text-end">
+            <thead>
+              <tr>
+                <th>GST</th>
+                <th>GST Amt.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>SGST</td>
+                <td>
+                  {form.CompanyState &&
+                  company.state &&
+                  form.CompanyState === company.state ? (
+                    <>
+                      ₹
+                      {Number(totalGST / 2).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </>
+                  ) : (
+                    <>₹0.00</>
+                  )}
+                </td>
+              </tr>
+              <tr>
+                <td>CGST</td>
+                <td>
+                  {form.CompanyState &&
+                  company.state &&
+                  form.CompanyState === company.state ? (
+                    <>
+                      ₹
+                      {Number(totalGST / 2).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </>
+                  ) : (
+                    <>₹0.00</>
+                  )}
+                </td>
+              </tr>
+              <tr>
+                <td>IGST</td>
+                <td>
+                  {form.CompanyState &&
+                  company.state &&
+                  form.CompanyState !== company.state ? (
+                    <>
+                      ₹
+                      {Number(totalGST).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </>
+                  ) : (
+                    <>₹0.00</>
+                  )}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

@@ -526,7 +526,6 @@ export const getCompanyWiseReport = async (req, res) => {
       return res.end();
     }
 
-    // ✅ Pagination for API response
     const totalCount = companyReports.length;
     const startIndex = (parseInt(page) - 1) * parseInt(limit);
     const endIndex = startIndex + parseInt(limit);
@@ -548,9 +547,9 @@ export const getCompanyWiseReport = async (req, res) => {
 export const getVendorProducts = async (req, res) => {
   try {
     const { companyId } = req.params;
+    const { exportExcel } = req.query;
 
     const company = await Company.findById(companyId);
-
     if (!company) {
       return res.status(404).json({ message: "Company not found" });
     }
@@ -558,25 +557,27 @@ export const getVendorProducts = async (req, res) => {
     const purchases = await Purchase.find({ company: companyId });
 
     const productMap = {};
-    purchases.forEach(purchase => {
-      purchase.products.forEach(p => {
+    purchases.forEach((purchase) => {
+      purchase.products.forEach((p) => {
         if (!productMap[p.product]) {
           productMap[p.product] = {
             productId: p.product,
             name: p.name,
             purchasedQty: p.quantity || 0,
-            purchasePrice: p.purchasePriceAfterDiscount,
-            sellingPrice: p.printPrice,
-            lastPurchaseDate: purchase.date, // track purchase date
+            purchasePrice: p.purchasePriceAfterDiscount || 0,
+            sellingPrice: p.printPrice || 0,
+            lastPurchaseDate: purchase.date,
           };
         } else {
-          // accumulate quantity
           productMap[p.product].purchasedQty += p.quantity;
 
-          // update purchase/selling price if this purchase is newer
-          if (new Date(purchase.date) > new Date(productMap[p.product].lastPurchaseDate)) {
-            productMap[p.product].purchasePrice = p.purchasePriceAfterDiscount;
-            productMap[p.product].sellingPrice = p.printPrice;
+          if (
+            new Date(purchase.date) >
+            new Date(productMap[p.product].lastPurchaseDate)
+          ) {
+            productMap[p.product].purchasePrice =
+              p.purchasePriceAfterDiscount || 0;
+            productMap[p.product].sellingPrice = p.printPrice || 0;
             productMap[p.product].lastPurchaseDate = purchase.date;
           }
         }
@@ -589,16 +590,22 @@ export const getVendorProducts = async (req, res) => {
       .select("_id unit");
 
     const storeStocks = await StoreProduct.aggregate([
-      { $match: { product: { $in: productIds.map(id => new mongoose.Types.ObjectId(id)) } } },
-      { $group: { _id: "$product", total: { $sum: "$quantity" } } }
+      {
+        $match: {
+          product: { $in: productIds.map((id) => new mongoose.Types.ObjectId(id)) },
+        },
+      },
+      { $group: { _id: "$product", total: { $sum: "$quantity" } } },
     ]);
 
-    const result = productIds.map(id => {
+    const result = productIds.map((id) => {
       const purchased = productMap[id].purchasedQty || 0;
       const purchasePrice = productMap[id].purchasePrice || 0;
       const sellingPrice = productMap[id].sellingPrice || 0;
-      const warehouseStock = warehouseStocks.find(p => p._id.toString() === id)?.unit || 0;
-      const storeStock = storeStocks.find(s => s._id.toString() === id)?.total || 0;
+      const warehouseStock =
+        warehouseStocks.find((p) => p._id.toString() === id)?.unit || 0;
+      const storeStock =
+        storeStocks.find((s) => s._id.toString() === id)?.total || 0;
       const currentStock = warehouseStock + storeStock;
       const soldQty = purchased - currentStock;
 
@@ -612,12 +619,85 @@ export const getVendorProducts = async (req, res) => {
         storeStock,
         currentStock,
         soldQty,
+        currentStockAmt: currentStock * purchasePrice,
       };
     });
 
+    // === Excel Export ===
+    if (exportExcel === "true") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Vendor Products");
+
+      worksheet.columns = [
+        { header: "S No.", key: "sno", width: 6 },
+        { header: "Product Name", key: "name", width: 30 },
+        { header: "Purchase Price (₹)", key: "purchasePrice", width: 20 },
+        { header: "Purchased Qty", key: "purchasedQty", width: 15 },
+        { header: "Selling Price (₹)", key: "sellingPrice", width: 20 },
+        { header: "Sold Qty", key: "soldQty", width: 15 },
+        { header: "Warehouse Stock", key: "warehouseStock", width: 18 },
+        { header: "Store Stock", key: "storeStock", width: 15 },
+        { header: "Closing Stock", key: "currentStock", width: 18 },
+        { header: "Cls. Stk. Amt. (₹)", key: "currentStockAmt", width: 20 },
+      ];
+
+      // Style header
+      worksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "4F81BD" },
+        };
+        cell.alignment = { vertical: "middle", horizontal: "center" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+
+      const formatCurrency = (num) =>
+        "₹ " +
+        Number(num).toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+
+      result.forEach((item, idx) => {
+        worksheet.addRow({
+          sno: idx + 1,
+          name: item.name,
+          purchasePrice: formatCurrency(item.purchasePrice),
+          purchasedQty: item.purchasedQty,
+          sellingPrice: formatCurrency(item.sellingPrice),
+          soldQty: item.soldQty,
+          warehouseStock: item.warehouseStock,
+          storeStock: item.storeStock,
+          currentStock: item.currentStock,
+          currentStockAmt: formatCurrency(item.currentStockAmt),
+        });
+      });
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=vendor_products_${company.name}.xlsx`
+      );
+
+      await workbook.xlsx.write(res);
+      return res.end();
+    }
+
+    // === JSON Response (no pagination, all products) ===
     res.json({
       company,
       products: result,
+      totalCount: result.length,
     });
   } catch (err) {
     console.error("Error in getVendorProducts:", err);

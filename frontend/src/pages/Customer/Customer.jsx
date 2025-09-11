@@ -33,6 +33,7 @@ const Customer = ({ url }) => {
     mobile: "",
     gst: "",
     state: "",
+    city: "",
     pendingCondition: "",
     page: 1,
     limit: 10,
@@ -186,27 +187,59 @@ const Customer = ({ url }) => {
   };
 
   const handleSave = async (id) => {
-      setLoading(true);
-      try {
-        await axios.patch(
-          `${url}/api/customer/${id}`,
-          { ...editData },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        toast.success("Customer updated successfully.");
-        setEditIndex(null);
-        fetchCustomers();
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to update customer.");
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
+    try {
+      await axios.patch(
+        `${url}/api/customer/${id}`,
+        { ...editData },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Customer updated successfully.");
+      setEditIndex(null);
+      fetchCustomers();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update customer.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCustomerClick = (customerId) => {
     navigate(`/all-customer/${customerId}/transactions`);
   };
+
+  const handleDownloadExcel = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== "") {
+            params.append(key, String(value).trim());
+          }
+        });
+  
+        params.append("exportExcel", "true");
+  
+        const res = await axios.get(`${url}/api/customer?${params.toString()}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob",
+        });
+  
+        const blob = new Blob([res.data], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+        const link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+        link.download = `Customers.xlsx`;
+        link.click();
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to download Excel");
+      } finally {
+        setLoading(false);
+      }
+    };
 
   return (
     <>
@@ -229,6 +262,15 @@ const Customer = ({ url }) => {
             placeholder="Mobile Number"
             value={filters.mobile}
             onChange={(e) => setFilters({ ...filters, mobile: e.target.value })}
+          />
+        </div>
+        <div className="col-md-2">
+          <label className="form-label">City:</label>
+          <input
+            className="form-control"
+            placeholder="City"
+            value={filters.city}
+            onChange={(e) => setFilters({ ...filters, city: e.target.value })}
           />
         </div>
         <div className="col-md-2">
@@ -264,6 +306,25 @@ const Customer = ({ url }) => {
             <option value="more">Wallet Amount &gt; 0</option>
           </select>
         </div>
+        <div className="col-md-1">
+          <label className="form-label">Download Excel:</label>
+          <br />
+          <button
+            className="btn btn-primary d-flex gap-1 align-items-center"
+            onClick={handleDownloadExcel}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              height="20px"
+              viewBox="0 -960 960 960"
+              width="20px"
+              fill="white"
+            >
+              <path d="m480-320 160-160-56-56-64 64v-168h-80v168l-64-64-56 56 160 160Zm0 240q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
+            </svg>
+            Download
+          </button>
+        </div>
       </div>
 
       <div className="customer row rounded mb-3">
@@ -273,6 +334,7 @@ const Customer = ({ url }) => {
               <th>#</th>
               <th scope="col">Customer Name</th>
               <th scope="col">Mobile No.</th>
+              <th scope="col">City</th>
               <th scope="col">State</th>
               <th scope="col">GST</th>
               <th scope="col" className="text-end">
@@ -323,6 +385,21 @@ const Customer = ({ url }) => {
                     <input
                       type="text"
                       className="form-control"
+                      value={editData.city}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) =>
+                        handleInputChange("city", e.target.value)
+                      }
+                    />
+                  ) : (
+                    customer.city
+                  )}
+                </td>
+                <td>
+                  {editIndex === index ? (
+                    <input
+                      type="text"
+                      className="form-control"
                       value={editData.state}
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) =>
@@ -367,7 +444,9 @@ const Customer = ({ url }) => {
                   })}
                 </th>
                 <th
-                  className={`text-end ${customer.pendingAmount >= 0 ? "text-success" : "text-danger"}`}
+                  className={`text-end ${
+                    customer.pendingAmount >= 0 ? "text-success" : "text-danger"
+                  }`}
                   style={{ textWrap: "nowrap" }}
                 >
                   ₹{" "}
@@ -522,7 +601,8 @@ const Customer = ({ url }) => {
                 ></button>
               </div>
               <div className="modal-body">
-                {pendingBills.length === 0 || modalCustomer.pendingAmount >=0 ? (
+                {pendingBills.length === 0 ||
+                modalCustomer.pendingAmount >= 0 ? (
                   <p className="text-center">
                     No pending bills for this customer!
                   </p>

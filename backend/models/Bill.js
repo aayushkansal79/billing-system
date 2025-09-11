@@ -23,6 +23,7 @@ const BillSchema = new mongoose.Schema({
     discount: { type: Number },
     discountMethod: { type: String, enum: ["percentage", "flat"] },
     state: { type: String, required: true },
+    city: { type: String },
     customerName: { type: String },
     mobileNo: { type: String },
     gstNumber: { type: String },

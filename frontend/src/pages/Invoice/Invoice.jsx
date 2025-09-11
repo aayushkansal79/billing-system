@@ -14,6 +14,7 @@ const Invoice = (
     mobileNo,
     gstNumber,
     state,
+    city,
     discount,
     discountMethod,
     products,
@@ -170,6 +171,8 @@ const Invoice = (
             {mobileNo || ""}
             {", "}
             {/* <br /> */}
+            {city}
+            {", "}
             {state}
             {", "}
             {/* <br /> */}

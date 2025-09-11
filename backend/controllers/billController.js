@@ -29,6 +29,7 @@ export const createBill = async (req, res) => {
       mobile: mobileNo = "",
       gst: gstNumber = "",
       state = "",
+      city = "",
     } = customer;
 
     if (!req.store || !req.store._id) return res.status(400).json({ error: "Store info missing" });
@@ -56,6 +57,7 @@ export const createBill = async (req, res) => {
         customerDoc.name = customerName || customerDoc.name;
         customerDoc.gst = gstNumber || customerDoc.gst;
         customerDoc.state = state || customerDoc.state;
+        customerDoc.city = city || customerDoc.city;
       }
     }
 
@@ -75,6 +77,7 @@ export const createBill = async (req, res) => {
       customer: customerDoc?._id,
       invoiceNumber,
       state,
+      city,
       customerName,
       mobileNo,
       gstNumber,
@@ -307,6 +310,7 @@ export const getAllBills = async (req, res) => {
         { header: "Mobile No", key: "mobileNo", width: 15 },
         { header: "Store", key: "store", width: 20 },
         { header: "Amount", key: "totalAmount", width: 15 },
+        { header: "Unpaid Amount", key: "unpaidAmount", width: 15 },
         { header: "Payment Status", key: "paymentStatus", width: 15 },
         { header: "Date", key: "date", width: 18 },
       ];
@@ -331,6 +335,7 @@ export const getAllBills = async (req, res) => {
           mobileNo: bill.mobileNo || "",
           store: bill.store?.username || "",
           totalAmount: `₹${(bill.totalAmount || 0).toLocaleString("en-IN")}` || 0,
+          unpaidAmount: bill.paymentStatus === "paid" ? `₹0.00` || 0 : `₹${(bill.totalAmount - bill.paidAmount || 0).toLocaleString("en-IN")}` || 0,
           paymentStatus: bill.paymentStatus || "",
           date: bill.createdAt ? new Date(bill.createdAt).toLocaleDateString("en-IN") : "",
         });
@@ -338,7 +343,7 @@ export const getAllBills = async (req, res) => {
 
       worksheet.columns.forEach((col) => {
         col.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
-        if (col.key === "totalAmount") {
+        if (col.key === "totalAmount" || col.key === "unpaidAmount") {
           col.numFmt = '₹ #,##,##0.00';
           col.alignment = { vertical: "middle", horizontal: "right" };
         }
@@ -551,44 +556,44 @@ export const getStoreWiseBillStats = async (req, res) => {
 
 export const getBillsReport = async (req, res) => {
   try {
-    const { search, page = 1, limit = 10, startDate, endDate } = req.query;
+    const { search, page = 1, limit = 10, startDate, endDate, exportExcel } = req.query;
 
     const query = {};
 
     if (search) {
       const regex = new RegExp(search, "i");
-      query.$or = [
-        { invoiceNumber: regex },
-      ];
+      query.$or = [{ invoiceNumber: regex }];
     }
 
     if (startDate || endDate) {
       query.date = {};
-
       if (startDate) {
         const start = new Date(startDate);
         start.setHours(0, 0, 0, 0);
-        const istStart = new Date(start.getTime());
-        query.date.$gte = istStart;
+        query.date.$gte = start;
       }
-
       if (endDate) {
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
-        const istEnd = new Date(end.getTime());
-        query.date.$lte = istEnd;
+        query.date.$lte = end;
       }
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
+    let bills = [];
+    let total = 0;
 
-    const bills = await Bill.find(query)
-      .sort({ date: 1 })
-      .skip(skip)
-      .limit(Number(limit))
-      .lean();
+    if (exportExcel === "true") {
+      bills = await Bill.find(query).sort({ date: 1 }).lean();
+      total = bills.length;
+    } else {
+      const parsedLimit = Number(limit) > 0 ? parseInt(limit) : 10;
+      const skip = (parseInt(page) - 1) * parsedLimit;
 
-    const total = await Bill.countDocuments(query);
+      [bills, total] = await Promise.all([
+        Bill.find(query).sort({ date: 1 }).skip(skip).limit(parsedLimit).lean(),
+        Bill.countDocuments(query),
+      ]);
+    }
 
     const allProductIds = [
       ...new Set(
@@ -627,12 +632,116 @@ export const getBillsReport = async (req, res) => {
         const purchaseInfo = purchaseMap[p.product.toString()] || {};
         return {
           ...p,
-          latestPurchasePrice: purchaseInfo.purchasePrice || null,
+          latestPurchasePrice: purchaseInfo.purchasePrice || 0,
           lastVendor: purchaseInfo.lastVendor || null,
           lastPurchaseDate: purchaseInfo.lastPurchaseDate || null,
         };
       }),
     }));
+
+    if (exportExcel === "true") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Bills Report");
+
+      worksheet.columns = [
+        { header: "Invoice No.", key: "invoiceNumber", width: 20 },
+        { header: "Product Name", key: "productName", width: 25 },
+        { header: "Type", key: "type", width: 15 },
+        { header: "Quantity", key: "quantity", width: 12 },
+        { header: "Price", key: "priceWithoutGst", width: 18 },
+        { header: "Net Price", key: "finalPrice", width: 18 },
+        { header: "Purchase Price", key: "latestPurchasePrice", width: 18 },
+        { header: "Profit", key: "profit", width: 18 },
+      ];
+
+      worksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "4F81BD" },
+        };
+        cell.alignment = { vertical: "middle", horizontal: "center" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+
+      const formatCurrency = (num) => {
+        if (!num || isNaN(num)) return "₹0.00";
+        return (
+          "₹" +
+          Number(num).toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })
+        );
+      };
+
+      let currentRow = 2;
+
+      report.forEach((bill) => {
+        const startRow = currentRow;
+
+        bill.products.forEach((p) => {
+          const priceWithoutGst =
+            p.finalPrice / (1 + 0.01 * (p.gstPercentage || 0));
+          const profit =
+            p.quantity * (priceWithoutGst - (p.latestPurchasePrice || 0));
+
+          worksheet.addRow({
+            invoiceNumber: bill.invoiceNumber,
+            productName: p.productName || "",
+            type: p.type || "",
+            quantity: p.quantity || 0,
+            priceWithoutGst: formatCurrency(priceWithoutGst),
+            finalPrice: formatCurrency(p.finalPrice || 0),
+            latestPurchasePrice: formatCurrency(p.latestPurchasePrice || 0),
+            profit: formatCurrency(profit),
+          });
+
+          currentRow++;
+        });
+
+        const endRow = currentRow - 1;
+
+        if (endRow > startRow) {
+          worksheet.mergeCells(`A${startRow}:A${endRow}`);
+          worksheet.getCell(`A${startRow}`).value = bill.invoiceNumber;
+          worksheet.getCell(`A${startRow}`).alignment = {
+            vertical: "middle",
+            horizontal: "center",
+          };
+        }
+      });
+
+      worksheet.columns.forEach((col) => {
+        col.alignment = {
+          vertical: "middle",
+          horizontal: "center",
+          wrapText: true,
+        };
+      });
+
+      worksheet.getRow(1).height = 28;
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=BillsReport_${new Date()
+          .toISOString()
+          .slice(0, 10)}.xlsx`
+      );
+
+      await workbook.xlsx.write(res);
+      return res.end();
+    }
 
     res.json({
       bills: report,
@@ -747,6 +856,7 @@ export const updateBill = async (req, res) => {
       mobile: mobileNo = "",
       gst: gstNumber = "",
       state = "",
+      city = "",
     } = customer;
 
     const bill = await Bill.findById(id);
@@ -756,6 +866,7 @@ export const updateBill = async (req, res) => {
     const oldBillTotal = bill.totalAmount;
     const oldPaidAmount = bill.paidAmount;
     const oldUsedCoins = bill.usedCoins;
+    const oldGeneratedCoins = Math.floor(parseFloat(bill.paidAmount) / 100) || 0;
 
     const store = bill.store;
 
@@ -786,11 +897,12 @@ export const updateBill = async (req, res) => {
     if (mobileNo) {
       customerDoc = await Customer.findOne({ mobile: mobileNo });
       if (!customerDoc) {
-        customerDoc = new Customer({ mobile: mobileNo, name: customerName, gst: gstNumber, state });
+        customerDoc = new Customer({ mobile: mobileNo, name: customerName, gst: gstNumber, state, city });
       } else {
         customerDoc.name = customerName || customerDoc.name;
         customerDoc.gst = gstNumber || customerDoc.gst;
         customerDoc.state = state || customerDoc.state;
+        customerDoc.city = city || customerDoc.city;
       }
     }
 
@@ -807,6 +919,7 @@ export const updateBill = async (req, res) => {
     // Update bill
     bill.customer = customerDoc?._id;
     bill.state = state;
+    bill.city = city;
     bill.customerName = customerName;
     bill.mobileNo = mobileNo;
     bill.gstNumber = gstNumber;
@@ -825,7 +938,7 @@ export const updateBill = async (req, res) => {
     // Update customer balance
     if (customerDoc) {
     
-        customerDoc.totalAmount -= oldBillTotal;
+      customerDoc.totalAmount -= oldBillTotal;
       customerDoc.paidAmount -= oldPaidAmount;
       customerDoc.usedCoins -= oldUsedCoins;
       if (customerDoc.totalAmount < 0) customerDoc.totalAmount = 0;
@@ -880,7 +993,7 @@ export const updateBill = async (req, res) => {
       customerDoc.paidAmount = (customerDoc.paidAmount || 0) + parseFloat(paidAmount);
       customerDoc.coins = Math.max(
         0,
-        (customerDoc.coins || 0) - usedCoins + generatedCoins
+        (customerDoc.coins || 0) - usedCoins - oldGeneratedCoins + generatedCoins
       );
       customerDoc.usedCoins = (customerDoc.usedCoins || 0) + usedCoins;
       customerDoc.pendingAmount =

@@ -293,7 +293,7 @@ export const getAllPurchaseReturns = async (req, res) => {
     if (exportExcel === "true") {
       purchaseReturns = await PurchaseReturn.find(query)
         .populate("company", "name shortName city contactPhone gstNumber state address")
-        .populate("products.product", "name price barcode")
+        .populate("products.product", "name type hsn")
         .sort({ date: -1 });
     } else {
       const parsedLimit = Number(limit) > 0 ? parseInt(limit) : 10;
@@ -301,7 +301,7 @@ export const getAllPurchaseReturns = async (req, res) => {
 
       purchaseReturns = await PurchaseReturn.find(query)
         .populate("company", "name shortName city contactPhone gstNumber state address")
-        .populate("products.product", "name price barcode")
+        .populate("products.product", "name type hsn")
         .sort({ date: -1 })
         .skip(skip)
         .limit(parsedLimit);

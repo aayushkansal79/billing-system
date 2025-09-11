@@ -18,6 +18,11 @@ const VendorProducts = ({ url }) => {
   const [company, setCompany] = useState({});
   const [products, setProducts] = useState([]);
 
+  const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({
+    exportExcel: "",
+  });
+
   useEffect(() => {
     if (!companyId) return;
     const fetchData = async () => {
@@ -41,10 +46,54 @@ const VendorProducts = ({ url }) => {
     setFilters((prev) => ({ ...prev, limit }));
   };
 
-  const totalPurchase = products.reduce((sum, prod) => sum + prod.purchasedQty, 0);
+  const totalPurchase = products.reduce(
+    (sum, prod) => sum + prod.purchasedQty,
+    0
+  );
   const totalSale = products.reduce((sum, prod) => sum + prod.soldQty, 0);
-  const totalClosing = products.reduce((sum, prod) => sum + prod.currentStock, 0);
-  const totalAmount = products.reduce((sum, prod) => sum + (prod.currentStock * (prod.purchasePrice)), 0);
+  const totalClosing = products.reduce(
+    (sum, prod) => sum + prod.currentStock,
+    0
+  );
+  const totalAmount = products.reduce(
+    (sum, prod) => sum + prod.currentStock * prod.purchasePrice,
+    0
+  );
+
+  const handleDownloadExcel = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          params.append(key, String(value).trim());
+        }
+      });
+
+      params.append("exportExcel", "true");
+
+      const res = await axios.get(
+        `${url}/api/company/${companyId}/products?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob",
+        }
+      );
+
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.download = `Vendor_Products.xlsx`;
+      link.click();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to download Excel");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -94,9 +143,29 @@ const VendorProducts = ({ url }) => {
       </div> */}
 
       <div className="transac mt-3 mb-3 rounded">
-        <button className="btn btn-secondary mb-3" onClick={() => navigate(-1)}>
-          ← Back
-        </button>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <button
+            className="btn btn-secondary mb-3"
+            onClick={() => navigate(-1)}
+          >
+            ← Back
+          </button>
+          <button
+            className="btn btn-primary d-flex gap-1 align-items-center"
+            onClick={handleDownloadExcel}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              height="20px"
+              viewBox="0 -960 960 960"
+              width="20px"
+              fill="white"
+            >
+              <path d="m480-320 160-160-56-56-64 64v-168h-80v168l-64-64-56 56 160 160Zm0 240q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
+            </svg>
+            Download
+          </button>
+        </div>
         <h3>
           Products for{" "}
           <b className="text-primary">{company.name || "Customer"}</b>
@@ -152,10 +221,13 @@ const VendorProducts = ({ url }) => {
                     <th className="text-danger">{t.currentStock}</th>
                     <th className="text-success text-end">
                       ₹{" "}
-                      {Number(t.currentStock * (t.purchasePrice)).toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
+                      {Number(t.currentStock * t.purchasePrice).toLocaleString(
+                        "en-IN",
+                        {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }
+                      )}
                     </th>
                   </tr>
                 ))}

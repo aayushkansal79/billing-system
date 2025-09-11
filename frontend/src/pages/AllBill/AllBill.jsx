@@ -340,6 +340,7 @@ const AllBill = ({ url }) => {
                 <th>Mobile No.</th>
                 {user?.type === "admin" && <th>Store</th>}
                 <th className="text-end">Total Amount (₹)</th>
+                <th className="text-end">Unpaid Amount (₹)</th>
                 <th>Payment Status</th>
                 <th>Invoice</th>
                 {user?.type === "store" && <th>Store</th>}
@@ -372,6 +373,24 @@ const AllBill = ({ url }) => {
                       maximumFractionDigits: 2,
                     })}
                     {/* <hr /> */}
+                  </th>
+                  <th
+                    className="text-danger text-end"
+                    style={{ whiteSpace: "nowrap" }}
+                  >
+                    {bill.paymentStatus === "paid" ? (
+                      "₹ 0.00"
+                    ) : (
+                      <>
+                        ₹{" "}
+                        {Number(
+                          bill.totalAmount - bill.paidAmount
+                        ).toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </>
+                    )}
                   </th>
                   <th className="text-danger">
                     {bill.paymentStatus === "paid" && (
@@ -457,6 +476,7 @@ const AllBill = ({ url }) => {
                     mobileNo={selectedBill.mobileNo}
                     gstNumber={selectedBill.gstNumber}
                     state={selectedBill.state}
+                    city={selectedBill.city}
                     discount={selectedBill.discount}
                     discountMethod={selectedBill.discountMethod}
                     products={selectedBill.products}

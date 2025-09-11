@@ -5,6 +5,7 @@ const customerSchema = new mongoose.Schema({
     name: { type: String, }, 
     gst: { type: String, default: "" },
     state: { type: String, required: true },
+    city: { type: String, default: "" },
     totalAmount: { type: Number, default: 0 },
     paidAmount: { type: Number, default: 0 },
     remainingPaid: { type: Number, default: 0 },
