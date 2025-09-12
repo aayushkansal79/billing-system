@@ -1,6 +1,7 @@
 import Transaction from "../models/Transaction.js";
 import Customer from "../models/Customer.js";
 import Bill from "../models/Bill.js"
+import ExcelJS from "exceljs";
 
 // export const getCustomerTransactions = async (req, res) => {
 //     try {
@@ -29,6 +30,7 @@ export const getCustomerTransactions = async (req, res) => {
       invoiceNo,
       startDate,
       endDate,
+      exportExcel,
     } = req.query;
 
     const customer = await Customer.findById(customerId);
@@ -44,31 +46,93 @@ export const getCustomerTransactions = async (req, res) => {
 
     if (startDate || endDate) {
       query.createdAt = {};
-
       if (startDate) {
-        // Convert IST midnight to UTC
         const start = new Date(startDate);
         start.setHours(0, 0, 0, 0);
-        const istStart = new Date(start.getTime());
-        query.createdAt.$gte = istStart;
+        query.createdAt.$gte = start;
       }
-
       if (endDate) {
-        // Convert IST end of day to UTC
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
-        const istEnd = new Date(end.getTime());
-        query.createdAt.$lte = istEnd;
+        query.createdAt.$lte = end;
       }
     }
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-    const total = await Transaction.countDocuments(query);
+    let transactions = [];
+    let total = 0;
 
-    const transactions = await Transaction.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
+    if (exportExcel === "true") {
+      transactions = await Transaction.find(query).sort({ createdAt: -1 });
+      total = transactions.length;
+    } else {
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      total = await Transaction.countDocuments(query);
+
+      transactions = await Transaction.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit));
+    }
+
+    if (exportExcel === "true") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Customer Transactions");
+
+      worksheet.columns = [
+        { header: "S No.", key: "sno", width: 6 },
+        { header: "Invoice No", key: "invoiceNo", width: 20 },
+        { header: "Bill Amount (₹)", key: "billAmount", width: 15 },
+        { header: "Paid Amount (₹)", key: "paidAmount", width: 20 },
+        { header: "Used Coins", key: "usedCoins", width: 10 },
+        { header: "Total Paid (₹)", key: "totalPaid", width: 15 },
+        { header: "Wallet (₹)", key: "wallet", width: 15 },
+        { header: "Payment Methods", key: "paymentMethods", width: 20 },
+        { header: "New Coins", key: "newCoins", width: 15 },
+      ];
+
+      worksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "4F81BD" },
+        };
+        cell.alignment = { vertical: "middle", horizontal: "center" };
+      });
+
+      const formatCurrency = (num) =>
+        "₹ " +
+        Number(num || 0).toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+
+      transactions.forEach((txn, idx) => {
+        worksheet.addRow({
+          sno: idx + 1,
+          invoiceNo: txn.invoiceNo && txn.billAmount ? (txn.invoiceNo) : "--",
+          billAmount: txn.invoiceNo && txn.billAmount ? formatCurrency(txn.billAmount) : "--",
+          paidAmount: txn.paymentMethods.length ? txn.paymentMethods.map((m) => formatCurrency(m.amount || 0)).join(" + ") : "₹ 0.00",
+          usedCoins: txn.usedCoins || "0",
+          totalPaid: formatCurrency(txn.paidAmount + (txn.usedCoins || 0)),
+          wallet: formatCurrency(txn.wallet || 0),
+          paymentMethods: txn.paymentMethods.map((m) => m.method).join(" + ") || "Unpaid",
+          newCoins: txn.generatedCoins || "0",
+        });
+      });
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=customer_${customer.name}_transactions.xlsx`
+      );
+
+      await workbook.xlsx.write(res);
+      return res.end();
+    }
 
     res.status(200).json({
       customer,
@@ -79,7 +143,9 @@ export const getCustomerTransactions = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching customer transactions:", error);
-    res.status(500).json({ message: "Server error while fetching transactions" });
+    res
+      .status(500)
+      .json({ message: "Server error while fetching transactions" });
   }
 };
 
