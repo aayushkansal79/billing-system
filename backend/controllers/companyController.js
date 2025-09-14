@@ -35,20 +35,27 @@ export const createCompany = async (req, res) => {
             return res.status(400).json({ error: "Company state is required." });
         }
 
-        // Check for duplicates by name, shortName, contactPhone, or gstNumber
-        const existingCompany = await Company.findOne({
-            $or: [
-                { name: name.trim() },
-                { shortName: shortName.trim() },
-                { contactPhone: contactPhone?.trim() },
-                { gstNumber: gstNumber?.trim() }
-            ]
-        });
+        const duplicateFields = [];
 
-        if (existingCompany) {
+        const nameExists = await Company.findOne({ name: name.trim() });
+        if (nameExists) duplicateFields.push("Company Name");
+
+        const shortNameExists = await Company.findOne({ shortName: shortName.trim() });
+        if (shortNameExists) duplicateFields.push("Short Name");
+
+        if (contactPhone?.trim()) {
+            const phoneExists = await Company.findOne({ contactPhone: contactPhone.trim() });
+            if (phoneExists) duplicateFields.push("Contact No.");
+        }
+
+        if (gstNumber?.trim()) {
+            const gstExists = await Company.findOne({ gstNumber: gstNumber.trim() });
+            if (gstExists) duplicateFields.push("GST Number");
+        }
+
+        if (duplicateFields.length > 0) {
             return res.status(400).json({
-                error: "Company already exists",
-                existingCompany,
+                error: `${duplicateFields.join(", ")} already exists.`,
             });
         }
 
@@ -70,6 +77,7 @@ export const createCompany = async (req, res) => {
         res.status(500).json({ error: "Internal server error." });
     }
 };
+
 
 
 
@@ -126,7 +134,7 @@ export const getAllCompanies = async (req, res) => {
       address,
       broker,
       page = 1,
-      limit = 10,
+      limit = 50,
       exportExcel,
     } = req.query;
 
@@ -353,7 +361,7 @@ export const updateACompany = async (req, res) => {
 
 export const getCompanyWiseReport = async (req, res) => {
   try {
-    const { name, mobile, state, page = 1, limit = 10, exportExcel } = req.query;
+    const { name, mobile, state, page = 1, limit = 50, exportExcel } = req.query;
 
     const purchases = await Purchase.find().populate("company", "name contactPhone state");
 

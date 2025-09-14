@@ -26,7 +26,7 @@ export const getCustomerTransactions = async (req, res) => {
     const customerId = req.params.customerId;
     const {
       page = 1,
-      limit = 10,
+      limit = 50,
       invoiceNo,
       startDate,
       endDate,
@@ -158,8 +158,12 @@ export const getCustomerTransactionsUnpaid = async (req, res) => {
             return res.status(404).json({ message: "Customer not found" });
         }
 
-        const transactions = await Transaction.find({ customerId, paymentStatus: { $ne: "paid" }, })
-            .sort({ createdAt: 1 }); // oldest first
+        const transactions = await Transaction.find({ 
+            customerId,
+            paymentStatus: { $ne: "paid" },
+            billAmount: { $exists: true, $ne: null, $gt: 0 }
+        })
+        .sort({ createdAt: 1 });
 
         res.status(200).json({ customer, transactions });
     } catch (error) {
@@ -167,6 +171,7 @@ export const getCustomerTransactionsUnpaid = async (req, res) => {
         res.status(500).json({ message: "Server error while fetching transactions" });
     }
 };
+
 
 export const payMultipleTransactions = async (req, res) => {
   try {

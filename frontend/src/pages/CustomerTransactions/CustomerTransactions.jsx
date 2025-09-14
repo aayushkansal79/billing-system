@@ -157,7 +157,7 @@ const CustomerTransactions = ({ url }) => {
             dateFormat="dd/MM/yyyy"
           />
         </div>
-        <div className="col-md-1">
+        <div className="col-md-2">
           <label className="form-label">Download Excel:</label>
           <br />
           <button

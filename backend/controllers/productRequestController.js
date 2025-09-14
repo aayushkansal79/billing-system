@@ -57,7 +57,7 @@ export const getProductRequests = async (req, res) => {
 
     const {
       page = 1,
-      limit = 10,
+      limit = 50,
       startDate,
       endDate,
     } = req.query;
@@ -125,7 +125,7 @@ export const getProductRequestsSent = async (req, res) => {
 
         const {
         page = 1,
-        limit = 10,
+        limit = 50,
         startDate,
         endDate,
         } = req.query;
@@ -190,7 +190,7 @@ export const getProductRequestsRecieved = async (req, res) => {
 
         const {
         page = 1,
-        limit = 10,
+        limit = 50,
         startDate,
         endDate,
         } = req.query;

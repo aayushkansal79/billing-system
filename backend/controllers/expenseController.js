@@ -66,7 +66,7 @@ export const getAllExpenses = async (req, res) => {
   try {
     let {
       page = 1,
-      limit = 10,
+      limit = 50,
       storeUsername,
       field,
       subhead,

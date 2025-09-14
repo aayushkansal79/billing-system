@@ -167,6 +167,15 @@ const Companies = ({ url }) => {
           />
         </div>
         <div className="col-md-2">
+          <label className="form-label">State:</label>
+          <input
+            className="form-control"
+            placeholder="Vendor State"
+            value={filters.state}
+            onChange={(e) => setFilters({ ...filters, state: e.target.value })}
+          />
+        </div>
+        <div className="col-md-2">
           <label className="form-label">Address:</label>
           <input
             className="form-control"
@@ -178,23 +187,14 @@ const Companies = ({ url }) => {
           />
         </div>
         <div className="col-md-2">
-          <label className="form-label">State:</label>
-          <input
-            className="form-control"
-            placeholder="Vendor State"
-            value={filters.state}
-            onChange={(e) => setFilters({ ...filters, state: e.target.value })}
-          />
-        </div>
-        <div className="col-md-2">
           <label className="form-label">Contact Number:</label>
           <input
             type="number"
             className="form-control"
             placeholder="Contact Number"
-            value={filters.contactNumber}
+            value={filters.contactPhone}
             onChange={(e) =>
-              setFilters({ ...filters, contactNumber: e.target.value })
+              setFilters({ ...filters, contactPhone: e.target.value })
             }
           />
         </div>

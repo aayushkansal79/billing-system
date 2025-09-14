@@ -2,7 +2,7 @@ import Purchase from "../models/Purchase.js";
 import Product from "../models/Product.js";
 import PurchaseReturn from "../models/PurchaseReturn.js";
 import Company from "../models/Company.js";
-import { getNextPurchaseReturnNumber } from "./counterController.js";
+import { getNextNumber } from "./counterController.js";
 import ExcelJS from "exceljs";
 
 // export const getPurchaseByInvoice = async (req, res) => {
@@ -219,7 +219,7 @@ export const createPurchaseReturn = async (req, res) => {
       );
     }
 
-    const purchaseReturnNo = await getNextPurchaseReturnNumber();
+    const purchaseReturnNo = await getNextNumber("purchasereturn");
 
     const purchaseReturn = new PurchaseReturn({
       purchaseReturnNo,
@@ -255,7 +255,7 @@ export const getAllPurchaseReturns = async (req, res) => {
       startDate,
       endDate,
       page = 1,
-      limit = 10,
+      limit = 50,
       exportExcel,
     } = req.query;
 
@@ -296,11 +296,11 @@ export const getAllPurchaseReturns = async (req, res) => {
         .populate("products.product", "name type hsn")
         .sort({ date: -1 });
     } else {
-      const parsedLimit = Number(limit) > 0 ? parseInt(limit) : 10;
+      const parsedLimit = Number(limit) > 0 ? parseInt(limit) : 50;
       const skip = (parseInt(page) - 1) * parsedLimit;
 
       purchaseReturns = await PurchaseReturn.find(query)
-        .populate("company", "name shortName city contactPhone gstNumber state address")
+        .populate("company", "name shortName city contactPhone gstNumber state address broker")
         .populate("products.product", "name type hsn")
         .sort({ date: -1 })
         .skip(skip)

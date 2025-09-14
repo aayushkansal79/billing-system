@@ -81,6 +81,8 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
           Contact: {company?.contactPhone}
           <br />
           GST: {company?.gstNumber}
+          <br />
+          Broker: {company?.broker}
         </div>
         <div className="text-end">
           <b>PURCHASER INFORMATION</b>

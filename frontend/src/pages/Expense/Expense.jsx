@@ -336,7 +336,7 @@ const Expense = ({ url }) => {
           </select>
         </div>
 
-        <div className="col-md-1">
+        <div className="col-md-2">
           <label className="form-label">Download Excel:</label>
           <br />
           <button

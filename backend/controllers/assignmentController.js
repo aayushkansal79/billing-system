@@ -38,7 +38,7 @@ export const getAllAssignments = async (req, res) => {
       dispatchStartDate,
       dispatchEndDate,
       page = 1,
-      limit = 10,
+      limit = 50,
     } = req.query;
 
     const query = {};

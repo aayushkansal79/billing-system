@@ -517,6 +517,16 @@ const Billing = ({ url, setSidebarOpen }) => {
       return acc + (isNaN(amt) ? 0 : amt);
     }, 0);
     setPaidAmount(sum);
+    if (
+      sum >
+      Math.round(
+        parseFloat(grandTotal) -
+          parseFloat(customer?.pendingAmount) -
+          (usedCoins || 0)
+      )
+    ) {
+      toast.info("Paid amount exceeds total payable amount.");
+    }
   }, [paymentMethods]);
 
   const handleSubmit = async (e) => {
@@ -790,6 +800,18 @@ const Billing = ({ url, setSidebarOpen }) => {
                 />
               </div>
 
+              <div className="col-md-1">
+                <label className="form-label">City</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter City"
+                  value={customer.city}
+                  onChange={(e) =>
+                    setCustomer({ ...customer, city: e.target.value })
+                  }
+                />
+              </div>
               <div className="col-md-2">
                 <label className="form-label">State*</label>
                 <Select
@@ -805,18 +827,6 @@ const Billing = ({ url, setSidebarOpen }) => {
                   }
                   className="basic-single-select"
                   classNamePrefix="select"
-                />
-              </div>
-              <div className="col-md-1">
-                <label className="form-label">City</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Enter City"
-                  value={customer.city}
-                  onChange={(e) =>
-                    setCustomer({ ...customer, city: e.target.value })
-                  }
                 />
               </div>
               <div className="col-md-2">
@@ -1113,9 +1123,7 @@ const Billing = ({ url, setSidebarOpen }) => {
                   </h6>
                 )}
                 {parseFloat(customer?.pendingAmount) > 0 && (
-                  <h6 className="text-success fw-bold">
-                    Wallet Amounts (-)
-                  </h6>
+                  <h6 className="text-success fw-bold">Wallet Amounts (-)</h6>
                 )}
                 {usedCoins > 0 && (
                   <h6 className="text-success fw-bold">Coins Used (-)</h6>
@@ -1267,7 +1275,10 @@ const Billing = ({ url, setSidebarOpen }) => {
                     id="unpaidRadio"
                     value="unpaid"
                     checked={paymentStatus === "unpaid"}
-                    onChange={(e) => setPaymentStatus(e.target.value)}
+                    onChange={(e) => {
+                      setPaymentStatus(e.target.value);
+                      setPaymentMethods([{ method: "", amount: "" }]);
+                    }}
                   />
                   <label className="form-check-label" htmlFor="unpaidRadio">
                     Unpaid

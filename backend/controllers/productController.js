@@ -2,7 +2,7 @@ import Product from "../models/Product.js";
 import StoreProduct from "../models/StoreProduct.js";
 import Assignment from "../models/Assignment.js";
 import Store from "../models/Store.js"
-import { getNextAssignmentNumber } from "./counterController.js";
+import { getNextNumber } from "./counterController.js";
 import Purchase from "../models/Purchase.js";
 import mongoose from "mongoose";
 import ExcelJS from "exceljs";
@@ -83,7 +83,7 @@ export const getAllProducts = async (req, res) => {
       startDate,
       endDate,
       page = 1,
-      limit = 10,
+      limit = 50,
       exportExcel,
     } = req.query;
 
@@ -113,9 +113,9 @@ export const getAllProducts = async (req, res) => {
     let total;
 
     if (exportExcel === "true") {
-      products = await Product.find(query).sort({ updatedAt: -1 });
+      products = await Product.find(query).sort({ lastPurchaseDate: -1 });
     } else {
-      const parsedLimit = Number(limit) > 0 ? parseInt(limit) : 10;
+      const parsedLimit = Number(limit) > 0 ? parseInt(limit) : 50;
       const skip = (parseInt(page) - 1) * parsedLimit;
 
       [products, total] = await Promise.all([
@@ -217,7 +217,7 @@ export const getOutOfStockProducts = async (req, res) => {
     // Search & pagination params
     const search = req.query.search || "";
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 50;
     const skip = (page - 1) * limit;
 
     // Fetch all stores (admins will be treated as 'warehouse')
@@ -384,7 +384,7 @@ export const assignProducts = async (req, res) => {
         }
       }
 
-      const assignmentNo = await getNextAssignmentNumber();
+      const assignmentNo = await getNextNumber("assignment");
 
       const assignment = new Assignment({
         assignmentNo,
@@ -405,7 +405,7 @@ export const assignProducts = async (req, res) => {
 
 export const getAllProductsWithVendors = async (req, res) => {
   try {
-    const { search, page = 1, limit = 10, exportExcel } = req.query;
+    const { search, page = 1, limit = 50, exportExcel } = req.query;
 
     const purchases = await Purchase.find()
       .sort({ createdAt: -1 })

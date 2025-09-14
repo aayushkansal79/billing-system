@@ -106,6 +106,8 @@ const InvoiceContent = React.forwardRef(function InvoiceContent(
           Contact: {company?.contactPhone}
           <br />
           GST: {company?.gstNumber}
+          <br />
+          Broker: {company?.broker}
         </div>
         <div className="text-end">
           <b>PURCHASER INFORMATION</b>
@@ -364,6 +366,7 @@ const Order = ({ url }) => {
 
         setPurchases(res.data.data);
         setTotalPages(res.data.totalPages);
+        setCurrentPage(res.data.currentPage);
       } catch (err) {
         console.error(err);
         toast.error("Failed to fetch purchases.");
@@ -552,9 +555,9 @@ const Order = ({ url }) => {
             type="number"
             className="form-control"
             placeholder="Contact Number"
-            value={filters.contactNumber}
+            value={filters.contactPhone}
             onChange={(e) =>
-              setFilters({ ...filters, contactNumber: e.target.value })
+              setFilters({ ...filters, contactPhone: e.target.value })
             }
           />
         </div>

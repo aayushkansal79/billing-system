@@ -306,7 +306,7 @@ const Customer = ({ url }) => {
             <option value="more">Wallet Amount &gt; 0</option>
           </select>
         </div>
-        <div className="col-md-1">
+        <div className="col-md-2">
           <label className="form-label">Download Excel:</label>
           <br />
           <button

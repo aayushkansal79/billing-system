@@ -103,7 +103,7 @@ function App() {
               <Route path="/product-report" element={<PrivateRoute roles={["admin"]}> <ProductReport url={url} /> </PrivateRoute>} />
               <Route path="/product-report/:productId/history" element={<PrivateRoute roles={["admin"]}> <ProductHistory url={url} /> </PrivateRoute>} />
               <Route path="/vendor-report" element={<PrivateRoute roles={["admin"]}> <VendorReport url={url} /> </PrivateRoute>} />
-              <Route path="/vendors/:companyId/products" element={<PrivateRoute roles={["admin"]}> <VendorProducts url={url} /> </PrivateRoute>} />
+              <Route path="/vendor-report/:companyId/products" element={<PrivateRoute roles={["admin"]}> <VendorProducts url={url} /> </PrivateRoute>} />
               <Route path="/bill-report" element={<PrivateRoute roles={["admin"]}> <BillReport url={url} /> </PrivateRoute>} />
               <Route path="/profile" element={<PrivateRoute roles={["admin"]}> <Profile url={url} /> </PrivateRoute>} />
               <Route path="/change-password" element={<PrivateRoute roles={["admin", "store"]}> <ChangePass url={url} /> </PrivateRoute>} />

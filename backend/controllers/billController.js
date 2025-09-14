@@ -2,7 +2,7 @@ import Bill from "../models/Bill.js";
 import Customer from "../models/Customer.js";
 import Transaction from "../models/Transaction.js";
 import StoreProduct from "../models/StoreProduct.js";
-import { getNextInvoiceNumber } from "../controllers/counterController.js";
+import { getNextNumber } from "../controllers/counterController.js";
 import Store from "../models/Store.js";
 import Purchase from "../models/Purchase.js";
 import mongoose from "mongoose";
@@ -69,7 +69,7 @@ export const createBill = async (req, res) => {
       return entry.method && entry.method.trim() !== "" && entry.amount && !isNaN(entry.amount);
     });
 
-    const invoiceNumber = await getNextInvoiceNumber();
+    const invoiceNumber = await getNextNumber("invoice");
     const roundedTotalAmount = Math.round(totalAmount);
 
     const newBill = new Bill({
@@ -231,7 +231,7 @@ export const getAllBills = async (req, res) => {
       startDate,
       endDate,
       page = 1,
-      limit = 10,
+      limit = 50,
       exportExcel,
     } = req.query;
 
@@ -556,7 +556,7 @@ export const getStoreWiseBillStats = async (req, res) => {
 
 export const getBillsReport = async (req, res) => {
   try {
-    const { search, page = 1, limit = 10, startDate, endDate, exportExcel } = req.query;
+    const { search, page = 1, limit = 50, startDate, endDate, exportExcel } = req.query;
 
     const query = {};
 

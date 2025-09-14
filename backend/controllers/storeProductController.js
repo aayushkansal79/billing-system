@@ -143,7 +143,7 @@ export const getStoreProducts = async (req, res) => {
     const storeId = req.store.id;
     const {
       page = 1,
-      limit = 10,
+      limit = 50,
       productName,
       barcode,
       quantity,

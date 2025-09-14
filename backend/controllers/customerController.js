@@ -53,7 +53,7 @@ export const getAllCustomers = async (req, res) => {
       pendingCondition,
       pendingValue = 0,
       page = 1,
-      limit = 10,
+      limit = 50,
       exportExcel,
     } = req.query;
 

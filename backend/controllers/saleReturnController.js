@@ -3,7 +3,7 @@ import SaleReturn from "../models/SaleReturn.js";
 import StoreProduct from "../models/StoreProduct.js";
 import Customer from "../models/Customer.js";
 import Transaction from "../models/Transaction.js";
-import { getNextSaleReturnNumber } from "./counterController.js";
+import { getNextNumber } from "./counterController.js";
 import ExcelJS from "exceljs";
 
 export const getBillByInvoice = async (req, res) => {
@@ -120,7 +120,7 @@ export const createSaleReturn = async (req, res) => {
       await customerDoc.save();
     }
 
-    const saleReturnNo = await getNextSaleReturnNumber();
+    const saleReturnNo = await getNextNumber("salereturn");
 
     const saleReturn = new SaleReturn({
       saleReturnNo,
@@ -167,7 +167,7 @@ export const getAllSaleReturns = async (req, res) => {
   try {
     let {
       page = 1,
-      limit = 10,
+      limit = 50,
       saleReturnNo,
       invoiceNumber,
       customerName,

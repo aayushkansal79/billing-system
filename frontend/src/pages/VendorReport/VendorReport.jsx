@@ -71,7 +71,7 @@ const VendorReport = ({ url }) => {
   };
 
   const handleVendorClick = (id) => {
-    navigate(`/vendors/${id}/products`);
+    navigate(`/vendor-report/${id}/products`);
   };
 
   const handleDownloadExcel = async () => {
@@ -111,7 +111,7 @@ const VendorReport = ({ url }) => {
 
   return (
     <>
-      <p className="bread">Vendors</p>
+      <p className="bread">Vendor Report</p>
 
       <div className="search row g-2 mb-4 px-2">
         <div className="col-md-2">
@@ -123,7 +123,7 @@ const VendorReport = ({ url }) => {
             onChange={(e) => setFilters({ ...filters, name: e.target.value })}
           />
         </div>
-        <div className="col-md-2">
+        {/* <div className="col-md-2">
           <label className="form-label">Mobile:</label>
           <input
             className="form-control"
@@ -131,8 +131,8 @@ const VendorReport = ({ url }) => {
             value={filters.mobile}
             onChange={(e) => setFilters({ ...filters, mobile: e.target.value })}
           />
-        </div>
-        <div className="col-md-2">
+        </div> */}
+        {/* <div className="col-md-2">
           <label className="form-label">State:</label>
           <input
             className="form-control"
@@ -140,8 +140,8 @@ const VendorReport = ({ url }) => {
             value={filters.state}
             onChange={(e) => setFilters({ ...filters, state: e.target.value })}
           />
-        </div>
-        <div className="col-md-1">
+        </div> */}
+        <div className="col-md-2">
           <label className="form-label">Download Excel:</label>
           <br />
           <button

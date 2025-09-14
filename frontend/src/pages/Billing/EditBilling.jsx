@@ -10,14 +10,13 @@ import { AuthContext } from "../../context/AuthContext";
 import { useParams, useNavigate } from "react-router-dom";
 
 const EditBilling = ({ url }) => {
-    
   useEffect(() => {
     document.title = "Edit Billing | Ajjawam";
   }, []);
 
-    const { id } = useParams();
-    const navigate = useNavigate();
-    
+  const { id } = useParams();
+  const navigate = useNavigate();
+
   // setSidebarOpen(false);
   const [loading, setLoading] = useState(false);
   const componentRef = useRef();
@@ -127,8 +126,8 @@ const EditBilling = ({ url }) => {
   ];
 
   const quantityRefs = useRef([]);
-    
-    useEffect(() => {
+
+  useEffect(() => {
     const fetchBill = async () => {
       try {
         const { data } = await axios.get(`${url}/api/bill/${id}`, {
@@ -147,33 +146,35 @@ const EditBilling = ({ url }) => {
           coins: bill.customer?.coins || 0,
           pendingAmount: bill.customer?.pendingAmount || 0,
         });
-            
+
         // Always append one empty row
-          setProducts([
-            ...(bill.products || []),
-            {
-              product: null,
-              productName: "",
-              type: "",
-              hsn: "",
-              quantity: "",
-              priceBeforeGst: "",
-              discountMethod: "percentage",
-              discount: "",
-              priceAfterDiscount: "",
-              discountAmt: "",
-              gstPercentage: "",
-              finalPrice: "",
-              total: "",
-            },
-          ]);
-          
+        setProducts([
+          ...(bill.products || []),
+          {
+            product: null,
+            productName: "",
+            type: "",
+            hsn: "",
+            quantity: "",
+            priceBeforeGst: "",
+            discountMethod: "percentage",
+            discount: "",
+            priceAfterDiscount: "",
+            discountAmt: "",
+            gstPercentage: "",
+            finalPrice: "",
+            total: "",
+          },
+        ]);
+
         //setProducts(bill.products || []);
         setDiscountMethod(bill.discountMethod || "percentage");
         setDiscountValue(bill.discount || 0);
         setPaymentStatus(bill.paymentStatus || "");
         setPaymentMethods(
-          bill.paymentMethods?.length ? bill.paymentMethods : [{ method: "", amount: "" }]
+          bill.paymentMethods?.length
+            ? bill.paymentMethods
+            : [{ method: "", amount: "" }]
         );
         setPaidAmount(bill.paidAmount || 0);
         setUsedCoins(bill.usedCoins || 0);
@@ -186,7 +187,7 @@ const EditBilling = ({ url }) => {
 
     fetchBill();
   }, [id, url, token, navigate]);
-        
+
   useEffect(() => {
     quantityRefs.current = quantityRefs.current.slice(0, products.length);
   }, [products.length]);
@@ -581,6 +582,16 @@ const EditBilling = ({ url }) => {
       return acc + (isNaN(amt) ? 0 : amt);
     }, 0);
     setPaidAmount(sum);
+    if (
+      sum >
+      Math.round(
+        parseFloat(grandTotal) -
+          parseFloat(customer?.pendingAmount) -
+          (usedCoins || 0)
+      )
+    ) {
+      toast.info("Paid amount exceeds total payable amount.");
+    }
   }, [paymentMethods]);
 
   const handleSubmit = async (e) => {
@@ -854,6 +865,18 @@ const EditBilling = ({ url }) => {
                 />
               </div>
 
+              <div className="col-md-1">
+                <label className="form-label">City</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter City"
+                  value={customer.city}
+                  onChange={(e) =>
+                    setCustomer({ ...customer, city: e.target.value })
+                  }
+                />
+              </div>
               <div className="col-md-2">
                 <label className="form-label">State*</label>
                 <Select
@@ -869,18 +892,6 @@ const EditBilling = ({ url }) => {
                   }
                   className="basic-single-select"
                   classNamePrefix="select"
-                />
-              </div>
-              <div className="col-md-1">
-                <label className="form-label">City</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Enter City"
-                  value={customer.city}
-                  onChange={(e) =>
-                    setCustomer({ ...customer, city: e.target.value })
-                  }
                 />
               </div>
               <div className="col-md-2">
@@ -1177,9 +1188,7 @@ const EditBilling = ({ url }) => {
                   </h6>
                 )}
                 {parseFloat(customer?.pendingAmount) > 0 && (
-                  <h6 className="text-success fw-bold">
-                    Wallet Amounts (-)
-                  </h6>
+                  <h6 className="text-success fw-bold">Wallet Amounts (-)</h6>
                 )}
                 {usedCoins > 0 && (
                   <h6 className="text-success fw-bold">Coins Used (-)</h6>
@@ -1331,7 +1340,10 @@ const EditBilling = ({ url }) => {
                     id="unpaidRadio"
                     value="unpaid"
                     checked={paymentStatus === "unpaid"}
-                    onChange={(e) => setPaymentStatus(e.target.value)}
+                    onChange={(e) => {
+                      setPaymentStatus(e.target.value);
+                      setPaymentMethods([{ method: "", amount: "" }]);
+                    }}
                   />
                   <label className="form-check-label" htmlFor="unpaidRadio">
                     Unpaid

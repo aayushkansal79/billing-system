@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./Profile.css";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Loader from "../../components/Loader/Loader";
@@ -13,9 +14,13 @@ const Profile = ({ url }) => {
   const [favicon, setFavicon] = useState(null);
   const [faviconPreview, setFaviconPreview] = useState(null);
 
+  useEffect(() => {
+    document.title = "Profile | Ajjawam";
+  }, []);
+
   const token =
     sessionStorage.getItem("token") || localStorage.getItem("token");
-  
+
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
@@ -32,6 +37,52 @@ const Profile = ({ url }) => {
     Thankyou: "",
     RefundNote: "",
   });
+
+  const [prefixes, setPrefixes] = useState({
+    invoicePrefix: "",
+    assignmentPrefix: "",
+    saleReturnPrefix: "",
+    purchaseReturnPrefix: "",
+  });
+
+  const handlePrefixChange = (e) => {
+    setPrefixes({ ...prefixes, [e.target.name]: e.target.value });
+  };
+
+  const submitPrefixes = async () => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This will update all prefixes and reset sequences to '0' if they have changed.",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, update them!",
+      cancelButtonText: "Cancel",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await axios.post(`${url}/api/counter`, prefixes, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success("Prefixes Updated!");
+      } catch (err) {
+        console.error("Error updating prefixes:", err);
+        toast.error("Failed to update prefixes.");
+      }
+    }
+  };
+
+  useEffect(() => {
+    const fetchPrefixes = async () => {
+      const response = await axios.get(`${url}/api/counter`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPrefixes(response.data);
+    };
+
+    fetchPrefixes();
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -55,9 +106,9 @@ const Profile = ({ url }) => {
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      if(form.tagTitle.length > 20){
-        toast.error("Tag Title length is more than 20!")
-        return
+      if (form.tagTitle.length > 20) {
+        toast.error("Tag Title length is more than 20!");
+        return;
       }
       await axios.post(`${url}/api/profile`, form, {
         headers: { Authorization: `Bearer ${token}` },
@@ -65,7 +116,7 @@ const Profile = ({ url }) => {
       toast.success("Profile Updated!");
     } catch (err) {
       toast.error("Failed to save profile");
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -104,83 +155,6 @@ const Profile = ({ url }) => {
     <>
       <p className="bread">Profile</p>
       <div className="profile row g-3">
-        {/* <div className="mt-4 col-md-6">
-          <label className="mb-3">Website Header Logo *</label>
-
-          <div className="mb-3">
-            <input
-              type="file"
-              className="form-control"
-              accept="image/*"
-              onChange={handleChangeImg}
-            />
-          </div>
-
-          {previewUrl && (
-            <div className="card w-100">
-              <img
-                src={previewUrl}
-                alt="Preview"
-                className="card-img-top"
-                style={{ objectFit: "contain", maxHeight: "200px" }}
-              />
-              <div className="card-body text-center">
-            <button className="btn btn-danger me-2" onClick={handleRemove}>
-            Remove
-            </button>
-            <button className="btn btn-success" onClick={() => alert("Upload logic here!")}>
-            Upload
-            </button>
-          </div>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-4 col-md-6">
-          <label className="mb-3">Website Favicon *</label>
-
-          <div className="mb-3">
-            <input
-              type="file"
-              className="form-control"
-              accept="image/*"
-              onChange={handleChangeImg}
-            />
-          </div>
-
-          {previewUrl && (
-            <div className="card w-100">
-              <img
-                src={previewUrl}
-                alt="Preview"
-                className="card-img-top"
-                style={{ objectFit: "contain", maxHeight: "200px" }}
-              />
-              <div className="card-body text-center">
-            <button className="btn btn-danger me-2" onClick={handleRemove}>
-              Remove
-              </button>
-            <button className="btn btn-success" onClick={() => alert("Upload logic here!")}>
-            Upload
-            </button>
-          </div>
-            </div>
-          )}
-        </div> */}
-
-        {/* <div className="col-md-3">
-          <label className="form-label">Website Title*</label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Enter Website Title"
-            name="websiteTitle"
-            value={form.websiteTitle}
-            onChange={handleChange}
-            required
-          />
-        </div> */}
-
         <div className="col-md-3">
           <label className="form-label">Website Address*</label>
           <input
@@ -323,8 +297,66 @@ const Profile = ({ url }) => {
             Save Changes
           </button>
         </div>
+
+        <div className="col-md-3">
+          <label className="form-label">Invoice Prefix*</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter Invoice Prefix"
+            name="invoicePrefix"
+            value={prefixes.invoicePrefix}
+            onChange={handlePrefixChange}
+          />
+        </div>
+
+        <div className="col-md-3">
+          <label className="form-label">Assignment Prefix*</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter Assignment Prefix"
+            name="assignmentPrefix"
+            value={prefixes.assignmentPrefix}
+            onChange={handlePrefixChange}
+          />
+        </div>
+
+        <div className="col-md-3">
+          <label className="form-label">Sale Return Prefix*</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter Sale Return Prefix"
+            name="saleReturnPrefix"
+            value={prefixes.saleReturnPrefix}
+            onChange={handlePrefixChange}
+          />
+        </div>
+
+        <div className="col-md-3">
+          <label className="form-label">Purchase Return Prefix*</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter Purchase Return Prefix"
+            name="purchaseReturnPrefix"
+            value={prefixes.purchaseReturnPrefix}
+            onChange={handlePrefixChange}
+          />
+        </div>
+
+        <div className="col-12">
+          <button
+            type="submit"
+            className="btn btn-primary"
+            onClick={submitPrefixes}
+          >
+            Update Prefixes
+          </button>
+        </div>
       </div>
-      
+
       {loading && <Loader />}
     </>
   );

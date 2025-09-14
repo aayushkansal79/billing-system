@@ -18,6 +18,7 @@ import masterSearchRoutes from './routes/masterSearchRoutes.js';
 import productRequestRoutes from './routes/productRequestRoutes.js'
 import expenseRoutes from './routes/expenseRoutes.js'
 import profileRoutes from './routes/profileRoutes.js'
+import counterRoutes from './routes/counterRoutes.js';
 
 // app config
 const app = express();
@@ -49,6 +50,7 @@ app.use("/api/master-search", masterSearchRoutes);
 app.use("/api/product-requests", productRequestRoutes);
 app.use("/api/expense", expenseRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/counter", counterRoutes);
 
 // database connection
 mongoose.connect(process.env.MONGO_URI)
