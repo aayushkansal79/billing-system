@@ -36,7 +36,7 @@ const Customer = ({ url }) => {
     city: "",
     pendingCondition: "",
     page: 1,
-    limit: 10,
+    limit: 50,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -210,36 +210,36 @@ const Customer = ({ url }) => {
   };
 
   const handleDownloadExcel = async () => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams();
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== "") {
-            params.append(key, String(value).trim());
-          }
-        });
-  
-        params.append("exportExcel", "true");
-  
-        const res = await axios.get(`${url}/api/customer?${params.toString()}`, {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: "blob",
-        });
-  
-        const blob = new Blob([res.data], {
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        });
-        const link = document.createElement("a");
-        link.href = window.URL.createObjectURL(blob);
-        link.download = `Customers.xlsx`;
-        link.click();
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to download Excel");
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          params.append(key, String(value).trim());
+        }
+      });
+
+      params.append("exportExcel", "true");
+
+      const res = await axios.get(`${url}/api/customer?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      });
+
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.download = `Customers.xlsx`;
+      link.click();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to download Excel");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -252,7 +252,10 @@ const Customer = ({ url }) => {
             className="form-control"
             placeholder="Customer Name"
             value={filters.name}
-            onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, name: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -261,7 +264,10 @@ const Customer = ({ url }) => {
             className="form-control"
             placeholder="Mobile Number"
             value={filters.mobile}
-            onChange={(e) => setFilters({ ...filters, mobile: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, mobile: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -270,7 +276,10 @@ const Customer = ({ url }) => {
             className="form-control"
             placeholder="City"
             value={filters.city}
-            onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, city: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -279,7 +288,10 @@ const Customer = ({ url }) => {
             className="form-control"
             placeholder="State"
             value={filters.state}
-            onChange={(e) => setFilters({ ...filters, state: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, state: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -288,7 +300,10 @@ const Customer = ({ url }) => {
             className="form-control"
             placeholder="GST"
             value={filters.gst}
-            onChange={(e) => setFilters({ ...filters, gst: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, gst: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -296,9 +311,10 @@ const Customer = ({ url }) => {
           <select
             className="form-select"
             value={filters.pendingCondition}
-            onChange={(e) =>
-              setFilters({ ...filters, pendingCondition: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, pendingCondition: e.target.value });
+              handlePageChange(1);
+            }}
           >
             <option value="">Select Condition</option>
             <option value="less">Wallet Amount &lt; 0</option>

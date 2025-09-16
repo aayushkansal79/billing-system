@@ -21,7 +21,7 @@ const StoreProducts = ({ url }) => {
     quantity: "",
     quantityCondition: "",
     page: 1,
-    limit: 10,
+    limit: 50,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -94,9 +94,10 @@ const StoreProducts = ({ url }) => {
             className="form-control"
             placeholder="Product Name"
             value={filters.productName}
-            onChange={(e) =>
-              setFilters({ ...filters, productName: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, productName: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -105,9 +106,10 @@ const StoreProducts = ({ url }) => {
             className="form-control"
             placeholder="Product Barcode"
             value={filters.barcode}
-            onChange={(e) =>
-              setFilters({ ...filters, barcode: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, barcode: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -116,9 +118,10 @@ const StoreProducts = ({ url }) => {
             className="form-select"
             name="unitCon"
             value={filters.quantityCondition}
-            onChange={(e) =>
-              setFilters({ ...filters, quantityCondition: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, quantityCondition: e.target.value });
+              handlePageChange(1);
+            }}
           >
             <option value="">Select Condition</option>
             <option value="less">Less than or equals to</option>
@@ -132,9 +135,10 @@ const StoreProducts = ({ url }) => {
             className="form-control"
             placeholder="Product Quantity"
             value={filters.quantity}
-            onChange={(e) =>
-              setFilters({ ...filters, quantity: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, quantity: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
       </div>

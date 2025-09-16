@@ -44,7 +44,7 @@ const Expense = ({ url }) => {
     startDate: null,
     endDate: null,
     page: 1,
-    limit: 10,
+    limit: 50,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -290,7 +290,10 @@ const Expense = ({ url }) => {
             className="form-control"
             placeholder="Expense Field"
             value={filters.field}
-            onChange={(e) => setFilters({ ...filters, field: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, field: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -301,7 +304,10 @@ const Expense = ({ url }) => {
             startDate={filters.startDate}
             endDate={filters.endDate}
             selected={filters.startDate}
-            onChange={(date) => setFilters({ ...filters, startDate: date })}
+            onChange={(date) => {
+              setFilters({ ...filters, startDate: date });
+              handlePageChange(1);
+            }}
             maxDate={filters.endDate}
             placeholderText="Start Date"
             dateFormat="dd/MM/yyyy"
@@ -316,7 +322,10 @@ const Expense = ({ url }) => {
             startDate={filters.startDate}
             endDate={filters.endDate}
             selected={filters.endDate}
-            onChange={(date) => setFilters({ ...filters, endDate: date })}
+            onChange={(date) => {
+              setFilters({ ...filters, endDate: date });
+              handlePageChange(1);
+            }}
             minDate={filters.startDate}
             placeholderText="End Date"
             dateFormat="dd/MM/yyyy"
@@ -328,7 +337,10 @@ const Expense = ({ url }) => {
           <select
             className="form-select"
             value={filters.type}
-            onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, type: e.target.value });
+              handlePageChange(1);
+            }}
           >
             <option value="">Select..</option>
             <option value="credit">Credit</option>

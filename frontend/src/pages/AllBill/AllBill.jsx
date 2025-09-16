@@ -41,7 +41,7 @@ const AllBill = ({ url }) => {
     startDate: null,
     endDate: null,
     page: 1,
-    limit: 10,
+    limit: 50,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -196,9 +196,10 @@ const AllBill = ({ url }) => {
             className="form-control"
             placeholder="Invoice Number"
             value={filters.invoiceNumber}
-            onChange={(e) =>
-              setFilters({ ...filters, invoiceNumber: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, invoiceNumber: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -207,9 +208,10 @@ const AllBill = ({ url }) => {
             className="form-control"
             placeholder="Customer Name"
             value={filters.customerName}
-            onChange={(e) =>
-              setFilters({ ...filters, customerName: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, customerName: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -218,9 +220,10 @@ const AllBill = ({ url }) => {
             className="form-control"
             placeholder="Customer Mobile No."
             value={filters.mobileNo}
-            onChange={(e) =>
-              setFilters({ ...filters, mobileNo: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, mobileNo: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         {user?.type === "admin" && (
@@ -230,9 +233,10 @@ const AllBill = ({ url }) => {
               className="form-control"
               placeholder="Store Username"
               value={filters.storeUsername}
-              onChange={(e) =>
-                setFilters({ ...filters, storeUsername: e.target.value })
-              }
+              onChange={(e) => {
+                setFilters({ ...filters, storeUsername: e.target.value });
+                handlePageChange(1);
+              }}
             />
           </div>
         )}
@@ -242,9 +246,10 @@ const AllBill = ({ url }) => {
             className="form-select"
             placeholder="Payment Status"
             value={filters.paymentStatus}
-            onChange={(e) =>
-              setFilters({ ...filters, paymentStatus: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, paymentStatus: e.target.value });
+              handlePageChange(1);
+            }}
           >
             <option value="">Select Status</option>
             <option value="paid">Paid</option>
@@ -261,7 +266,10 @@ const AllBill = ({ url }) => {
             startDate={filters.startDate}
             endDate={filters.endDate}
             selected={filters.startDate}
-            onChange={(date) => setFilters({ ...filters, startDate: date })}
+            onChange={(date) => {
+              setFilters({ ...filters, startDate: date });
+              handlePageChange(1);
+            }}
             maxDate={filters.endDate}
             placeholderText="Start Date"
             dateFormat="dd/MM/yyyy"
@@ -276,7 +284,10 @@ const AllBill = ({ url }) => {
             startDate={filters.startDate}
             endDate={filters.endDate}
             selected={filters.endDate}
-            onChange={(date) => setFilters({ ...filters, endDate: date })}
+            onChange={(date) => {
+              setFilters({ ...filters, endDate: date });
+              handlePageChange(1);
+            }}
             minDate={filters.startDate}
             placeholderText="End Date"
             dateFormat="dd/MM/yyyy"

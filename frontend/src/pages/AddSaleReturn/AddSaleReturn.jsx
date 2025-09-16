@@ -80,8 +80,7 @@ const AddSaleReturn = ({ url }) => {
 
       // toast.success("Sale return processed successfully!");
       Swal.fire("Success", "Sale return processed successfully!", "success");
-
-      console.log(res.data);
+      setInvoice("");
       setBill(null);
       setReturnProducts([]);
       setReturnMethod("");

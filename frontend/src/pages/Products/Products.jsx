@@ -152,7 +152,7 @@ const Products = ({ url }) => {
     startDate: "",
     endDate: "",
     page: 1,
-    limit: 10,
+    limit: 50,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -188,7 +188,7 @@ const Products = ({ url }) => {
     setCurrentPage(page);
     setFilters((prev) => ({ ...prev, page }));
   };
-  
+
   const handleLimitChange = (limit) => {
     setFilters((prev) => ({ ...prev, limit }));
   };
@@ -211,11 +211,10 @@ const Products = ({ url }) => {
   const handleSave = async (id) => {
     setLoading(true);
     try {
-
-      if(editData.minUnit < 0 || editData.printPrice < 0){
+      if (editData.minUnit < 0 || editData.printPrice < 0) {
         toast.error("Enter correct values.");
         setLoading(false);
-        return
+        return;
       }
       await axios.put(`${url}/api/product/${id}`, editData, {
         headers: { Authorization: `Bearer ${token}` },
@@ -268,39 +267,36 @@ const Products = ({ url }) => {
   };
 
   const handleDownloadExcel = async () => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams();
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== "") {
-            params.append(key, String(value).trim());
-          }
-        });
-  
-        params.append("exportExcel", "true");
-  
-        const res = await axios.get(
-          `${url}/api/product?${params.toString()}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            responseType: "blob",
-          }
-        );
-  
-        const blob = new Blob([res.data], {
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        });
-        const link = document.createElement("a");
-        link.href = window.URL.createObjectURL(blob);
-        link.download = `Products.xlsx`;
-        link.click();
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to download Excel");
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          params.append(key, String(value).trim());
+        }
+      });
+
+      params.append("exportExcel", "true");
+
+      const res = await axios.get(`${url}/api/product?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      });
+
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.download = `Products.xlsx`;
+      link.click();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to download Excel");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -313,7 +309,10 @@ const Products = ({ url }) => {
             className="form-control"
             placeholder="Product Name"
             value={filters.name}
-            onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, name: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -322,9 +321,10 @@ const Products = ({ url }) => {
             className="form-control"
             placeholder="Product Barcode"
             value={filters.barcode}
-            onChange={(e) =>
-              setFilters({ ...filters, barcode: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, barcode: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -333,9 +333,10 @@ const Products = ({ url }) => {
             className="form-select"
             name="unitCon"
             value={filters.unitCon}
-            onChange={(e) =>
-              setFilters({ ...filters, unitCon: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, unitCon: e.target.value });
+              handlePageChange(1);
+            }}
           >
             <option value="">Select Condition</option>
             <option value="less">Less than or equals to</option>
@@ -349,7 +350,10 @@ const Products = ({ url }) => {
             className="form-control"
             placeholder="Product Quantity"
             value={filters.unit}
-            onChange={(e) => setFilters({ ...filters, unit: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, unit: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -360,7 +364,10 @@ const Products = ({ url }) => {
             startDate={filters.startDate}
             endDate={filters.endDate}
             selected={filters.startDate}
-            onChange={(date) => setFilters({ ...filters, startDate: date })}
+            onChange={(date) => {
+              setFilters({ ...filters, startDate: date });
+              handlePageChange(1);
+            }}
             maxDate={filters.endDate}
             placeholderText="Start Date"
             dateFormat="dd/MM/yyyy"
@@ -375,7 +382,10 @@ const Products = ({ url }) => {
             startDate={filters.startDate}
             endDate={filters.endDate}
             selected={filters.endDate}
-            onChange={(date) => setFilters({ ...filters, endDate: date })}
+            onChange={(date) => {
+              setFilters({ ...filters, endDate: date });
+              handlePageChange(1);
+            }}
             minDate={filters.startDate}
             placeholderText="End Date"
             dateFormat="dd/MM/yyyy"
@@ -567,7 +577,9 @@ const Products = ({ url }) => {
                 </th>
                 {/* <td>{new Date(product.createdAt).toLocaleDateString()}</td> */}
                 <td>
-                  {new Date(product.lastPurchaseDate).toLocaleDateString("en-GB")}
+                  {new Date(product.lastPurchaseDate).toLocaleDateString(
+                    "en-GB"
+                  )}
                 </td>
                 <td>
                   <div

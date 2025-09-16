@@ -240,7 +240,21 @@ const PurchaseReturn = ({ url }) => {
       Swal.fire("Success", "Purchase return submitted", "success");
       setSelectedCompany(null);
       setCompanySearch("");
-      setReturnProducts([{ name: "", productId: "", returnQty: "" }]);
+      setReturnProducts([
+        {
+          name: "",
+          productId: "",
+          type: "",
+          hsn: "",
+          quantity: "",
+          purchasePrice: "",
+          purchasePriceAfterDiscount: "",
+          gstPercentage: "",
+          sellingPrice: "",
+          printPrice: "",
+          returnQty: "",
+        },
+      ]);
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.error || "Failed to submit return");

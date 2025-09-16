@@ -25,7 +25,7 @@ const RequestsRecieved = ({ url }) => {
     startDate: "",
     endDate: "",
     page: 1,
-    limit: 10,
+    limit: 50,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -179,7 +179,10 @@ const RequestsRecieved = ({ url }) => {
             startDate={filters.startDate}
             endDate={filters.endDate}
             selected={filters.startDate}
-            onChange={(date) => setFilters({ ...filters, startDate: date })}
+            onChange={(date) => {
+              setFilters({ ...filters, startDate: date });
+              handlePageChange(1);
+            }}
             maxDate={filters.endDate}
             placeholderText="Start Date"
             dateFormat="dd/MM/yyyy"
@@ -194,7 +197,10 @@ const RequestsRecieved = ({ url }) => {
             startDate={filters.startDate}
             endDate={filters.endDate}
             selected={filters.endDate}
-            onChange={(date) => setFilters({ ...filters, endDate: date })}
+            onChange={(date) => {
+              setFilters({ ...filters, endDate: date });
+              handlePageChange(1);
+            }}
             minDate={filters.startDate}
             placeholderText="End Date"
             dateFormat="dd/MM/yyyy"

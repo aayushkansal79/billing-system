@@ -166,7 +166,7 @@ const Assignments = ({ url }) => {
     dispatchStartDate: "",
     dispatchEndDate: "",
     page: 1,
-    limit: 10,
+    limit: 50,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -378,9 +378,10 @@ const Assignments = ({ url }) => {
             className="form-control"
             placeholder="Assignment Number"
             value={filters.assignmentNo}
-            onChange={(e) =>
-              setFilters({ ...filters, assignmentNo: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, assignmentNo: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         {user?.type === "admin" && (
@@ -390,9 +391,10 @@ const Assignments = ({ url }) => {
               className="form-control"
               placeholder="Store Username"
               value={filters.storeUsername}
-              onChange={(e) =>
-                setFilters({ ...filters, storeUsername: e.target.value })
-              }
+              onChange={(e) => {
+                setFilters({ ...filters, storeUsername: e.target.value });
+                handlePageChange(1);
+              }}
             />
           </div>
         )}
@@ -401,9 +403,10 @@ const Assignments = ({ url }) => {
           <select
             className="form-select"
             value={filters.assignStatus}
-            onChange={(e) =>
-              setFilters({ ...filters, assignStatus: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, assignStatus: e.target.value });
+              handlePageChange(1);
+            }}
           >
             <option value="">Select Status</option>
             <option value="Process">Process</option>
@@ -420,9 +423,10 @@ const Assignments = ({ url }) => {
             startDate={filters.createdStartDate}
             endDate={filters.createdEndDate}
             selected={filters.createdStartDate}
-            onChange={(date) =>
-              setFilters({ ...filters, createdStartDate: date })
-            }
+            onChange={(date) => {
+              setFilters({ ...filters, createdStartDate: date });
+              handlePageChange(1);
+            }}
             maxDate={filters.createdEndDate}
             placeholderText="Assign. Start Date"
             dateFormat="dd/MM/yyyy"
@@ -437,9 +441,10 @@ const Assignments = ({ url }) => {
             startDate={filters.createdStartDate}
             endDate={filters.createdEndDate}
             selected={filters.createdEndDate}
-            onChange={(date) =>
-              setFilters({ ...filters, createdEndDate: date })
-            }
+            onChange={(date) => {
+              setFilters({ ...filters, createdEndDate: date });
+              handlePageChange(1);
+            }}
             minDate={filters.createdStartDate}
             placeholderText="Assign. End Date"
             dateFormat="dd/MM/yyyy"
@@ -455,9 +460,10 @@ const Assignments = ({ url }) => {
             startDate={filters.dispatchStartDate}
             endDate={filters.dispatchEndDate}
             selected={filters.dispatchStartDate}
-            onChange={(date) =>
-              setFilters({ ...filters, dispatchStartDate: date })
-            }
+            onChange={(date) => {
+              setFilters({ ...filters, dispatchStartDate: date });
+              handlePageChange(1);
+            }}
             maxDate={filters.dispatchEndDate}
             placeholderText="Dispatch Start Date"
             dateFormat="dd/MM/yyyy"
@@ -472,9 +478,10 @@ const Assignments = ({ url }) => {
             startDate={filters.dispatchStartDate}
             endDate={filters.dispatchEndDate}
             selected={filters.dispatchEndDate}
-            onChange={(date) =>
-              setFilters({ ...filters, dispatchEndDate: date })
-            }
+            onChange={(date) => {
+              setFilters({ ...filters, dispatchEndDate: date });
+              handlePageChange(1);
+            }}
             minDate={filters.dispatchStartDate}
             placeholderText="Dispatch End Date"
             dateFormat="dd/MM/yyyy"

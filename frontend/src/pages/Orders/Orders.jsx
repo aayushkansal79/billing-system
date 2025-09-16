@@ -337,7 +337,7 @@ const Order = ({ url }) => {
     startDate: "",
     endDate: "",
     page: 1,
-    limit: 10,
+    limit: 50,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -501,9 +501,10 @@ const Order = ({ url }) => {
             className="form-control"
             placeholder="Invoice No"
             value={filters.invoiceNumber}
-            onChange={(e) =>
-              setFilters({ ...filters, invoiceNumber: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, invoiceNumber: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
 
@@ -513,9 +514,10 @@ const Order = ({ url }) => {
             className="form-control"
             placeholder="Order No"
             value={filters.orderNumber}
-            onChange={(e) =>
-              setFilters({ ...filters, orderNumber: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, orderNumber: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -524,9 +526,10 @@ const Order = ({ url }) => {
             className="form-control"
             placeholder="Vendor Name"
             value={filters.companyName}
-            onChange={(e) =>
-              setFilters({ ...filters, companyName: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, companyName: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         {/* <div className="col-md-2">
@@ -546,7 +549,10 @@ const Order = ({ url }) => {
             className="form-control"
             placeholder="Vendor State"
             value={filters.state}
-            onChange={(e) => setFilters({ ...filters, state: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, state: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -556,9 +562,10 @@ const Order = ({ url }) => {
             className="form-control"
             placeholder="Contact Number"
             value={filters.contactPhone}
-            onChange={(e) =>
-              setFilters({ ...filters, contactPhone: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, contactPhone: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -567,9 +574,10 @@ const Order = ({ url }) => {
             className="form-control"
             placeholder="Vendor GST"
             value={filters.gstNumber}
-            onChange={(e) =>
-              setFilters({ ...filters, gstNumber: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, gstNumber: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -578,7 +586,10 @@ const Order = ({ url }) => {
             className="form-control"
             placeholder="Broker Name"
             value={filters.broker}
-            onChange={(e) => setFilters({ ...filters, broker: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, broker: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
 
@@ -590,7 +601,10 @@ const Order = ({ url }) => {
             startDate={filters.startDate}
             endDate={filters.endDate}
             selected={filters.startDate}
-            onChange={(date) => setFilters({ ...filters, startDate: date })}
+            onChange={(date) => {
+              setFilters({ ...filters, startDate: date });
+              handlePageChange(1);
+            }}
             maxDate={filters.endDate}
             placeholderText="Start Date"
             dateFormat="dd/MM/yyyy"
@@ -605,7 +619,10 @@ const Order = ({ url }) => {
             startDate={filters.startDate}
             endDate={filters.endDate}
             selected={filters.endDate}
-            onChange={(date) => setFilters({ ...filters, endDate: date })}
+            onChange={(date) => {
+              setFilters({ ...filters, endDate: date });
+              handlePageChange(1);
+            }}
             minDate={filters.startDate}
             placeholderText="End Date"
             dateFormat="dd/MM/yyyy"

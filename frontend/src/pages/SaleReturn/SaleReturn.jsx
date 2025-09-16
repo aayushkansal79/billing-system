@@ -151,7 +151,7 @@ const SaleReturn = ({ url }) => {
     startDate: null,
     endDate: null,
     page: 1,
-    limit: 10,
+    limit: 50,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -296,9 +296,10 @@ const SaleReturn = ({ url }) => {
             className="form-control"
             placeholder="Sale Return No."
             value={filters.saleReturnNo}
-            onChange={(e) =>
-              setFilters({ ...filters, saleReturnNo: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, saleReturnNo: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -307,9 +308,10 @@ const SaleReturn = ({ url }) => {
             className="form-control"
             placeholder="Invoice Number"
             value={filters.invoiceNumber}
-            onChange={(e) =>
-              setFilters({ ...filters, invoiceNumber: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, invoiceNumber: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -318,9 +320,10 @@ const SaleReturn = ({ url }) => {
             className="form-control"
             placeholder="Customer Name"
             value={filters.customerName}
-            onChange={(e) =>
-              setFilters({ ...filters, customerName: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, customerName: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -329,7 +332,10 @@ const SaleReturn = ({ url }) => {
             className="form-control"
             placeholder="Mobile No"
             value={filters.mobile}
-            onChange={(e) => setFilters({ ...filters, mobile: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, mobile: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -340,7 +346,10 @@ const SaleReturn = ({ url }) => {
             startDate={filters.startDate}
             endDate={filters.endDate}
             selected={filters.startDate}
-            onChange={(date) => setFilters({ ...filters, startDate: date })}
+            onChange={(date) => {
+              setFilters({ ...filters, startDate: date });
+              handlePageChange(1);
+            }}
             maxDate={filters.endDate}
             placeholderText="Start Date"
             dateFormat="dd/MM/yyyy"
@@ -354,7 +363,10 @@ const SaleReturn = ({ url }) => {
             startDate={filters.startDate}
             endDate={filters.endDate}
             selected={filters.endDate}
-            onChange={(date) => setFilters({ ...filters, endDate: date })}
+            onChange={(date) => {
+              setFilters({ ...filters, endDate: date });
+              handlePageChange(1);
+            }}
             minDate={filters.startDate}
             placeholderText="End Date"
             dateFormat="dd/MM/yyyy"

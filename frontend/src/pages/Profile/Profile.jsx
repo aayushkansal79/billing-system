@@ -45,6 +45,8 @@ const Profile = ({ url }) => {
     purchaseReturnPrefix: "",
   });
 
+  const [editPrefixes, setEditPrefixes] = useState(false);
+
   const handlePrefixChange = (e) => {
     setPrefixes({ ...prefixes, [e.target.name]: e.target.value });
   };
@@ -307,6 +309,7 @@ const Profile = ({ url }) => {
             name="invoicePrefix"
             value={prefixes.invoicePrefix}
             onChange={handlePrefixChange}
+            disabled={!editPrefixes}
           />
         </div>
 
@@ -319,6 +322,7 @@ const Profile = ({ url }) => {
             name="assignmentPrefix"
             value={prefixes.assignmentPrefix}
             onChange={handlePrefixChange}
+            disabled={!editPrefixes}
           />
         </div>
 
@@ -331,6 +335,7 @@ const Profile = ({ url }) => {
             name="saleReturnPrefix"
             value={prefixes.saleReturnPrefix}
             onChange={handlePrefixChange}
+            disabled={!editPrefixes}
           />
         </div>
 
@@ -343,17 +348,42 @@ const Profile = ({ url }) => {
             name="purchaseReturnPrefix"
             value={prefixes.purchaseReturnPrefix}
             onChange={handlePrefixChange}
+            disabled={!editPrefixes}
           />
         </div>
 
         <div className="col-12">
-          <button
-            type="submit"
-            className="btn btn-primary"
-            onClick={submitPrefixes}
-          >
-            Update Prefixes
-          </button>
+          {editPrefixes ? (
+            <>
+              <button
+                type="submit"
+                className="btn btn-success"
+                onClick={() => {
+                  submitPrefixes();
+                  setEditPrefixes(false);
+                }}
+              >
+                Update Prefixes
+              </button>
+              <button
+                type="submit"
+                className="btn btn-secondary mx-2"
+                onClick={() => {
+                  setEditPrefixes(false);
+                }}
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button
+              type="submit"
+              className="btn btn-primary"
+              onClick={() => setEditPrefixes(true)}
+            >
+              Edit Prefixes
+            </button>
+          )}
         </div>
       </div>
 

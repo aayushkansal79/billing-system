@@ -14,7 +14,7 @@ const ProductReport = ({ url }) => {
   const [filters, setFilters] = useState({
     search: "",
     page: 1,
-    limit: 10,
+    limit: 50,
   });
   const [loading, setLoading] = useState(false);
 
@@ -109,7 +109,10 @@ const ProductReport = ({ url }) => {
             className="form-control"
             placeholder="Product Name"
             value={filters.search}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, search: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">

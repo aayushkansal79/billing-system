@@ -31,7 +31,7 @@ const Companies = ({ url }) => {
     // startDate: "",
     // endDate: "",
     page: 1,
-    limit: 10,
+    limit: 50,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -152,7 +152,10 @@ const Companies = ({ url }) => {
             className="form-control"
             placeholder="Vendor Name"
             value={filters.name}
-            onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, name: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -161,9 +164,10 @@ const Companies = ({ url }) => {
             className="form-control"
             placeholder="Vendor Name"
             value={filters.shortName}
-            onChange={(e) =>
-              setFilters({ ...filters, shortName: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, shortName: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -172,7 +176,10 @@ const Companies = ({ url }) => {
             className="form-control"
             placeholder="Vendor State"
             value={filters.state}
-            onChange={(e) => setFilters({ ...filters, state: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, state: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -181,9 +188,10 @@ const Companies = ({ url }) => {
             className="form-control"
             placeholder="Vendor Address"
             value={filters.address}
-            onChange={(e) =>
-              setFilters({ ...filters, address: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, address: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -193,9 +201,10 @@ const Companies = ({ url }) => {
             className="form-control"
             placeholder="Contact Number"
             value={filters.contactPhone}
-            onChange={(e) =>
-              setFilters({ ...filters, contactPhone: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, contactPhone: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -204,9 +213,10 @@ const Companies = ({ url }) => {
             className="form-control"
             placeholder="Vendor GST"
             value={filters.gstNumber}
-            onChange={(e) =>
-              setFilters({ ...filters, gstNumber: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, gstNumber: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
@@ -215,17 +225,30 @@ const Companies = ({ url }) => {
             className="form-control"
             placeholder="Broker Name"
             value={filters.broker}
-            onChange={(e) =>
-              setFilters({ ...filters, broker: e.target.value })
-            }
+            onChange={(e) => {
+              setFilters({ ...filters, broker: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         <div className="col-md-2">
           <label className="form-label">Download Excel:</label>
           <br />
-          <button className="btn btn-primary d-flex gap-1 align-items-center" onClick={handleDownloadExcel}>
-            <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="white"><path d="m480-320 160-160-56-56-64 64v-168h-80v168l-64-64-56 56 160 160Zm0 240q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
-            Download</button>
+          <button
+            className="btn btn-primary d-flex gap-1 align-items-center"
+            onClick={handleDownloadExcel}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              height="20px"
+              viewBox="0 -960 960 960"
+              width="20px"
+              fill="white"
+            >
+              <path d="m480-320 160-160-56-56-64 64v-168h-80v168l-64-64-56 56 160 160Zm0 240q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
+            </svg>
+            Download
+          </button>
         </div>
         {/* <div className="col-md-2">
           <label className="form-label">Start Date:</label>

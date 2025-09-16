@@ -23,7 +23,7 @@ const VendorReport = ({ url }) => {
     mobile: "",
     state: "",
     page: 1,
-    limit: 10,
+    limit: 50,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -120,7 +120,10 @@ const VendorReport = ({ url }) => {
             className="form-control"
             placeholder="Vendor Name"
             value={filters.name}
-            onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+            onChange={(e) => {
+              setFilters({ ...filters, name: e.target.value });
+              handlePageChange(1);
+            }}
           />
         </div>
         {/* <div className="col-md-2">
